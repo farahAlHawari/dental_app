@@ -1,0 +1,354 @@
+import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
+import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
+import 'package:dental_app/core/widgets/app_text_field.dart';
+import 'package:dental_app/features/login/presentation/pages/login_page.dart';
+import 'package:dental_app/features/register/presentation/pages/verify_otp_page.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
+
+  @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateMixin {
+  final _phoneController = TextEditingController();
+
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+   final _confirmPasswordController = TextEditingController();
+     bool _obscureConfirmPassword = true;
+
+    late AnimationController _toothController;
+
+    @override
+  void initState() {
+    super.initState();
+    _toothController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true); 
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _toothController.dispose(); 
+     _confirmPasswordController.dispose(); 
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset('assets/backgrounds/background1.png',color:Theme.of(context).colorScheme.primary, 
+               fit: BoxFit.cover,),
+            ),
+            SafeArea(
+              child:LayoutBuilder(
+    builder: (context, constraints){
+      return SingleChildScrollView(
+                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child:  ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: constraints.maxHeight, 
+          ),
+                    child: Column(
+                     mainAxisAlignment: MainAxisAlignment.center, 
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surface,
+                     borderRadius: BorderRadius.circular(28),
+                                    
+                                boxShadow: [
+                                    
+                                  BoxShadow(
+                                    
+                                    color: const Color.fromARGB(255, 112, 112, 112),
+                                    
+                                    blurRadius: 20,
+                                    
+                                    offset: const Offset(0, 8),
+                                    
+                                  ),
+                                    
+                                ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: Container(
+                                  
+                                  width: 60,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(10)
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 8,
+                              ),
+
+                              Center(
+  child: SizedBox(
+    width: 100,
+    height: 100,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        // الدائرة الخلفية
+        Image.asset(
+          "assets/images/1.png",
+          color: Theme.of(context).colorScheme.primary,
+          width: 100,
+        ),
+       
+        AnimatedBuilder(
+          animation: _toothController,
+          builder: (context, child) {
+            final scale = 1.3 + (_toothController.value * 0.15); 
+            return Transform.scale(
+              scale: scale,
+              child: child,
+            );
+          },
+          child: Image.asset(
+            "assets/images/3.png", 
+            width: 45,
+           
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+                              Center(
+                                child: Text("Sign Up",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                 fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 20,
+                                  
+                                ),),
+                              ),
+                              SizedBox(height: 5,),
+                              Center(
+                                child: Text("Create your account",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  fontSize: 10,
+                                  
+                                ),),
+                              ),
+                          
+                              SizedBox(height: 20,),
+                              Text("Phone number",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                                
+                              ),
+                              ),
+                              const SizedBox(height: 8),
+                               AppTextField(
+  controller: _phoneController,
+  hint: "09xxxxxxxx",
+  prefixIcon: Icons.phone_outlined,
+),
+                           
+                              SizedBox(height: 20,),
+                          
+                          
+                          
+                               Text("Password",textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                                
+                              ),
+                              ),
+                              const SizedBox(height: 8),
+                          
+                              
+                                                     AppTextField(
+  controller: _passwordController,
+  hint: "••••••••",
+  isPassword: true,
+  prefixIcon: Icons.lock_outline,
+),
+   
+                          
+SizedBox(height: 20,),
+                            Text("Confirm Password",textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                                
+                              ),
+                              ),
+                              const SizedBox(height: 8),
+                          
+                              
+                                                     AppTextField(
+  controller: _confirmPasswordController,
+  hint: "••••••••",
+  isPassword: true,
+  prefixIcon: Icons.lock_outline,
+),
+   
+                            SizedBox(height: 40,),
+                                SizedBox(
+                          
+                                  height: 54,
+                          
+                                  child: ElevatedButton(
+                          
+                                    onPressed: () {
+                          
+                                     Navigator.push(context, MaterialPageRoute(builder: (context) => VerifyOtpPage(), ));
+                          // context.read<ThemeBloc>().add(ToggleTheme());
+                                    },
+                          
+                                    style: ElevatedButton.styleFrom(
+                          
+                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                          
+                                      shape: RoundedRectangleBorder(
+                          
+                                        borderRadius: BorderRadius.circular(16),
+                          
+                                      ),
+                          
+                                      elevation: 0,
+                          
+                                    ),
+                          
+                                    child: Row(
+                          
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                          
+                                      children: [
+                          
+                                         Icon(Icons.arrow_back, color: Theme.of(context).scaffoldBackgroundColor),
+                          
+                                        const SizedBox(width: 8),
+                          
+                                        Text(
+                          
+                                          'Sign Up',
+                          
+                                          style: TextStyle(
+                          
+                                            color: Theme.of(context).scaffoldBackgroundColor,
+                          
+                                            fontSize: 16,
+                          
+                                            fontWeight: FontWeight.bold,
+                          
+                                          ),
+                          
+                                        ),
+                                        
+                               
+                          
+                                      ],
+                          
+                                    ),
+                          
+                                  ),
+                          
+                                ),
+                          
+                          
+                                 const SizedBox(height: 20),
+                          
+                          
+                          
+                                Divider(color: Theme.of(context).colorScheme.primary),
+                          
+                                const SizedBox(height: 16),
+                          
+                          
+                          
+                                Text(
+                          
+                                  "Do You Have an Account?",
+                          
+                                  textAlign: TextAlign.center,
+                          
+                                  style: TextStyle(
+                          
+                                    fontSize: 14,
+                          
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          
+                                  ),
+                          
+                                ),
+                          
+                                const SizedBox(height: 6),
+                          
+                                Center(
+                          
+                                  child: TextButton(
+                          
+                                    onPressed: () {
+                          
+                                     Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                          
+                                    },
+                          
+                                    child: Text(
+                          
+                                      "Log in to your account",
+                          
+                                      style: TextStyle(
+                          
+                                        color: Theme.of(context).colorScheme.primary,
+                          
+                                        fontWeight: FontWeight.bold,
+                          
+                                        fontSize: 15,
+                          
+                                      ),
+                          
+                                    ),))
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+    }
+    
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
