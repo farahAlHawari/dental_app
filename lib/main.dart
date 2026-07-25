@@ -1,55 +1,63 @@
+// import 'package:dental_app/core/theme/app_theme.dart';
 import 'package:dental_app/core/theme/app_theme.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_state.dart';
-import 'package:dental_app/features/login/presentation/pages/login_page.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/features/change_language/presentation/pages/choose_language.dart';
-import 'package:dental_app/features/onboarding/presentation/pages/on_boarding_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  final savedLang = await SharedPrefs.getLanguage();
+  final startLocale =
+      savedLang == 'en' ? const Locale('en') : const Locale('ar');
+
+  runApp(EasyLocalization(
+    supportedLocales: const [Locale('en'), Locale('ar')],
+    startLocale: startLocale,
+    path: 'assets/translations',
+    fallbackLocale: const Locale('ar'),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    // return MaterialApp(
-    //    theme: AppTheme.light,
+    return BlocProvider(
+      create: (_) => ThemeBloc(),
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp(
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: state.themeMode,
+            locale: context.locale,
+            supportedLocales: context.supportedLocales,
+            localizationsDelegates: context.localizationDelegates,
+            debugShowCheckedModeBanner: false,
+              builder: (context, child) {
+    final isArabic = context.locale.languageCode == 'ar';
 
-    //   darkTheme: AppTheme.dark,
-
-    //   themeMode: state.themeMode,
-    //    debugShowCheckedModeBanner: false,
-    //   home: ChooseLanguage() ,
-    // );
-  return  BlocProvider(
-
- create: (_) => ThemeBloc(),
-
- child: BlocBuilder<ThemeBloc,ThemeState>(
-
- builder: (context,state){
-
-   return MaterialApp(
-
-      theme: AppTheme.light,
-
-      darkTheme: AppTheme.dark,
-
-      themeMode: state.themeMode,
-          debugShowCheckedModeBanner: false,
-      home: ChooseLanguage() ,
-
-   );
-
- },
-
-),
-
-);
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: isArabic ? 'cr' : 'ir',
+        ),
+      ),
+      child: child!,
+    );
+  },
+            home: ChooseLanguage(),
+          );
+        },
+      ),
+    );
   }
 }

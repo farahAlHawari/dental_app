@@ -3,6 +3,8 @@ import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
+import 'package:dental_app/features/reset_password/presentation/insert_phonenumber_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -136,7 +138,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   ),
 ),
                               Center(
-                                child: Text("welcome Back",
+                                child: Text("Welcome Back".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                  fontWeight: FontWeight.bold,
@@ -147,7 +149,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               ),
                               SizedBox(height: 5,),
                               Center(
-                                child: Text("log in to your account",
+                                child: Text("Log in to your account".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
@@ -157,7 +159,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               ),
                           
                               SizedBox(height: 20,),
-                              Text("Phone number",
+                              Text("Phone Number".tr(),
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 13,
@@ -175,7 +177,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           
                           
                           
-                               Text("Password",textAlign: TextAlign.left,
+                               Text("Password".tr(),textAlign: TextAlign.left,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 13,
@@ -184,14 +186,45 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               ),
                               const SizedBox(height: 8),
                           
-                                                     AppTextField(
+//                                                      AppTextField(
+//   controller: _passwordController,
+//   hint: "••••••••",
+//   isPassword: true,
+//   prefixIcon: Icons.lock_outline,
+// ),
+       AppTextField(
   controller: _passwordController,
   hint: "••••••••",
   isPassword: true,
   prefixIcon: Icons.lock_outline,
 ),
-                          
-                            SizedBox(height: 40,),
+const SizedBox(height: 8),
+Align(
+  alignment: Alignment.centerRight,
+  child: TextButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => InsertPhonenumberPage()),
+      );
+    },
+    style: TextButton.styleFrom(
+      padding: EdgeInsets.zero,
+      minimumSize: Size(0, 0),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    ),
+    child: Text(
+      "Forgot Password?".tr(),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
+    ),
+  ),
+),
+               
+                            SizedBox(height: 30,),
                                 SizedBox(
                           
                                   height: 54,
@@ -230,7 +263,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           
                                         Text(
                           
-                                          'LogIn',
+                                          'Login'.tr(),
                           
                                           style: TextStyle(
                           
@@ -265,53 +298,55 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           
                           
                           
-                                Text(
-                          
-                                  "You Don't Have an Account?",
-                          
-                                  textAlign: TextAlign.center,
-                          
-                                  style: TextStyle(
-                          
-                                    fontSize: 14,
-                          
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          
-                                  ),
-                          
-                                ),
-                          
-                                const SizedBox(height: 6),
-                          
-                                Center(
-                          
-                                  child: TextButton(
-                          
-                                    onPressed: () {
-                          
-                                        Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => SignupPage()
-                                     ));
-                          
-                                    },
-                          
-                                    child: Text(
-                          
-                                      "create an account",
-                          
+                                Row(
+                                  children: [
+                                    Text(
+                                                              
+                                      "Don't have an account?".tr(),
+                                                              
+                                      textAlign: TextAlign.center,
+                                                              
                                       style: TextStyle(
-                          
-                                        color: Theme.of(context).colorScheme.primary,
-                          
-                                        fontWeight: FontWeight.bold,
-                          
-                                        fontSize: 15,
-                          
+                                                              
+                                        fontSize: 14,
+                                                              
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                                              
                                       ),
-                          
-                                    ),))
+                                                              
+                                    ),
+                                                              
+                                    const SizedBox(height: 6),
+                                                              
+                                    TextButton(
+                                                              
+                                      onPressed: () {
+                                                              
+                                          Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => SignupPage()
+                                       ));
+                                                              
+                                      },
+                                                              
+                                      child: Text(
+                                                              
+                                        "Sign Up".tr(),
+                                                              
+                                        style: TextStyle(
+                                                              
+                                          color: Theme.of(context).colorScheme.primary,
+                                                              
+                                          fontWeight: FontWeight.bold,
+                                                              
+                                          fontSize: 15,
+                                                              
+                                        ),
+                                                              
+                                      ),),
+                                  ],
+                                )
                             ],
                           ),
                         )

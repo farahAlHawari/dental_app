@@ -5,6 +5,7 @@ import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
 import 'package:dental_app/features/register/presentation/pages/patient_type.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
@@ -158,7 +159,7 @@ _timer?.cancel();
   ),
 ),
                               Center(
-                                child: Text("Verify OTP",
+                                child: Text("Verify OTP".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                  fontWeight: FontWeight.bold,
@@ -169,7 +170,7 @@ _timer?.cancel();
                               ),
                               SizedBox(height: 5,),
                               Center(
-                                child: Text("enter the varefication code we sent to your mobile phone",
+                                child: Text("Enter the verification code sent to your mobile number".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
@@ -224,7 +225,7 @@ const SizedBox(height: 25),
 
 Center(
   child: Text(
-    "Didn't receive the code?",
+    "Didn't receive the code?".tr(),
     style: TextStyle(
       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
       fontSize: 13,
@@ -243,7 +244,7 @@ Center(
             // أرسل OTP من جديد
           },
           child: Text(
-            "Resend Code",
+            "Resend Code".tr(),
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
@@ -251,7 +252,7 @@ Center(
           ),
         )
       : Text(
-          "Resend in 00:${_seconds.toString().padLeft(2, '0')}",
+          "Resend in 00:".tr()+"${_seconds.toString().padLeft(2, '0')}",
           style: TextStyle(
             color: AppColors.textSecondary,
           ),
@@ -278,7 +279,7 @@ SizedBox(
       children: [
        
         Text(
-          "Verify",
+          "Verify".tr(),
           style: TextStyle(
             color: Theme.of(context).scaffoldBackgroundColor,
             fontSize: 16,
@@ -307,7 +308,7 @@ Center(
       context.read<ThemeBloc>().add(ToggleTheme());
     },
     child: Text(
-      "Back to Sign Up",
+      "Back to Sign Up".tr(),
       style: TextStyle(
         color: Theme.of(context).colorScheme.primary,
         fontWeight: FontWeight.bold,

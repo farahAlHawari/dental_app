@@ -25,11 +25,11 @@ class ProfileCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 228, 243, 249),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withAlpha(200),
+            color: Theme.of(context).colorScheme.shadow,
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -86,14 +86,14 @@ class ProfileCard extends StatelessWidget {
              
 
 
-              InkWell(
-                onTap: onEdit,
-                borderRadius: BorderRadius.circular(20),
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(Icons.edit_outlined),
-                ),
-              ),
+              // InkWell(
+              //   onTap: onEdit,
+              //   borderRadius: BorderRadius.circular(20),
+              //   child: const Padding(
+              //     padding: EdgeInsets.all(4),
+              //     child: Icon(Icons.edit_outlined),
+              //   ),
+              // ),
 
 
               const SizedBox(height: 12),

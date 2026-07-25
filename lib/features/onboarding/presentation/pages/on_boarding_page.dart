@@ -2,6 +2,7 @@ import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/features/login/presentation/pages/login_page.dart';
 import 'package:dental_app/features/onboarding/presentation/widgets/on_boarding_card.dart';
 import 'package:dental_app/features/onboarding/presentation/widgets/on_boarding_dot_indicator.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -22,17 +23,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
     'assets/animations/33.json',
   ];
 
-  final List<String> titles = [
-    'Book your appointment\nin just a few taps',
-    'Track your dental\ntreatment journey',
-    'Get notified before\nyour visit',
-  ];
- 
-  final List<String> descriptions = [
-    'Choose your doctor, pick a suitable time, and confirm your appointment instantly.',
-    'Keep all your visits, prescriptions, and X-rays organized in one digital file.',
-    'Never miss a session with reminders sent right before your appointment.',
-  ];
+final List<String> titles = [
+  'Book Your Dental\nAppointment with Ease',
+  'Your Complete\nDental Records',
+  'Stay Connected\nwith Your Clinic',
+];
+
+final List<String> descriptions = [
+  'Choose a convenient date and time, then confirm your appointment in just a few steps.',
+  'Access your treatment plans, X-rays, prescriptions, and visit history anytime.',
+  'Receive appointment reminders, treatment updates, and important notifications so you never miss a visit.',
+];
 
   bool get _isLastPage => _currentIndex == titles.length - 1;
 
@@ -102,8 +103,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                       child: OnboardingPageCard(
                         lottieAsset: lottieAssets[index],
-                        title: titles[index],
-                        description: descriptions[index],
+                        title: titles[index].tr(),
+                        description: descriptions[index].tr(),
                       ),
                     ),
                   );
@@ -127,7 +128,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       : TextButton(
                           onPressed: _skip,
                           child: Text(
-                            'SKIP',
+                            'Skip'.tr(),
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontWeight: FontWeight.w600,
@@ -146,7 +147,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ),
                     ),
                     child: Text(
-                      _isLastPage ? 'START' : 'NEXT',
+                      _isLastPage ? 'Get Started'.tr() : 'Next'.tr(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
