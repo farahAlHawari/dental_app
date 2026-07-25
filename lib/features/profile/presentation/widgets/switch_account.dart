@@ -16,7 +16,7 @@ class SwitchAccountBottomSheet extends StatelessWidget {
               width: 50,
               height: 5,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -24,7 +24,7 @@ class SwitchAccountBottomSheet extends StatelessWidget {
             const SizedBox(height: 20),
 
             const Text(
-              "تبديل الحساب",
+              "Switch Account",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -56,15 +56,8 @@ class SwitchAccountBottomSheet extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            const Divider(),
+            
 
-            ListTile(
-              leading: const CircleAvatar(
-                child: Icon(Icons.add),
-              ),
-              title: const Text("إضافة مريض جديد"),
-              onTap: () {},
-            )
           ],
         ),
       ),

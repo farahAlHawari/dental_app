@@ -1,8 +1,10 @@
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/features/change_language/presentation/widgets/language_selector.dart';
 import 'package:dental_app/features/onboarding/presentation/pages/on_boarding_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
@@ -110,7 +112,7 @@ LottieBuilder.asset("assets/animations/44.json",width: 150,repeat: true,fit: Box
                   ),
                 ),
                 Text(
-                  "Choose Language",
+                  "Choose Language".tr(),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 20,
@@ -119,7 +121,7 @@ LottieBuilder.asset("assets/animations/44.json",width: 150,repeat: true,fit: Box
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "please choose your language to begin",
+                  "Please choose your language to begin.".tr(),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                     fontSize: 10,
@@ -128,7 +130,7 @@ LottieBuilder.asset("assets/animations/44.json",width: 150,repeat: true,fit: Box
                 ),
                 const SizedBox(height: 24),
 
-              SizedBox(height: 10,),
+              // SizedBox(height: 10,),
 GestureDetector(
   onTap: () {
     setState(() {
@@ -136,7 +138,9 @@ GestureDetector(
     });
   },
   child: Padding(
-    padding: const EdgeInsets.all(20),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 10,vertical: 5
+    ),
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
@@ -216,7 +220,9 @@ GestureDetector(
     });
   },
   child: Padding(
-    padding: const EdgeInsets.all(20),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 10,vertical: 10
+    ),
     child: AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
@@ -300,12 +306,41 @@ GestureDetector(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      onPressed: () {
-                        // context.read<ThemeBloc>().add(ToggleTheme());
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => OnboardingPage(),));
-                      },
-                      child: const Text(
-                        "Continue",
+                      onPressed: () async {
+  final locale = _selectedIndex == 0
+      ? const Locale('en')
+      : const Locale('ar');
+
+  await context.setLocale(locale);
+  await SharedPrefs.saveLanguage(locale.languageCode);
+
+  if (context.mounted) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => OnboardingPage()),
+    );
+  }
+},
+  //                       onPressed: () async {
+  // final locale = _selectedIndex == 0
+  //     ? const Locale('en', 'US')
+  //     : const Locale('ar', 'AR');
+
+  // await context.setLocale(locale);
+  // await SharedPrefs.saveLanguage(locale.languageCode);
+
+  // if (context.mounted) {
+  //   Navigator.pushReplacement(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => OnboardingPage()),
+  //   );
+  // }
+
+  //                       // context.read<ThemeBloc>().add(ToggleTheme());
+  //                       Navigator.push(context, MaterialPageRoute(builder: (context) => OnboardingPage(),));
+  //                     },
+                      child:  Text(
+                        "Continue".tr(),
                         style: TextStyle(color: AppColors.background, fontSize: 16),
                       ),
                     ),

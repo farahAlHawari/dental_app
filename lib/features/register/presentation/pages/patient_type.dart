@@ -3,6 +3,7 @@ import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
 import 'package:dental_app/features/register/presentation/pages/medical_info.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -45,7 +46,7 @@ int _selectedIndex = -1;
         child: Stack(        
           children: [
             Positioned.fill(
-              child: Image.asset('assets/backgrounds/background1.png', 
+              child: Image.asset('assets/backgrounds/background1.png',color:Theme.of(context).colorScheme.primary , 
                fit: BoxFit.cover,),
             ),
             SafeArea(
@@ -134,7 +135,7 @@ int _selectedIndex = -1;
   ),
 ),
                               Center(
-                                child: Text("Select the Primary Patient",
+                                child: Text("Who will this account manage?".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                  fontWeight: FontWeight.bold,
@@ -145,11 +146,11 @@ int _selectedIndex = -1;
                               ),
                               SizedBox(height: 5,),
                               Center(
-                                child: Text("This helps us personalize appointments and medical records.",
+                                child: Text("Choose who this account will be used for. You can manage your own dental care or a family member's care.".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   
                                 ),),
                               ),
@@ -202,9 +203,9 @@ int _selectedIndex = -1;
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children:  [
               Text(
-                "Myself",
+                "Myself".tr(),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -212,13 +213,13 @@ int _selectedIndex = -1;
               ),
               SizedBox(height: 4),
               Text(
-                "This account is for my own dental care.",
+                "Manage my appointments, treatment plans, and dental records.".tr(),
                 style: TextStyle(fontSize: 12),
               ),
             ],
           ),
         ),
-
+SizedBox(width: 5,),
         Icon(
           _selectedIndex == 0
               ? Icons.check_circle_rounded
@@ -277,9 +278,9 @@ GestureDetector(
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children:  [
               Text(
-                "Family Member",
+                "Family Member".tr(),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -287,13 +288,13 @@ GestureDetector(
               ),
               SizedBox(height: 4),
               Text(
-                "Manage appointments for your family.",
+                "Manage appointments and dental records for a family member.".tr(),
                 style: TextStyle(fontSize: 12),
               ),
             ],
           ),
         ),
-
+SizedBox(width: 5,),
         Icon(
           _selectedIndex == 1
               ? Icons.check_circle_rounded
@@ -340,13 +341,13 @@ GestureDetector(
                           
                                       children: [
                           
-                                        const Icon(Icons.arrow_right, color: Colors.white),
+                                        // const Icon(Icons.air, color: Colors.white),
                           
                                         const SizedBox(width: 8),
                           
                                         Text(
                           
-                                          'Next',
+                                          'Next'.tr(),
                           
                                           style: TextStyle(
                           
