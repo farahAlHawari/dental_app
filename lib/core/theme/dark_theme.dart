@@ -17,20 +17,18 @@ class DarkTheme {
         surface: AppColors.darkSurface,
         error: AppColors.error,
 
-    primaryContainer: AppColors.CardSelectedDark,
+        primaryContainer: AppColors.CardSelectedDark,
         surfaceContainerHighest: AppColors.surfaceVariantDark,
 
         shadow: AppColors.shadowdark,
       ),
 
-      appBarTheme: const AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
 
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppColors.containertDark,
+        // fillColor: AppColors.CardSelectedDark,
       ),
 
       cardColor: AppColors.containertDark,

@@ -17,21 +17,18 @@ class LightTheme {
         surface: AppColors.surface,
         error: AppColors.error,
 
-        
         surfaceContainerHighest: AppColors.surfaceVariantLight,
 
-primaryContainer: AppColors.CardSelectedLight,
+        primaryContainer: AppColors.CardSelectedLight,
         shadow: AppColors.shadowlight,
       ),
 
-      appBarTheme: const AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
 
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.containerLight,
+        // fillColor: AppColors.containerLight,
+        fillColor: AppColors.surface,
       ),
 
       cardColor: AppColors.containerLight,
