@@ -5,7 +5,6 @@ import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/core/widgets/dialog.dart';
 import 'package:dental_app/features/register/presentation/pages/patient_type.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
-import 'package:dental_app/features/register/presentation/pages/verify_otp_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 

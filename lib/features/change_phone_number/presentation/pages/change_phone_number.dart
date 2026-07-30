@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
-import 'package:dental_app/features/change_phone_number/presentation/pages/verify_otp_page.dart';
 import 'package:dental_app/features/register/presentation/pages/patient_type.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
-import 'package:dental_app/features/register/presentation/pages/verify_otp_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 
@@ -185,7 +183,7 @@ SizedBox(
   height: 54,
   child: ElevatedButton(
     onPressed: () {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => VerifyOtpPage2(),));
+      // Navigator.push(context, MaterialPageRoute(builder: (context) => VerifyOtpPage2(),));
     },
     style: ElevatedButton.styleFrom(
       backgroundColor: AppColors.primary,

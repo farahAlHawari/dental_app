@@ -59,6 +59,7 @@ class _AppTextFieldState extends State<AppTextField> {
       maxLines: widget.isPassword ? 1 : widget.maxLines,
       validator: widget.validator,
       onChanged: widget.onChanged,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
 readOnly: widget.readOnly,
 onTap: widget.onTap,
       style: TextStyle(
