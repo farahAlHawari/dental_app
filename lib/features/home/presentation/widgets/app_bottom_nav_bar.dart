@@ -30,7 +30,7 @@ class AppBottomNavBar extends StatelessWidget {
   static const int emphasizedIndex = 2;
 
   static const double _normalSize = 44;
-  static const double _emphasizedSize = 44;
+  static const double _emphasizedSize = 50;
 
   const AppBottomNavBar({
     super.key,
@@ -69,7 +69,7 @@ class AppBottomNavBar extends StatelessWidget {
             child: AnimatedSlide(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOut,
-              offset: isSelected && isEmphasized ? Offset.zero : Offset.zero,
+              offset: Offset.zero,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,

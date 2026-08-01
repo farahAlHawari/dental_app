@@ -12,6 +12,10 @@ class AppointmentStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = status.color;
+    // النقطة الصغيرة منيح تضل بلونها الأصلي (زخرفة بس)، بس النص لازم
+    // يقرا منيح فوق الخلفية الفاتحة تبعه - فبنغمّقه شوي هون بنفس تقنية
+    // readableAccent يلي استخدمناها بأماكن تانية بالمشروع.
+    final textColor = Color.alphaBlend(Colors.black.withOpacity(0.2), color);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -31,7 +35,7 @@ class AppointmentStatusBadge extends StatelessWidget {
           Text(
             status.labelKey.tr(),
             style: TextStyle(
-              color: color,
+              color: textColor,
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),

@@ -16,10 +16,16 @@ class SelectDateTimePage extends StatefulWidget {
   final bool isReschedule;
   final void Function(DateTime date, String time)? onDateTimeSelected;
 
+  /// نوع الزيارة (أو اسم الجلسة لو مسار متابعة) يلي بيتعرض بشاشة تأكيد
+  /// الحجز بعدها. مش لازمة بوضع isReschedule (ما في شاشة تأكيد جديدة
+  /// بهاد الوضع).
+  final String? visitTypeLabel;
+
   const SelectDateTimePage({
     super.key,
     this.isReschedule = false,
     this.onDateTimeSelected,
+    this.visitTypeLabel,
   });
 
   @override
@@ -147,7 +153,9 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          (widget.isReschedule ? 'Reschedule Appointment' : 'Book New Appointment')
+          (widget.isReschedule
+                  ? 'Reschedule Appointment'
+                  : 'Book New Appointment')
               .tr(),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
@@ -176,8 +184,7 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                         children: [
                           if (!widget.isReschedule) ...[
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
                                   'Select Date & Time'.tr(),
@@ -253,8 +260,17 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: colors.primary.withOpacity(0.1),
+                                  color: colors.surface,
                                   borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colors.shadow.withOpacity(
+                                        isDark ? 0.30 : 0.10,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
                                 child: Text(
                                   _monthHeaderLabel,
@@ -516,7 +532,8 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                                   MaterialPageRoute(
                                     builder: (context) => BookingConfirmationPage(
                                       visitTypeLabel:
-                                          'موعد استشارة', // TODO: مؤقت لحد ما نربط القيمة الحقيقية من شاشة نوع الزيارة
+                                          widget.visitTypeLabel ??
+                                          'موعد استشارة', // احتياطي لو ما انمررت من الشاشة السابقة
                                       date: _availableDays[_selectedDayIndex],
                                       time: _selectedTime!,
                                       onConfirm: () {

@@ -1,4 +1,5 @@
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/features/appointments/presentation/pages/select_date_time_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/bookable_session_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -26,8 +27,12 @@ class SelectFollowUpSessionPage extends StatelessWidget {
   ];
 
   void _onBookSession(BuildContext context, BookableSession session) {
-    // TODO: navigate to the date & time selection page, passing the
-    // chosen session along.
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelectDateTimePage(visitTypeLabel: session.title),
+      ),
+    );
   }
 
   @override

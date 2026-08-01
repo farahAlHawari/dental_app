@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 /// التيكست بوكس. الخطوة 2 من 3 (بعد اختيار نوع الزيارة، قبل اختيار
 /// الوقت والتاريخ).
 class ConsultationReasonPage extends StatefulWidget {
-  const ConsultationReasonPage({super.key});
+  final String visitTypeLabel;
+
+  const ConsultationReasonPage({super.key, required this.visitTypeLabel});
 
   @override
   State<ConsultationReasonPage> createState() => _ConsultationReasonPageState();
@@ -219,7 +221,10 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              SelectDateTimePage(),
+                                              SelectDateTimePage(
+                                                visitTypeLabel:
+                                                    widget.visitTypeLabel,
+                                              ),
                                         ),
                                       );
                                     }
