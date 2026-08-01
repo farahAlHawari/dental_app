@@ -129,6 +129,46 @@
 "Thursday": "الخميس",
 "Friday": "الجمعة",
 "Saturday": "السبت",
-"Sunday": "الأحد"
+"Sunday": "الأحد",
+"My Appointments": "مواعيدي",
+"My Profile": "ملفي الشخصي",
+"Home": "الرئيسية",
+"My Treatment Plans": "خططي العلاجية",
+"Promotional Gallery": "المعرض التسويقي",
+
+"Upcoming": "القادمة",
+"Previous": "السابقة",
+
+"Pending Confirmation": "قيد الانتظار",
+"Confirmed": "مؤكد",
+"Checked In": "وصل العيادة",
+"In Treatment": "قيد المعالجة",
+"Completed": "مكتمل",
+"Cancelled": "ملغى",
+"No Show": "لم يحضر",
+
+"Cancel Appointment": "إلغاء الموعد",
+"Reschedule Appointment": "تعديل الموعد",
+"Confirm New Date": "تأكيد الموعد الجديد",
+
+"Cancel this appointment?": "إلغاء هذا الموعد؟",
+"Are you sure you want to cancel this appointment? This action cannot be undone.": "هل أنت متأكد من إلغاء هذا الموعد؟ لا يمكن التراجع عن هذا الإجراء.",
+"Yes, Cancel": "نعم، إلغاء",
+"Keep Appointment": "الاحتفاظ بالموعد",
+
+"No upcoming appointments": "لا توجد مواعيد قادمة",
+"No previous visits yet": "لا توجد زيارات سابقة بعد",
+
+"Need a periodic checkup?": "تحتاج إلى فحص دوري؟",
+"Browse": "تصفح الحالة",
+
+"Before": "قبل",
+"After": "بعد",
+"Teeth Whitening": "تبييض الأسنان",
+"Professional teeth whitening completed successfully.\nSwipe the slider to compare the result.": "تم تبييض الأسنان بشكل احترافي بنجاح.\nحرّك السلايدر لمقارنة النتيجة.",
+"See the real result of our teeth whitening treatment. Drag the slider to compare before and after!": "شوفوا بعينكن نتيجة تبييض الأسنان الحقيقية. حرّكوا السلايدر لتقارنوا بين قبل وبعد!",
+
+"AM": "ص",
+"PM": "م"
 
 }

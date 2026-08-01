@@ -3,6 +3,7 @@ import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
+import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
 import 'package:dental_app/features/reset_password/presentation/insert_phonenumber_page.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -253,8 +254,15 @@ class _LoginPageState extends State<LoginPage>
 
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      context.read<ThemeBloc>().add(
-                                        ToggleTheme(),
+                                      // context.read<ThemeBloc>().add(
+                                      //   ToggleTheme(),
+                                      // );
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              MainNavigationPage(),
+                                        ),
                                       );
                                     },
 
@@ -349,18 +357,18 @@ class _LoginPageState extends State<LoginPage>
                                         ),
                                       ),
                                     ),
-                                    ElevatedButton(
-                                      child: Text("حجز موعد"),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                SelectVisitTypePage(),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                    // ElevatedButton(
+                                    //   child: Text("حجز موعد"),
+                                    //   onPressed: () {
+                                    //     Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //         builder: (context) =>
+                                    //             SelectVisitTypePage(),
+                                    //       ),
+                                    //     );
+                                    //   },
+                                    // ),
                                   ],
                                 ),
                               ],

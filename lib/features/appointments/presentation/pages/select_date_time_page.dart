@@ -7,8 +7,20 @@ import 'package:flutter/material.dart';
 /// بيوصلوا هون. الخطوة 3 من 3. بيقدر المريض يحجز بس ضمن الأيام السبعة
 /// القادمة، فما في تنقل بين شهور فعلي - إذا الأيام السبعة امتدت عبر
 /// شهرين، بس بيتحسب ذلك تلقائياً وينعرض كنص فوق صف الأيام.
+///
+/// نفس الشاشة معادة استخدامها لإعادة جدولة موعد موجود (`isReschedule =
+/// true`) - بهالوضع ما منعرض شريط تقدّم الخطوات (مش جزء من مسار حجز
+/// جديد)، وعند التأكيد منرجع التاريخ/الوقت المختارين مباشرة عبر
+/// [onDateTimeSelected] بدل ما نفتح شاشة تأكيد الحجز.
 class SelectDateTimePage extends StatefulWidget {
-  const SelectDateTimePage({super.key});
+  final bool isReschedule;
+  final void Function(DateTime date, String time)? onDateTimeSelected;
+
+  const SelectDateTimePage({
+    super.key,
+    this.isReschedule = false,
+    this.onDateTimeSelected,
+  });
 
   @override
   State<SelectDateTimePage> createState() => _SelectDateTimePageState();
@@ -135,7 +147,8 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          'Book New Appointment'.tr(),
+          (widget.isReschedule ? 'Reschedule Appointment' : 'Book New Appointment')
+              .tr(),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: colors.onSurface,
@@ -161,45 +174,47 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Select Date & Time'.tr(),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colors.onSurface.withOpacity(0.7),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                'Step 3 of 3'.tr(),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0, end: 1),
-                              duration: const Duration(milliseconds: 700),
-                              curve: Curves.easeOutCubic,
-                              builder: (context, value, _) =>
-                                  LinearProgressIndicator(
-                                    value: value,
-                                    minHeight: 6,
-                                    backgroundColor: colors.primary.withOpacity(
-                                      0.15,
-                                    ),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      colors.primary,
-                                    ),
+                          if (!widget.isReschedule) ...[
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Select Date & Time'.tr(),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colors.onSurface.withOpacity(0.7),
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                ),
+                                Text(
+                                  'Step 3 of 3'.tr(),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                            const SizedBox(height: 10),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0, end: 1),
+                                duration: const Duration(milliseconds: 700),
+                                curve: Curves.easeOutCubic,
+                                builder: (context, value, _) =>
+                                    LinearProgressIndicator(
+                                      value: value,
+                                      minHeight: 6,
+                                      backgroundColor: colors.primary
+                                          .withOpacity(0.15),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        colors.primary,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                          ],
 
                           const SizedBox(height: 28),
 
@@ -488,6 +503,14 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                         // ),
                         onPressed: _selectedTime != null
                             ? () {
+                                if (widget.isReschedule) {
+                                  widget.onDateTimeSelected?.call(
+                                    _availableDays[_selectedDayIndex],
+                                    _selectedTime!,
+                                  );
+                                  Navigator.of(context).pop();
+                                  return;
+                                }
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -515,7 +538,10 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                           ),
                         ),
                         label: Text(
-                          'Continue to confirm booking'.tr(),
+                          (widget.isReschedule
+                                  ? 'Confirm New Date'
+                                  : 'Continue to confirm booking')
+                              .tr(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,

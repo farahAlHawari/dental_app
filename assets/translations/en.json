@@ -130,9 +130,46 @@
 "Thursday": "Thursday",
 "Friday": "Friday",
 "Saturday": "Saturday",
-"Sunday": "Sunday"
+"Sunday": "Sunday",
+"My Appointments": "My Appointments",
+"My Profile": "My Profile",
+"Home": "Home",
+"My Treatment Plans": "My Treatment Plans",
+"Promotional Gallery": "Promotional Gallery",
 
+"Upcoming": "Upcoming",
+"Previous": "Previous",
 
- 
+"Pending Confirmation": "Pending Confirmation",
+"Confirmed": "Confirmed",
+"Checked In": "Checked In",
+"In Treatment": "In Treatment",
+"Completed": "Completed",
+"Cancelled": "Cancelled",
+"No Show": "No Show",
+
+"Cancel Appointment": "Cancel Appointment",
+"Reschedule Appointment": "Reschedule Appointment",
+"Confirm New Date": "Confirm New Date",
+
+"Cancel this appointment?": "Cancel this appointment?",
+"Are you sure you want to cancel this appointment? This action cannot be undone.": "Are you sure you want to cancel this appointment? This action cannot be undone.",
+"Yes, Cancel": "Yes, Cancel",
+"Keep Appointment": "Keep Appointment",
+
+"No upcoming appointments": "No upcoming appointments",
+"No previous visits yet": "No previous visits yet",
+
+"Need a periodic checkup?": "Need a periodic checkup?",
+"Browse": "Browse",
+
+"Before": "Before",
+"After": "After",
+"Teeth Whitening": "Teeth Whitening",
+"Professional teeth whitening completed successfully.\nSwipe the slider to compare the result.": "Professional teeth whitening completed successfully.\nSwipe the slider to compare the result.",
+"See the real result of our teeth whitening treatment. Drag the slider to compare before and after!": "See the real result of our teeth whitening treatment. Drag the slider to compare before and after!",
+
+"AM": "AM",
+"PM": "PM"
 
 }

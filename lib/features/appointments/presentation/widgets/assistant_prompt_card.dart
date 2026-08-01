@@ -97,7 +97,7 @@ class _AssistantPromptCardState extends State<AssistantPromptCard>
                 width: 64,
                 height: 64,
                 child: Lottie.asset(
-                  'assets/animations/chat_assistant.json',
+                  'assets/animations/ai_bot_dental.json',
                   repeat: true,
                   errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.smart_toy_outlined,

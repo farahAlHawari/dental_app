@@ -36,6 +36,7 @@ class _VisitTypeCardState extends State<VisitTypeCard> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -54,7 +55,7 @@ class _VisitTypeCardState extends State<VisitTypeCard> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: colors.shadow,
+                color: colors.shadow.withOpacity(isDark ? 0.35 : 0.12),
                 blurRadius: 14,
                 offset: const Offset(0, 5),
               ),
