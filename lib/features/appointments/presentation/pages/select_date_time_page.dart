@@ -2,6 +2,8 @@ import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/features/appointments/presentation/pages/booking_confirmation_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:dental_app/features/appointments/presentation/utils/appointment_date_format.dart'
+    as date_fmt;
 
 /// شاشة اختيار اليوم والوقت — نهاية مسار الاستشارة ومسار المتابعة الاثنين
 /// بيوصلوا هون. الخطوة 3 من 3. بيقدر المريض يحجز بس ضمن الأيام السبعة
@@ -34,20 +36,20 @@ class SelectDateTimePage extends StatefulWidget {
 
 class _SelectDateTimePageState extends State<SelectDateTimePage> {
   static const _weekdayKeys = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  static const _monthKeys = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  // static const _monthKeys = [
+  //   'January',
+  //   'February',
+  //   'March',
+  //   'April',
+  //   'May',
+  //   'June',
+  //   'July',
+  //   'August',
+  //   'September',
+  //   'October',
+  //   'November',
+  //   'December',
+  // ];
 
   // TODO: بيانات تجريبية لحد ما توصل الشاشة مع الـ backend الحقيقي - كل
   // يوم المفروض يجيب أوقاته المتاحة الفعلية من السيرفر (ومنطقياً لازم
@@ -118,7 +120,8 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
     return _weekdayKeys[date.weekday - 1].tr();
   }
 
-  String _monthLabel(DateTime date) => _monthKeys[date.month - 1].tr();
+  // String _monthLabel(DateTime date) => _monthKeys[date.month - 1].tr();
+  String _monthLabel(DateTime date) => date_fmt.monthKeys[date.month - 1].tr();
 
   String get _monthHeaderLabel {
     final months = <String>{};
@@ -483,7 +486,7 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          time,
+                                          date_fmt.formatMockTimeLabel(time),
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,

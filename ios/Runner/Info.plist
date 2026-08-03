@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>نحتاج الوصول للكاميرا لمسح رمز QR بالعيادة لتأكيد وصولك تلقائياً.</string>
 </dict>
 </plist>

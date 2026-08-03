@@ -170,6 +170,51 @@
 "See the real result of our teeth whitening treatment. Drag the slider to compare before and after!": "See the real result of our teeth whitening treatment. Drag the slider to compare before and after!",
 
 "AM": "AM",
-"PM": "PM"
+"PM": "PM",
+"Scan QR to confirm your arrival": "Scan QR to confirm your arrival",
+"Awaiting clinic confirmation": "Awaiting clinic confirmation",
+"In {days} days": "In {days} days",
+
+"Scan QR to Check In": "Scan QR to Check In",
+"Attendance Confirmed": "Attendance Confirmed",
+"Your arrival at the clinic has been confirmed successfully.": "Your arrival at the clinic has been confirmed successfully.",
+"Done": "Done",
+"Point your camera at the QR code at reception": "Point your camera at the QR code at reception",
+"Your arrival will be confirmed automatically": "Your arrival will be confirmed automatically",
+"Need help?": "Need help?",
+"Enter code manually": "Enter code manually",
+"Reception code": "Reception code",
+"Could not access the camera. Please check camera permission.": "Could not access the camera. Please check camera permission.",
+
+"Welcome": "Welcome",
+"My Medical Record": "My Medical Record",
+"Book Appointment": "Book Appointment",
+"Emergency Appointment": "Emergency Appointment",
+"Invoices": "Invoices",
+"Upcoming Appointment": "Upcoming Appointment",
+"Date & Time": "Date & Time",
+"Your Active Treatment Plan": "Your Active Treatment Plan",
+"Session {current} of {total}": "Session {current} of {total}",
+"Completion Rate": "Completion Rate",
+"Treatment Plan Details": "Treatment Plan Details",
+"Chat with your personal smart assistant": "Chat with your personal smart assistant",
+"Ask any medical question, describe your pain, or report your concern instantly.": "Ask any medical question, describe your pain, or report your concern instantly.",
+"Start chatting now": "Start chatting now",
+
+"Our Clinic": "Our Clinic",
+"Did you know? Replacing your toothbrush every 3 months helps keep your gums healthy and prevents bacteria buildup.": "Did you know? Replacing your toothbrush every 3 months helps keep your gums healthy and prevents bacteria buildup.",
+"Special offer this month: 20% off teeth whitening sessions. Contact the clinic to book your appointment.": "Special offer this month: 20% off teeth whitening sessions. Contact the clinic to book your appointment.",
+"Reminder: regular check-ups every 6 months are key to catching dental issues early.": "Reminder: regular check-ups every 6 months are key to catching dental issues early.",
+
+"Pain Consultation": "Pain Consultation",
+"Cleaning & Polishing": "Cleaning & Polishing",
+"Orthodontic Follow-up": "Orthodontic Follow-up",
+"Tooth Filling": "Tooth Filling",
+"Routine Check-up & Cleaning": "Routine Check-up & Cleaning",
+"Wisdom Tooth Extraction": "Wisdom Tooth Extraction",
+"Cosmetic Dentistry Consultation": "Cosmetic Dentistry Consultation",
+"General Dentist": "General Dentist",
+"Teeth Cleaning": "Teeth Cleaning",
+"Metal Braces": "Metal Braces"
 
 }

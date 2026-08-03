@@ -20,6 +20,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   // بتبلش الشاشة عالرئيسية (نفس index العنصر المبرز بالناف بار).
   int _currentIndex = AppBottomNavBar.emphasizedIndex;
 
+  // بيزيد وحدة كل ما ندخل عالرئيسية - منمررها كـ key لكارد الخطة
+  // العلاجية بالرئيسية حتى يعيد أنيميشن شريط التقدم من الصفر كل مرة
+  // (بدل ما يشتغل مرة وحدة بس أول ما تفتح التطبيق).
+  int _homeVisitCount = 0;
+
   // نفس ترتيب أيقونات AppBottomNavBar بالظبط.
   static const List<String> _tabTitleKeys = [
     'My Profile',
@@ -28,6 +33,15 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     'My Treatment Plans',
     'Promotional Gallery',
   ];
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+      if (index == AppBottomNavBar.emphasizedIndex) {
+        _homeVisitCount++;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,14 +56,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           const ProfilePage(), // ملفي الشخصي - جاهزة
           const MyAppointmentsPage(), // مواعيدي - جاهزة
 
-          const HomePage(), // الرئيسية
+          HomePage(homeVisitCount: _homeVisitCount), // الرئيسية
           _PlaceholderTab(titleKey: _tabTitleKeys[3]), // خططي العلاجية
           const PromotionalGalleryPage(), // المعرض التسويقي
         ],
       ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _onTabTapped,
       ),
     );
   }

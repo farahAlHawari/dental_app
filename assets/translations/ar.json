@@ -169,6 +169,51 @@
 "See the real result of our teeth whitening treatment. Drag the slider to compare before and after!": "شوفوا بعينكن نتيجة تبييض الأسنان الحقيقية. حرّكوا السلايدر لتقارنوا بين قبل وبعد!",
 
 "AM": "ص",
-"PM": "م"
+"PM": "م",
+"Scan QR to confirm your arrival": "امسح رمز QR لتأكيد وصولك",
+"Awaiting clinic confirmation": "بانتظار تأكيد العيادة",
+"In {days} days": "خلال {days} أيام",
+
+"Scan QR to Check In": "امسح QR لتسجيل الوصول",
+"Attendance Confirmed": "تم تأكيد الحضور",
+"Your arrival at the clinic has been confirmed successfully.": "تم تأكيد وصولك للعيادة بنجاح.",
+"Done": "تم",
+"Point your camera at the QR code at reception": "وجّه الكاميرا نحو رمز QR في الاستقبال",
+"Your arrival will be confirmed automatically": "سيتم تأكيد وصولك للعيادة تلقائياً",
+"Need help?": "تحتاج مساعدة؟",
+"Enter code manually": "أدخل الكود يدوياً",
+"Reception code": "كود الاستقبال",
+"Could not access the camera. Please check camera permission.": "تعذّر الوصول للكاميرا. يرجى التحقق من صلاحية الكاميرا.",
+
+"Welcome": "أهلاً بك",
+"My Medical Record": "ملفي الطبي",
+"Book Appointment": "حجز موعد",
+"Emergency Appointment": "موعد طارئ",
+"Invoices": "الفواتير",
+"Upcoming Appointment": "الموعد القادم",
+"Date & Time": "التاريخ والوقت",
+"Your Active Treatment Plan": "خطتك العلاجية النشطة",
+"Session {current} of {total}": "الجلسة {current} من {total}",
+"Completion Rate": "نسبة الإنجاز",
+"Treatment Plan Details": "تفاصيل الخطة العلاجية",
+"Chat with your personal smart assistant": "تحدث مع مساعدك الشخصي الذكي",
+"Ask any medical question, describe your pain, or report your concern instantly.": "اطرح أي سؤال طبي، أو صف ألمك، أو أبلغ عن مشكلتك فوراً.",
+"Start chatting now": "ابدأ المحادثة الآن",
+
+"Our Clinic": "عيادتنا",
+"Did you know? Replacing your toothbrush every 3 months helps keep your gums healthy and prevents bacteria buildup.": "هل تعلم؟ استبدال فرشاة أسنانك كل 3 أشهر يساعد في الحفاظ على صحة لثتك ويمنع تراكم البكتيريا.",
+"Special offer this month: 20% off teeth whitening sessions. Contact the clinic to book your appointment.": "عرض خاص هذا الشهر: خصم 20% على جلسات تبييض الأسنان. تواصل مع العيادة لحجز موعدك.",
+"Reminder: regular check-ups every 6 months are key to catching dental issues early.": "تذكير: الفحص الدوري كل 6 أشهر مهم للكشف المبكر عن مشاكل الأسنان.",
+
+"Pain Consultation": "استشارة ألم",
+"Cleaning & Polishing": "تنظيف وتلميع",
+"Orthodontic Follow-up": "متابعة تقويم الأسنان",
+"Tooth Filling": "حشوة ضرس",
+"Routine Check-up & Cleaning": "فحص وتنظيف دوري",
+"Wisdom Tooth Extraction": "خلع ضرس العقل",
+"Cosmetic Dentistry Consultation": "استشارة تجميل أسنان",
+"General Dentist": "طبيب أسنان عام",
+"Teeth Cleaning": "تنظيف الأسنان",
+"Metal Braces": "تقويم معدني"
 
 }

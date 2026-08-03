@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 import 'models/appointment_model.dart';
 import 'models/appointment_status.dart';
 
@@ -6,9 +8,10 @@ import 'models/appointment_status.dart';
 /// القائمة هون بتغطي كل حالة من حالات دورة حياة الموعد السبعة، حتى نتأكد
 /// الديزاين والشارات صح بكل حالة.
 ///
-/// العيادة فيها طبيب واحد بس، فكل المواعيد إلها نفس الطبيب.
+/// العيادة فيها طبيب واحد بس، فكل المواعيد إلها نفس الطبيب. اسم الطبيب
+/// (اسم علم) بضل عربي، بس الاختصاص مترجم متل باقي نصوص الواجهة.
 const String _doctorName = 'د. سمير إبراهيم';
-const String _doctorSpecialty = 'طبيب أسنان عام';
+String get _doctorSpecialty => 'General Dentist'.tr();
 
 List<Appointment> buildMockAppointments() {
   final now = DateTime.now();
@@ -17,7 +20,7 @@ List<Appointment> buildMockAppointments() {
     // قيد الانتظار - بانتظار تأكيد العيادة (auto confirmation = off).
     Appointment(
       id: 'apt-1',
-      visitTypeLabel: 'استشارة ألم',
+      visitTypeLabel: 'Pain Consultation'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.add(const Duration(days: 3, hours: 2)),
@@ -27,7 +30,7 @@ List<Appointment> buildMockAppointments() {
     // مؤكد - جاهز، بيقدر المريض يلغيه أو يعدله.
     Appointment(
       id: 'apt-2',
-      visitTypeLabel: 'تنظيف وتلميع',
+      visitTypeLabel: 'Cleaning & Polishing'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.add(const Duration(days: 6, hours: 5)),
@@ -38,7 +41,7 @@ List<Appointment> buildMockAppointments() {
     // وصل العيادة (Check-In) - بانتظار دوره لعند الطبيب.
     Appointment(
       id: 'apt-3',
-      visitTypeLabel: 'متابعة تقويم الأسنان',
+      visitTypeLabel: 'Orthodontic Follow-up'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.add(const Duration(hours: 1)),
@@ -49,7 +52,7 @@ List<Appointment> buildMockAppointments() {
     // فات لعند الطبيب وجاري تنفيذ الجلسة حالياً.
     Appointment(
       id: 'apt-4',
-      visitTypeLabel: 'حشوة ضرس',
+      visitTypeLabel: 'Tooth Filling'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.subtract(const Duration(minutes: 20)),
@@ -59,7 +62,7 @@ List<Appointment> buildMockAppointments() {
     // مواعيد سابقة - مكتمل.
     Appointment(
       id: 'apt-5',
-      visitTypeLabel: 'فحص وتنظيف دوري',
+      visitTypeLabel: 'Routine Check-up & Cleaning'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.subtract(const Duration(days: 10)),
@@ -67,7 +70,7 @@ List<Appointment> buildMockAppointments() {
     ),
     Appointment(
       id: 'apt-6',
-      visitTypeLabel: 'خلع ضرس العقل',
+      visitTypeLabel: 'Wisdom Tooth Extraction'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.subtract(const Duration(days: 45)),
@@ -77,7 +80,7 @@ List<Appointment> buildMockAppointments() {
     // ملغى - المريض ألغاه بنفسه قبل المهلة المسموحة.
     Appointment(
       id: 'apt-7',
-      visitTypeLabel: 'استشارة تجميل أسنان',
+      visitTypeLabel: 'Cosmetic Dentistry Consultation'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.subtract(const Duration(days: 5)),
@@ -87,7 +90,7 @@ List<Appointment> buildMockAppointments() {
     // لم يحضر - الجلسة العلاجية المرتبطة لسا جاهزة لإعادة الحجز.
     Appointment(
       id: 'apt-8',
-      visitTypeLabel: 'جلسة متابعة علاج العصب',
+      visitTypeLabel: 'Root Canal Follow-up Session'.tr(),
       doctorName: _doctorName,
       doctorSpecialty: _doctorSpecialty,
       scheduledAt: now.subtract(const Duration(days: 2)),

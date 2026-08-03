@@ -34,9 +34,7 @@ class _QuickActionCardState extends State<QuickActionCard> {
     final isDark = theme.brightness == Brightness.dark;
 
     final Color tint = widget.isDanger ? colors.error : colors.primary;
-    final Color background = widget.isDanger
-        ? colors.error.withOpacity(isDark ? 0.16 : 0.08)
-        : colors.surface;
+    final Color background = colors.surface; // نفس خلفية باقي الكرودات دايماً
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -50,18 +48,17 @@ class _QuickActionCardState extends State<QuickActionCard> {
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 14),
+          alignment: Alignment.center, // هون كان ناقص - هو سبب طلوعهم لفوق
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(18),
-            boxShadow: widget.isDanger
-                ? []
-                : [
-                    BoxShadow(
-                      color: colors.shadow.withOpacity(isDark ? 0.30 : 0.10),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color: colors.shadow.withOpacity(isDark ? 0.30 : 0.10),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -77,16 +74,16 @@ class _QuickActionCardState extends State<QuickActionCard> {
               ),
               const SizedBox(height: 10),
               Text(
-  widget.label,
-  textAlign: TextAlign.center,
-  maxLines: 2,
-  overflow: TextOverflow.ellipsis,
-  style: TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    color: widget.isDanger ? colors.error : colors.onSurface,
-  ),
-),
+                widget.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: widget.isDanger ? colors.error : colors.onSurface,
+                ),
+              ),
             ],
           ),
         ),

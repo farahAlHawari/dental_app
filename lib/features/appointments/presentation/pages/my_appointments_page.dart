@@ -1,9 +1,11 @@
+import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:dental_app/core/widgets/dialog.dart';
 import 'package:dental_app/features/appointments/data/mock_appointments_data.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_model.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_status.dart';
+import 'package:dental_app/features/appointments/presentation/pages/qr_checkin_scanner_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_date_time_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/appointment_card.dart';
@@ -86,6 +88,18 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
     );
   }
 
+  Future<void> _openQrCheckIn(Appointment appointment) async {
+    final checkedIn = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const QrCheckinScannerPage()),
+    );
+    if (checkedIn == true) {
+      _updateAppointment(
+        appointment.copyWith(status: AppointmentStatus.checkedIn),
+      );
+    }
+  }
+
   ({int hour, int minute}) _parseTimeOfDay(String label) {
     // متوقع شكل "9:00 AM" / "1:00 PM" - نفس الشكل يلي بيولده SelectDateTimePage.
     final isPm = label.toUpperCase().contains('PM');
@@ -124,6 +138,20 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
         ),
       ),
       backgroundColor: colors.surfaceContainerHighest,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90),
+        child: FloatingActionButton.extended(
+          onPressed: _openBooking,
+          backgroundColor: colors.primary,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add_rounded),
+          label: Text(
+            'Book New Appointment'.tr(),
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -161,28 +189,24 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
                                 16,
                                 10,
                                 16,
-                                110,
+                                90,
                               ),
-                              itemCount:
-                                  items.length + (_tabIndex == 0 ? 1 : 0),
+                              itemCount: items.length,
                               itemBuilder: (context, index) {
-                                if (_tabIndex == 0 && index == items.length) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: _BookAppointmentButton(
-                                      onTap: _openBooking,
-                                    ),
-                                  );
-                                }
-
                                 final appointment = items[index];
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 14),
-                                  child: AppointmentCard(
-                                    appointment: appointment,
-                                    onCancel: () => _confirmCancel(appointment),
-                                    onReschedule: () =>
-                                        _openReschedule(appointment),
+                                  child: FadeSlideIn(
+                                    delay: Duration(milliseconds: 60 * index),
+                                    child: AppointmentCard(
+                                      appointment: appointment,
+                                      onCancel: () =>
+                                          _confirmCancel(appointment),
+                                      onReschedule: () =>
+                                          _openReschedule(appointment),
+                                      onScanQr: () =>
+                                          _openQrCheckIn(appointment),
+                                    ),
                                   ),
                                 );
                               },
@@ -239,36 +263,36 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-/// زر حجز موعد جديد - يظهر بس بنص الواجهة بعد آخر كرت بتبويب "القادمة".
-class _BookAppointmentButton extends StatelessWidget {
-  final VoidCallback onTap;
+// /// زر حجز موعد جديد - يظهر بس بنص الواجهة بعد آخر كرت بتبويب "القادمة".
+// class _BookAppointmentButton extends StatelessWidget {
+//   final VoidCallback onTap;
 
-  const _BookAppointmentButton({required this.onTap});
+//   const _BookAppointmentButton({required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+//   @override
+//   Widget build(BuildContext context) {
+//     final colors = Theme.of(context).colorScheme;
 
-    return Center(
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-        label: Text(
-          'Book New Appointment'.tr(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: colors.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-      ),
-    );
-  }
-}
+//     return Center(
+//       child: ElevatedButton.icon(
+//         onPressed: onTap,
+//         icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+//         label: Text(
+//           'Book New Appointment'.tr(),
+//           style: const TextStyle(
+//             color: Colors.white,
+//             fontWeight: FontWeight.w700,
+//           ),
+//         ),
+//         style: ElevatedButton.styleFrom(
+//           backgroundColor: colors.primary,
+//           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
+//           elevation: 0,
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(30),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

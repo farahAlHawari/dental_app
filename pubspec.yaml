@@ -44,6 +44,7 @@ dependencies:
   easy_localization: ^3.0.8
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
+  mobile_scanner: ^7.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

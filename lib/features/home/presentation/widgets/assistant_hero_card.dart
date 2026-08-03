@@ -59,66 +59,66 @@ class _AssistantHeroCardState extends State<AssistantHeroCard>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-  crossAxisAlignment: CrossAxisAlignment.center,
-  children: [
-    AnimatedBuilder(
-      animation: _glowController,
-      builder: (context, child) {
-        final glow = _glowController.value;
-        return Container(
-          width: 68,
-          height: 96,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.16 + glow * 0.10),
-            borderRadius: BorderRadius.circular(20),
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _glowController,
+                builder: (context, child) {
+                  final glow = _glowController.value;
+                  return Container(
+                    width: 68,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.16 + glow * 0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: child,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Lottie.asset(
+                    'assets/animations/Ai_Robot.json',
+                    repeat: true,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.smart_toy_outlined,
+                      color: Colors.white,
+                      size: 34,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Chat with your personal smart assistant'.tr(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Ask any medical question, describe your pain, or report your concern instantly.'
+                          .tr(),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.5,
+                        color: Colors.white.withOpacity(0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: child,
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Lottie.asset(
-          'assets/animations/Ai_Robot.json',
-          repeat: true,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.smart_toy_outlined,
-            color: Colors.white,
-            size: 34,
-          ),
-        ),
-      ),
-    ),
-    const SizedBox(width: 14),
-    Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Chat with your personal smart assistant'.tr(),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Ask any medical question, describe your pain, or report your concern instantly.'
-                .tr(),
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.5,
-              color: Colors.white.withOpacity(0.85),
-            ),
-          ),
-        ],
-      ),
-    ),
-  ],
-),
-         
+
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,

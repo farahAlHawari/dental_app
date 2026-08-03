@@ -51,49 +51,52 @@ class ActiveTreatmentPlanCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Expanded(
-      child: Text(
-        'Your Active Treatment Plan'.tr(),
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: colors.onSurface,
-        ),
-      ),
-    ),
-    const SizedBox(width: 8),
-    Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        'Session {current} of {total}'.tr(
-          namedArgs: {
-            'current': '$currentSession',
-            'total': '$totalSessions',
-          },
-        ),
-        style: TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-          color: badgeColor,
-        ),
-      ),
-    ),
-  ],
-),
-const SizedBox(height: 4),
-Text(
-  planName,
-  style: TextStyle(
-    fontSize: 13,
-    color: colors.onSurface.withOpacity(0.6),
-  ),
-),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'Your Active Treatment Plan'.tr(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: badgeColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Session {current} of {total}'.tr(
+                    namedArgs: {
+                      'current': '$currentSession',
+                      'total': '$totalSessions',
+                    },
+                  ),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: badgeColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            planName,
+            style: TextStyle(
+              fontSize: 13,
+              color: colors.onSurface.withOpacity(0.6),
+            ),
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -118,15 +121,35 @@ Text(
           const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: progress),
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => LinearProgressIndicator(
-                value: value,
-                minHeight: 8,
-               backgroundColor: colors.primary.withOpacity(0.15),
-valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+            child: SizedBox(
+              height: 8,
+              child: Stack(
+                children: [
+                  Container(color: colors.primary.withOpacity(0.15)),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: progress),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => FractionallySizedBox(
+                      alignment: AlignmentDirectional.centerStart,
+                      widthFactor: value,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          // متدرج بين لونين بدل لون واحد فلات.
+                          gradient: LinearGradient(
+                            colors: [
+                              colors.primary,
+                              colors.secondary,
+                              colors.tertiary,
+                            ],
+                            begin: AlignmentDirectional.centerStart,
+                            end: AlignmentDirectional.centerEnd,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
