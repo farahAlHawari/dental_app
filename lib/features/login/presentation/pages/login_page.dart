@@ -257,12 +257,16 @@ class _LoginPageState extends State<LoginPage>
                                       // context.read<ThemeBloc>().add(
                                       //   ToggleTheme(),
                                       // );
-                                      Navigator.push(
+                                      Navigator.pushAndRemoveUntil(
                                         context,
                                         MaterialPageRoute(
+                                          settings: const RouteSettings(
+                                            name: MainNavigationPage.routeName,
+                                          ),
                                           builder: (context) =>
-                                              MainNavigationPage(),
+                                              const MainNavigationPage(),
                                         ),
+                                        (route) => false,
                                       );
                                     },
 

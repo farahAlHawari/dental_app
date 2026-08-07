@@ -41,7 +41,7 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
@@ -50,7 +50,7 @@ class AppBottomNavBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow,
+            color: colors.shadow.withOpacity(0.40),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),

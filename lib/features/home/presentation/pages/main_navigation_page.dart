@@ -12,11 +12,25 @@ import 'package:flutter/material.dart';
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
+  /// اسم الراوت لحتى نقدر نرجّع له من مسار الحجز بدون ما نطلع
+  /// لشاشات الأونبوردنغ/اللغة/تسجيل الدخول يلي تحتها بالستاك.
+  static const String routeName = '/main';
+
+  /// index تبويب "مواعيدي" بنفس ترتيب IndexedStack / الناف بار.
+  static const int appointmentsTabIndex = 1;
+
+  /// بيتنادى من فوق مسار الحجز بعد التأكيد حتى نرجع للناف ونفتح مواعيدي.
+  static void goToAppointmentsTab() {
+    _MainNavigationPageState._instance?._goToTab(appointmentsTabIndex);
+  }
+
   @override
   State<MainNavigationPage> createState() => _MainNavigationPageState();
 }
 
 class _MainNavigationPageState extends State<MainNavigationPage> {
+  static _MainNavigationPageState? _instance;
+
   // بتبلش الشاشة عالرئيسية (نفس index العنصر المبرز بالناف بار).
   int _currentIndex = AppBottomNavBar.emphasizedIndex;
 
@@ -34,13 +48,30 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     'Promotional Gallery',
   ];
 
-  void _onTabTapped(int index) {
+  @override
+  void initState() {
+    super.initState();
+    _instance = this;
+  }
+
+  @override
+  void dispose() {
+    if (_instance == this) _instance = null;
+    super.dispose();
+  }
+
+  void _goToTab(int index) {
+    if (!mounted) return;
     setState(() {
       _currentIndex = index;
       if (index == AppBottomNavBar.emphasizedIndex) {
         _homeVisitCount++;
       }
     });
+  }
+
+  void _onTabTapped(int index) {
+    _goToTab(index);
   }
 
   @override

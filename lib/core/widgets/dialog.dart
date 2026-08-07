@@ -9,6 +9,11 @@ class CustomStatusDialog extends StatelessWidget {
   final String? cancelButtonText; // اختياري (إذا كان الديالوغ يحتاج زر إلغاء)
   final VoidCallback? onCancel;
 
+  /// true لحالات التحذير/الإجراءات اللي بترجع لورا (متل تأكيد إلغاء
+  /// موعد) - بيستبدل أنيميشن الاحتفال (confetti) بأيقونة تحذير بلون
+  /// error، لأنه مش منطقي نحتفل بإجراء المريض عم يفكر يلغي شي.
+  final bool isDestructive;
+
   const CustomStatusDialog({
     super.key,
     required this.title,
@@ -17,6 +22,7 @@ class CustomStatusDialog extends StatelessWidget {
     required this.onConfirm,
     this.cancelButtonText,
     this.onCancel,
+    this.isDestructive = false,
   });
 
   
@@ -28,6 +34,7 @@ class CustomStatusDialog extends StatelessWidget {
     required VoidCallback onConfirm,
     String? cancelButtonText,
     VoidCallback? onCancel,
+    bool isDestructive = false,
   }) {
     showDialog(
       context: context,
@@ -39,6 +46,7 @@ class CustomStatusDialog extends StatelessWidget {
         onConfirm: onConfirm,
         cancelButtonText: cancelButtonText,
         onCancel: onCancel,
+        isDestructive: isDestructive,
       ),
     );
   }
@@ -56,14 +64,24 @@ class CustomStatusDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min, // ليأخذ حجم المحتوى فقط ولا يملأ الشاشة
           children: [
             
-           LottieBuilder.asset("assets/animations/ss.json",width: 120,
-              height: 120,repeat: true,),
-            // Image.asset(
-            //   imagePath,
-            //   width: 120,
-            //   height: 120,
-            //   fit: BoxFit.contain,
-            // ),
+            if (isDestructive)
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.error.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                  size: 46,
+                ),
+              )
+            else
+              LottieBuilder.asset("assets/animations/ss.json",width: 120,
+                height: 120,repeat: true,),
+            const SizedBox(height: 12),
             
 
             // 2. العنوان الرئيسي

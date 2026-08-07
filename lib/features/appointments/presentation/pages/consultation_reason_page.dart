@@ -1,5 +1,6 @@
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/features/appointments/presentation/pages/chatbot_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_date_time_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/assistant_prompt_card.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -29,22 +30,24 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
   }
 
   Future<void> _startChat() async {
-    // TODO: لما تصير شاشة الشات بوت جاهزة، هون منعمل push إلها ومنستنى
-    // نتيجة من نوع String؟ (ملخص المحادثة يلي المفروض تولّده):
-    //
-    // final summary = await Navigator.push<String>(
-    //   context,
-    //   MaterialPageRoute(builder: (_) => const ChatbotPage()),
-    // );
-    // if (summary != null) setState(() => _chatSummary = summary);
-  }
-
-  void _useChatSummary() {
-    if (_chatSummary == null) return;
-    _reasonController.text = _chatSummary!;
-    _reasonController.selection = TextSelection.fromPosition(
-      TextPosition(offset: _reasonController.text.length),
+    // شات الحجز: كل فتح = جلسة جديدة (ما في تخزين). الملخص بيرجع
+    // بس لما المريض يكبس "إنهاء المحادثة واستخراج التشخيص".
+    final summary = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ChatbotPage(mode: ChatbotMode.booking),
+      ),
     );
+    if (summary != null && summary.isNotEmpty) {
+      setState(() {
+        _chatSummary = summary;
+        // تعبئة التيكست فيلد مباشرة — المريض يقدر يعدل قبل المتابعة.
+        _reasonController.text = summary;
+        _reasonController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _reasonController.text.length),
+        );
+      });
+    }
   }
 
   @override
@@ -156,7 +159,6 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
                       child: AssistantPromptCard(
                         hasChatSummary: _chatSummary != null,
                         onStartChat: _startChat,
-                        onUseSummary: _useChatSummary,
                       ),
                     ),
 

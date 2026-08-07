@@ -2,7 +2,7 @@ import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:dental_app/core/widgets/dialog.dart';
-import 'package:dental_app/features/appointments/data/mock_appointments_data.dart';
+import 'package:dental_app/features/appointments/data/mock_appointments_store.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_model.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_status.dart';
 import 'package:dental_app/features/appointments/presentation/pages/qr_checkin_scanner_page.dart';
@@ -22,8 +22,26 @@ class MyAppointmentsPage extends StatefulWidget {
 }
 
 class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
-  late List<Appointment> _appointments = buildMockAppointments();
+  final _store = MockAppointmentsStore.instance;
   int _tabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _store.addListener(_onStoreChanged);
+  }
+
+  @override
+  void dispose() {
+    _store.removeListener(_onStoreChanged);
+    super.dispose();
+  }
+
+  void _onStoreChanged() {
+    if (mounted) setState(() {});
+  }
+
+  List<Appointment> get _appointments => _store.appointments;
 
   List<Appointment> get _upcoming {
     final list = _appointments.where((a) => a.status.isUpcoming).toList();
@@ -38,11 +56,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
   }
 
   void _updateAppointment(Appointment updated) {
-    setState(() {
-      _appointments = _appointments
-          .map((a) => a.id == updated.id ? updated : a)
-          .toList();
-    });
+    _store.replace(updated);
   }
 
   void _confirmCancel(Appointment appointment) {
@@ -54,6 +68,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
               .tr(),
       confirmButtonText: 'Yes, Cancel'.tr(),
       cancelButtonText: 'Keep Appointment'.tr(),
+      isDestructive: true,
       onConfirm: () {
         Navigator.pop(context);
         _updateAppointment(

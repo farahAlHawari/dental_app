@@ -38,7 +38,7 @@ class ActiveTreatmentPlanCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
             color: colors.shadow.withOpacity(isDark ? 0.30 : 0.10),
@@ -140,7 +140,7 @@ class ActiveTreatmentPlanCard extends StatelessWidget {
                             colors: [
                               colors.primary,
                               colors.secondary,
-                              colors.tertiary,
+                              // colors.tertiary,
                             ],
                             begin: AlignmentDirectional.centerStart,
                             end: AlignmentDirectional.centerEnd,
