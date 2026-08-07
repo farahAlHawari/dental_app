@@ -1,37 +1,37 @@
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/features/appointments/presentation/utils/appointment_date_format.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:dental_app/core/widgets/success_check_animation.dart';
 
 /// آخر شاشة بمسار الحجز - ملخص نوع الزيارة والتاريخ والوقت، وزر تأكيد
 /// نهائي. ما إلها رقم خطوة (زي step 1/2/3) لأنها شاشة المراجعة الأخيرة
 /// مش خطوة إضافية بنفس تسلسل الحجز.
 class BookingConfirmationPage extends StatelessWidget {
-  static const List<String> _weekdayFullKeys = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  static const List<String> _monthKeys = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  // static const List<String> _weekdayFullKeys = [
+  //   'Monday',
+  //   'Tuesday',
+  //   'Wednesday',
+  //   'Thursday',
+  //   'Friday',
+  //   'Saturday',
+  //   'Sunday',
+  // ];
+  // static const List<String> _monthKeys = [
+  //   'January',
+  //   'February',
+  //   'March',
+  //   'April',
+  //   'May',
+  //   'June',
+  //   'July',
+  //   'August',
+  //   'September',
+  //   'October',
+  //   'November',
+  //   'December',
+  // ];
 
   final String visitTypeLabel;
   final DateTime date;
@@ -48,11 +48,13 @@ class BookingConfirmationPage extends StatelessWidget {
     this.onCancel,
   });
 
-  String get _formattedDate {
-    final weekday = _weekdayFullKeys[date.weekday - 1].tr();
-    final month = _monthKeys[date.month - 1].tr();
-    return '$weekday ${date.day} $month ${date.year}';
-  }
+  // String get _formattedDate {
+  //   final weekday = _weekdayFullKeys[date.weekday - 1].tr();
+  //   final month = _monthKeys[date.month - 1].tr();
+  //   return '$weekday ${date.day} $month ${date.year}';
+  // }
+
+  String get _formattedDate => formatAppointmentDate(date);
 
   Widget _summaryRow(
     BuildContext context, {
@@ -254,7 +256,7 @@ class BookingConfirmationPage extends StatelessWidget {
                                     context,
                                     icon: Icons.access_time_rounded,
                                     label: 'Time'.tr(),
-                                    value: time,
+                                    value: formatMockTimeLabel(time),
                                   ),
                                 ],
                               ),

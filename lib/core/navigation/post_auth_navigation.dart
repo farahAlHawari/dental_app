@@ -1,7 +1,7 @@
 import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
-import 'package:dental_app/core/widgets/home_page.dart';
+import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
 import 'package:dental_app/features/login/presentation/pages/login_page.dart';
 import 'package:dental_app/features/profile/data/datasources/patient_remote_data_source.dart';
 import 'package:dental_app/features/profile/domain/repositories/patient_repository_impl.dart';
@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 /// Single post-auth entry point.
 ///
 /// - No patients → PatientType (never restore a stale onboarding step)
-/// - Has patients → HomePage (restore selected patient when still valid)
+/// - Has patients → MainNavigationPage (restore selected patient when still valid)
 /// - Network / server failure → no navigation (caller shows retry)
 /// - 401 after refresh fail → Login (tokens already cleared by Dio)
 class PostAuthNavigation {
@@ -63,7 +63,10 @@ class PostAuthNavigation {
         );
         if (!context.mounted) return true;
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(
+            settings: const RouteSettings(name: MainNavigationPage.routeName),
+            builder: (_) => const MainNavigationPage(),
+          ),
           (route) => false,
         );
         return true;

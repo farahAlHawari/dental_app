@@ -1,24 +1,20 @@
-import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 /// كرت "المساعد الذكي" يلي بيطلع فوق التيكست بوكس مباشرة.
-/// - إذا ما في ملخص محادثة بعد: بيبين بس زر "تحدث مع المساعد".
-/// - أول ما يصير في ملخص (hasChatSummary = true): بيظهر تحته بحركة
-///   (AnimatedSize + fade) زر "استخدام ملخص المحادثة".
-/// - حول الكارد حلقة خفيفة "نابضة" (glow) بتنبّض ببطء - هدفها توحي
-///   إنه هاد الجزء تحديداً مدعوم بذكاء اصطناعي، بدون ما تكون صارخة.
+/// زر واحد لفتح الشات (أو متابعة المحادثة). الملخص بيتعبّى بالتيكست
+/// فيلد تلقائياً لما المريض ينهي المحادثة من جوا البوت — ما عاد في
+/// حاجة لزر "استخدام الملخص" المنفصل.
+/// حول الكارد حلقة خفيفة "نابضة" (glow) لتوحي إنه مدعوم بذكاء اصطناعي.
 class AssistantPromptCard extends StatefulWidget {
   final bool hasChatSummary;
   final VoidCallback onStartChat;
-  final VoidCallback onUseSummary;
 
   const AssistantPromptCard({
     super.key,
     required this.hasChatSummary,
     required this.onStartChat,
-    required this.onUseSummary,
   });
 
   @override
@@ -97,7 +93,7 @@ class _AssistantPromptCardState extends State<AssistantPromptCard>
                 width: 64,
                 height: 64,
                 child: Lottie.asset(
-                  'assets/animations/chat_assistant.json',
+                  'assets/animations/ai_bot_dental.json',
                   repeat: true,
                   errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.smart_toy_outlined,
@@ -153,33 +149,6 @@ class _AssistantPromptCardState extends State<AssistantPromptCard>
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            child: !widget.hasChatSummary
-                ? const SizedBox.shrink()
-                : Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: AnimatedOpacity(
-                      opacity: widget.hasChatSummary ? 1 : 0,
-                      duration: const Duration(milliseconds: 250),
-                      child: ElevatedButton.icon(
-                        onPressed: widget.onUseSummary,
-                        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                        label: Text('Use chat summary'.tr()),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: Colors.black.withOpacity(0.85),
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
           ),
         ],
       ),

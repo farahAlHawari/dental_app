@@ -132,7 +132,10 @@ class SelectVisitTypePage extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ConsultationReasonPage(),
+                              builder: (context) => ConsultationReasonPage(
+                                visitTypeLabel:
+                                    'Initial Consultation / First Visit'.tr(),
+                              ),
                             ),
                           );
                         },
