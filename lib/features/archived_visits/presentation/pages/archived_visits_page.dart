@@ -1,4 +1,5 @@
 import 'package:dental_app/core/utils/shared_prefs.dart';
+import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
 import 'package:dental_app/features/archived_visits/domain/session_rating_helper.dart';
 import 'package:dental_app/features/archived_visits/presentation/bloc/archived_visits_bloc.dart';
@@ -172,7 +173,7 @@ class _ArchivedVisitsViewState extends State<_ArchivedVisitsView> {
                 }
 
                 if (_sessions.isEmpty) {
-                  return Center(child: Text('No completed visits'.tr()));
+                  return EmptyListState(message: 'No completed visits'.tr());
                 }
 
                 return RefreshIndicator(

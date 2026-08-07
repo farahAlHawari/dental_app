@@ -1,4 +1,5 @@
 import 'package:dental_app/core/utils/shared_prefs.dart';
+import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
 import 'package:dental_app/features/medical_archive/domain/medical_archive_helper.dart';
 import 'package:dental_app/features/medical_archive/presentation/bloc/medical_archive_bloc.dart';
@@ -92,25 +93,7 @@ class _RadiographViewState extends State<_RadiographView> {
             }
 
             if (_items.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'No radiographs'.tr(),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _load,
-                        child: Text('Retry'.tr()),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              return EmptyListState(message: 'No radiographs'.tr());
             }
 
             return RefreshIndicator(
