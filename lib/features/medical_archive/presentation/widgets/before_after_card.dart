@@ -1,5 +1,6 @@
 import 'package:before_after/before_after.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class BeforeAfterCard extends StatefulWidget {
@@ -33,8 +34,8 @@ class _BeforeAfterCardState extends State<BeforeAfterCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Teeth Whitening",
+            Text(
+              "Teeth Whitening".tr(),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -77,14 +78,14 @@ class _BeforeAfterCardState extends State<BeforeAfterCard> {
                     Positioned(
                       top: 10,
                       left: 10,
-                      child: _ImageTag(text: "Before"),
+                      child: _ImageTag(text: "Before".tr()),
                     ),
 
                     
                     Positioned(
                       top: 10,
                       right: 10,
-                      child: _ImageTag(text: "After"),
+                      child: _ImageTag(text: "After".tr()),
                     ),
                   ],
                 ),
@@ -93,9 +94,8 @@ class _BeforeAfterCardState extends State<BeforeAfterCard> {
 
             const SizedBox(height: 12),
 
-            const Text(
-              "Professional teeth whitening completed successfully.\n"
-              "Swipe the slider to compare the result.",
+            Text(
+              "Professional teeth whitening completed successfully.\nSwipe the slider to compare the result.".tr(),
               style: TextStyle(fontSize: 14),
             ),
 

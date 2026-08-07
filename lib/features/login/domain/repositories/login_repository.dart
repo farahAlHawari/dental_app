@@ -6,4 +6,12 @@ abstract class LoginRepository {
     required String phone,
     required String password,
   });
+
+  // ================================
+  // NEW CODE START
+  // ================================
+  Future<Either<Failure, Map<String, dynamic>>> getMe();
+  // ================================
+  // NEW CODE END
+  // ================================
 }

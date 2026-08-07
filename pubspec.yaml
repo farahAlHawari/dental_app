@@ -46,6 +46,10 @@ dependencies:
   url_launcher: ^6.3.2
   dio: ^5.11.0
   dartz: ^0.10.1
+  local_auth: ^3.0.2
+  pdfrx: ^2.2.24
+  path_provider: ^2.1.6
+  shimmer: ^3.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

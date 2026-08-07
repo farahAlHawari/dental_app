@@ -307,76 +307,119 @@ class _SignupPageState extends State<SignupPage>
                                             ),
                                           );
                                         } else if (state is RegisterFailure) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text(state.errMessage)),
+                                          // ACTIVE already exists → dialog + Login.
+                                          if (state.statusCode == 409) {
+                                            showDialog<void>(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                title: Text(
+                                                  'Account already exists'.tr(),
+                                                ),
+                                                content: Text(
+                                                  state.errMessage,
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(ctx),
+                                                    child: Text('Cancel'.tr()),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(ctx);
+                                                      Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (_) =>
+                                                              const LoginPage(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Text('Login'.tr()),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            return;
+                                          }
+                                          // DISABLED / INVITED / other → backend message only.
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(state.errMessage),
+                                            ),
                                           );
                                         }
                                       },
                                       builder: (context, state) {
                                         return SizedBox(
+                                          width: double.infinity,
                                           height: 54,
-                              
                                           child: ElevatedButton(
                                             onPressed: state is RegisterLoading
-                                  ? null
-                                  : () async{
-                                      if (!_formKey.currentState!.validate()) return;
-                                       final language = await SharedPrefs.getLanguage() ?? "en";
-                              
-                                      context.read<RegisterBloc>().add(
-                                        RegisterSubmitted(
-                                          phone: _phoneController.text,
-                                          password: _passwordController.text,
-                                          confirmPassword: _confirmPasswordController.text,
-                                          language: language,
-                                        ),
-                                      );
-                                    },
-                              
+                                                ? null
+                                                : () async {
+                                                    if (!_formKey.currentState!
+                                                        .validate()) {
+                                                      return;
+                                                    }
+                                                    final language =
+                                                        await SharedPrefs
+                                                                .getLanguage() ??
+                                                            'en';
+
+                                                    context
+                                                        .read<RegisterBloc>()
+                                                        .add(
+                                                          RegisterSubmitted(
+                                                            phone:
+                                                                _phoneController
+                                                                    .text,
+                                                            password:
+                                                                _passwordController
+                                                                    .text,
+                                                            confirmPassword:
+                                                                _confirmPasswordController
+                                                                    .text,
+                                                            language: language,
+                                                          ),
+                                                        );
+                                                  },
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                              
+                                              backgroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(16),
                                               ),
-                              
                                               elevation: 0,
                                             ),
-                              
-                                            child: state is RegisterLoading
-                                                ? const SizedBox(
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                if (state is RegisterLoading)
+                                                  const SizedBox(
                                                     width: 20,
                                                     height: 20,
-                                                    child: CircularProgressIndicator(
+                                                    child:
+                                                        CircularProgressIndicator(
                                                       strokeWidth: 2,
                                                       color: Colors.white,
                                                     ),
                                                   )
-                                                : Row(
-                              
-                                            mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                              
-                                              children: [
-                                                //  Icon(Icons.arrow_back, color: Theme.of(context).scaffoldBackgroundColor),
-                              
-                                                // const SizedBox(width: 8),
-                                                Text(
-                                                  "Sign Up".tr(),
-                              
-                                                  style: TextStyle(
-                                                    color: Theme.of(
-                                                      context,
-                                                    ).scaffoldBackgroundColor,
-                              
-                                                    fontSize: 16,
-                              
-                                                    fontWeight: FontWeight.bold,
+                                                else
+                                                  Text(
+                                                    'Sign Up'.tr(),
+                                                    style: TextStyle(
+                                                      color: Theme.of(context)
+                                                          .scaffoldBackgroundColor,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
                                                   ),
-                                                ),
                                               ],
                                             ),
                                           ),

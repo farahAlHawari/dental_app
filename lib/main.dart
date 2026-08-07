@@ -1,9 +1,9 @@
 // import 'package:dental_app/core/theme/app_theme.dart';
+import 'package:dental_app/core/navigation/app_bootstrap_page.dart';
 import 'package:dental_app/core/theme/app_theme.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_state.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
-import 'package:dental_app/features/change_language/presentation/pages/choose_language.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,19 +42,19 @@ class MyApp extends StatelessWidget {
             supportedLocales: context.supportedLocales,
             localizationsDelegates: context.localizationDelegates,
             debugShowCheckedModeBanner: false,
-              builder: (context, child) {
-    final isArabic = context.locale.languageCode == 'ar';
+            builder: (context, child) {
+              final isArabic = context.locale.languageCode == 'ar';
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        textTheme: Theme.of(context).textTheme.apply(
-          fontFamily: isArabic ? 'cr' : 'ir',
-        ),
-      ),
-      child: child!,
-    );
-  },
-            home: ChooseLanguage(),
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  textTheme: Theme.of(context).textTheme.apply(
+                        fontFamily: isArabic ? 'cr' : 'ir',
+                      ),
+                ),
+                child: child!,
+              );
+            },
+            home: const AppBootstrapPage(),
           );
         },
       ),

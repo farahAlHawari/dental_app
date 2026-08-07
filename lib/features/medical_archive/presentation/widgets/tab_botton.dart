@@ -1,4 +1,3 @@
-import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class TabButton extends StatelessWidget {
@@ -15,17 +14,24 @@ class TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final unselectedColor = scheme.onSurface.withOpacity(0.55);
+    // Keep app font (cr/ir from MaterialApp builder) — bare TextStyle drops it.
+    final baseStyle = Theme.of(context).textTheme.labelLarge ??
+        Theme.of(context).textTheme.bodyMedium ??
+        const TextStyle();
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
       margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        color: selected ? AppColors.secondary: Colors.transparent,
+        color: selected ? scheme.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(25),
         boxShadow: selected
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(.08),
+                  color: scheme.shadow.withOpacity(0.08),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -41,12 +47,11 @@ class TabButton extends StatelessWidget {
             child: AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 250),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                
-                color: selected ? Colors.white : Colors.grey.shade700,
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.w500,
+              style: baseStyle.copyWith(
+                color: selected ? scheme.onPrimary : unselectedColor,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 fontSize: 13,
+                height: 1.15,
               ),
               child: Text(text),
             ),

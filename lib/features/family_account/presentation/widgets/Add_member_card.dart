@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class AddMemberCard extends StatelessWidget {
@@ -25,7 +26,7 @@ class AddMemberCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 20),
+                padding: const EdgeInsets.only(left: 20,right:20),
                 child: Container(
                   width: 46,
                   height: 46,
@@ -40,7 +41,7 @@ class AddMemberCard extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    "Add New Member",
+                    "Add New Member".tr(),
                     style: TextStyle(
                       color: primary,
                       fontWeight: FontWeight.bold,
@@ -49,7 +50,7 @@ class AddMemberCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Create a new medical file",
+                    "Create a new medical file".tr(),
                     style: TextStyle(
                       color: primary.withOpacity(0.6),
                       fontSize: 11,

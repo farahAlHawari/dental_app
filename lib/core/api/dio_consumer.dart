@@ -14,21 +14,38 @@ class DioConsumer {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await SharedPrefs.getToken();
-          if (token != null && options.path != EndPoints.refreshToken) {
+          final isPublic = EndPoints.isPublicAuthPath(options.path);
+          if (token != null && !isPublic) {
             options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            options.headers.remove('Authorization');
           }
+          // ================================
+          // NEW CODE START
+          // ================================
+          // FormData must set its own Content-Type (with boundary).
+          // Removing a forced/json content-type prevents multipart failures.
+          if (options.data is FormData) {
+            options.headers.remove(Headers.contentTypeHeader);
+          }
+          // ================================
+          // NEW CODE END
+          // ================================
           handler.next(options);
         },
         onError: (error, handler) async {
           final isUnauthorized = error.response?.statusCode == 401;
-          final isRefreshCall = error.requestOptions.path == EndPoints.refreshToken;
+          final isPublic =
+              EndPoints.isPublicAuthPath(error.requestOptions.path);
 
-          if (isUnauthorized && !isRefreshCall) {
+          // Skip token refresh/clear for public auth endpoints (login, register, …)
+          if (isUnauthorized && !isPublic) {
             try {
               final newAccessToken = await _refreshAccessToken();
               if (newAccessToken != null) {
                 final retryOptions = error.requestOptions;
-                retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+                retryOptions.headers['Authorization'] =
+                    'Bearer $newAccessToken';
                 final retryResponse = await dio.fetch(retryOptions);
                 return handler.resolve(retryResponse);
               }
@@ -80,10 +97,42 @@ Future<dynamic> patch(String path, {dynamic data}) async {
     _handleDioException(e);
   }
 }
+
+  // ================================
+  // NEW CODE START
+  // ================================
+  Future<dynamic> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    try {
+      final response = await dio.get(path, queryParameters: queryParameters);
+      return response.data;
+    } on DioException catch (e) {
+      _handleDioException(e);
+    }
+  }
+  // ================================
+  // NEW CODE END
+  // ================================
   void _handleDioException(DioException e) {
+    // ================================
+    // MODIFIED
+    // ================================
     if (e.response != null) {
+      final data = e.response!.data;
+      if (data is Map<String, dynamic>) {
+        throw ServerException(
+          errorModel: ErrorModel.fromJson(data),
+        );
+      }
+      if (data is Map) {
+        throw ServerException(
+          errorModel: ErrorModel.fromJson(Map<String, dynamic>.from(data)),
+        );
+      }
       throw ServerException(
-        errorModel: ErrorModel.fromJson(e.response!.data),
+        errorModel: ErrorModel(
+          statusCode: e.response!.statusCode ?? 500,
+          errorMessage: data?.toString() ?? 'Something went wrong',
+        ),
       );
     } else {
       throw ServerException(
@@ -93,5 +142,8 @@ Future<dynamic> patch(String path, {dynamic data}) async {
         ),
       );
     }
+    // ================================
+    // MODIFIED END
+    // ================================
   }
 }

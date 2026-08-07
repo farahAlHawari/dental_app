@@ -115,12 +115,14 @@
 //   }
 // }
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/widgets/patient_avatar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ProfileCard extends StatelessWidget {
   final String name;
   final String gender;
-  final String imagePath;
+  final String? imageUrl;
 
   final VoidCallback? onEdit;
   final VoidCallback? onSwitchAccount;
@@ -129,7 +131,7 @@ class ProfileCard extends StatelessWidget {
     super.key,
     required this.name,
     required this.gender,
-    required this.imagePath,
+    this.imageUrl,
     this.onEdit,
     this.onSwitchAccount,
   });
@@ -162,13 +164,11 @@ class ProfileCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              CircleAvatar(
+              PatientAvatar(
+                imageUrl: imageUrl,
                 radius: 30,
                 backgroundColor: primary.withOpacity(0.15),
-                child: CircleAvatar(
-                  radius: 27,
-                  backgroundImage: AssetImage(imagePath),
-                ),
+                iconColor: primary,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -199,7 +199,7 @@ class ProfileCard extends StatelessWidget {
                           Icon(_genderIcon, size: 14, color: primary),
                           const SizedBox(width: 4),
                           Text(
-                            gender,
+                            gender.tr(),
                             style: TextStyle(
                               color: primary,
                               fontSize: 12,

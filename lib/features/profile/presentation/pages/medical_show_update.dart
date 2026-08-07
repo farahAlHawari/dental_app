@@ -1,11 +1,25 @@
 import 'dart:io';
 
+import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/utils/api_date_utils.dart';
+import 'package:dental_app/core/utils/patient_status_guard.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
-import 'package:dental_app/features/profile/presentation/pages/profile_page.dart';
+import 'package:dental_app/core/widgets/home_page.dart';
+import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
+import 'package:dental_app/core/api/end_points.dart';
+import 'package:dental_app/features/profile/data/datasources/patient_remote_data_source.dart';
+import 'package:dental_app/features/profile/domain/repositories/patient_repository_impl.dart';
+import 'package:dental_app/features/profile_image/data/datasources/upload_profile_image_remote_data_source.dart';
+import 'package:dental_app/features/profile_image/domain/repositories/upload_profile_image_repository_impl.dart';
 import 'package:dental_app/features/register/presentation/widgets/birth_date_field.dart';
-import 'package:dental_app/features/register/presentation/widgets/chronic_diseases_widget.dart';
+import 'package:dental_app/features/register/presentation/widgets/dynamic_field_widget.dart';
+import 'package:dental_app/features/register/presentation/widgets/field_validation_utils.dart';
+import 'package:dental_app/features/register/presentation/widgets/form_field_schema.dart';
 import 'package:dental_app/features/register/presentation/widgets/gender_selector_widget.dart';
+import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
@@ -15,7 +29,25 @@ class MedicalInfo extends StatefulWidget {
   /// إذا فيها بيانات => وضع "عرض" ثم إمكانية التعديل
   final Map<String, dynamic>? patientData;
 
-  const MedicalInfo({super.key, this.patientData});
+  // ================================
+  // NEW CODE START
+  // ================================
+  final String? patientId;
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  const MedicalInfo({
+    super.key,
+    this.patientData,
+    // ================================
+    // NEW CODE START
+    // ================================
+    this.patientId,
+    // ================================
+    // NEW CODE END
+    // ================================
+  });
 
   @override
   State<MedicalInfo> createState() => _MedicalInfoState();
@@ -30,54 +62,276 @@ class _MedicalInfoState extends State<MedicalInfo>
 
   final _nameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
-  final _allergiesController = TextEditingController();
 
   String _gender = "";
-  List<String> selectedDiseases = [];
 
-  final List<String> diseases = [
-    "Diabetes",
-    "Hypertension",
-    "Asthma",
-    "Heart Disease",
-    "Thyroid",
-    "Kidney Disease",
-    "Other",
-  ];
+  // ================================
+  // NEW CODE START
+  // ================================
+  final _repository = PatientRepositoryImpl(
+    remoteDataSource: PatientRemoteDataSource(api: DioConsumer(dio: Dio())),
+  );
 
-  bool get _isCreateMode => widget.patientData == null;
+  // ================================
+  // NEW CODE START — profile_image feature
+  // ================================
+  final _uploadProfileImageRepository = UploadProfileImageRepositoryImpl(
+    remoteDataSource: UploadProfileImageRemoteDataSource(
+      api: DioConsumer(dio: Dio()),
+    ),
+  );
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  String? _patientId;
+  String _patientStatus = PatientStatusGuard.active;
+  List<FormFieldSchema> _schema = [];
+  final Map<String, dynamic> _formValues = {};
+  bool _loading = true;
+  bool _submitting = false;
+  String? _loadError;
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  // ================================
+  // MODIFIED
+  // ================================
+  bool get _isCreateMode =>
+      widget.patientData == null &&
+      (widget.patientId == null || widget.patientId!.isEmpty) &&
+      (_patientId == null || _patientId!.isEmpty);
+  // ================================
+  // MODIFIED END
+  // ================================
   late bool _isEditing;
 
   @override
   void initState() {
     super.initState();
-    _isEditing = _isCreateMode;
+    _isEditing = widget.patientData == null &&
+        (widget.patientId == null || widget.patientId!.isEmpty);
 
+    // ================================
+    // MODIFIED
+    // ================================
+    _patientId = widget.patientId;
     final data = widget.patientData;
     if (data != null) {
-      _nameController.text = data["name"] ?? "";
-      _dobController.text = data["dob"] ?? "";
-      _gender = data["gender"] ?? "";
-      selectedDiseases = List<String>.from(data["diseases"] ?? []);
-      _allergiesController.text = data["allergies"] ?? "";
-      _imagePath = data["image"];
+      _nameController.text =
+          (data["fullName"] ?? data["name"] ?? "").toString();
+      _dobController.text =
+          (data["birthDate"] ?? data["dob"] ?? "").toString();
+      _gender = (data["gender"] ?? "").toString();
+      _imagePath = data["image"]?.toString();
+      final formValues = data["formValues"];
+      if (formValues is Map) {
+        formValues.forEach((key, value) {
+          _formValues[key.toString()] = value;
+        });
+      }
     }
+    // ================================
+    // MODIFIED END
+    // ================================
 
     _toothController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+
+    // ================================
+    // NEW CODE START
+    // ================================
+    _loadInitialData();
+    // ================================
+    // NEW CODE END
+    // ================================
   }
 
-  void _toggleDisease(String disease) {
+  // ================================
+  // NEW CODE START
+  // ================================
+  Future<void> _loadInitialData() async {
     setState(() {
-      if (selectedDiseases.contains(disease)) {
-        selectedDiseases.remove(disease);
-      } else {
-        selectedDiseases.add(disease);
-      }
+      _loading = true;
+      _loadError = null;
     });
+
+    // TEMP preview delay — remove later if not needed.
+    await ShimmerPreview.wait();
+    if (!mounted) return;
+
+    final schemaResult = await _repository.getFormSchema();
+    if (!mounted) return;
+
+    await schemaResult.fold(
+      (failure) async {
+        setState(() {
+          _loading = false;
+          _loadError = failure.errMessage;
+        });
+      },
+      (schema) async {
+        _schema = schema;
+        for (final field in schema) {
+          if (!_formValues.containsKey(field.key)) {
+            _formValues[field.key] =
+                field.type == 'MULTI_SELECT' ? <String>[] : null;
+          }
+        }
+
+        final id = widget.patientId;
+        if (id != null && id.isNotEmpty) {
+          final detailResult = await _repository.getPatientById(id);
+          if (!mounted) return;
+          detailResult.fold(
+            (failure) {
+              setState(() {
+                _loading = false;
+                _loadError = failure.errMessage;
+              });
+            },
+            (data) {
+              _applyPatientData(data);
+              setState(() {
+                _loading = false;
+                _isEditing = false;
+              });
+            },
+          );
+        } else {
+          setState(() => _loading = false);
+        }
+      },
+    );
   }
+
+  void _applyPatientData(Map<String, dynamic> data) {
+    _patientId = (data['id'] ?? data['_id'] ?? _patientId)?.toString();
+    _nameController.text =
+        (data['fullName'] ?? data['name'] ?? '').toString();
+    _dobController.text =
+        (data['birthDate'] ?? data['dob'] ?? '').toString();
+    _gender = (data['gender'] ?? '').toString();
+    _patientStatus =
+        PatientStatusGuard.normalize(data['status']?.toString());
+    // ================================
+    // NEW CODE START — profileImage from API
+    // ================================
+    final profileUrl = _extractProfileImageUrl(data);
+    if (profileUrl != null && profileUrl.isNotEmpty) {
+      _imagePath = profileUrl;
+    } else if (data['image'] != null) {
+      _imagePath = data['image']?.toString();
+    }
+    // ================================
+    // NEW CODE END
+    // ================================
+    final formValues = data['formValues'];
+    if (formValues is Map) {
+      formValues.forEach((key, value) {
+        _formValues[key.toString()] = value;
+      });
+    }
+  }
+
+  // ================================
+  // NEW CODE START
+  // ================================
+  String? _extractProfileImageUrl(Map<String, dynamic> data) {
+    final profileImage = data['profileImage'];
+    if (profileImage is Map) {
+      final url = profileImage['url']?.toString();
+      if (url != null && url.trim().isNotEmpty) return url.trim();
+    }
+    return null;
+  }
+
+  String _resolveImageUrl(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    final base = EndPoints.baserUrl;
+    // baserUrl ends with /api/v1/ — uploads are typically host-rooted.
+    final origin = base.replaceFirst(RegExp(r'/api/v1/?$'), '');
+    if (url.startsWith('/')) return '$origin$url';
+    return '$origin/$url';
+  }
+
+  /// Uploads selected local image via profile_image feature. Never throws.
+  /// Returns false only when upload was attempted and failed.
+  Future<bool> _uploadSelectedImageIfNeeded(String patientId) async {
+    if (_image == null) return true;
+
+    final uploadResult =
+        await _uploadProfileImageRepository.uploadProfileImage(
+      patientId: patientId,
+      imagePath: _image!.path,
+    );
+    if (!mounted) return true;
+
+    return uploadResult.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.errMessage)),
+        );
+        return false;
+      },
+      (data) {
+        _applyPatientData(data);
+        _image = null;
+        return true;
+      },
+    );
+  }
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  bool _validateForm() {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Full Name is required'.tr())),
+      );
+      return false;
+    }
+    if (_dobController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Birth Date is required'.tr())),
+      );
+      return false;
+    }
+    if (_gender.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gender is required'.tr())),
+      );
+      return false;
+    }
+
+    for (final field in _schema) {
+      final error =
+          FieldValidationUtils.validateField(field, _formValues[field.key]);
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _toggleEditing() {
+    if (!_isEditing) {
+      if (!PatientStatusGuard.ensureEditable(context, _patientStatus)) {
+        return;
+      }
+    }
+    setState(() => _isEditing = !_isEditing);
+  }
+  // ================================
+  // NEW CODE END
+  // ================================
 
   Future<void> _pickImage() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
@@ -91,42 +345,106 @@ class _MedicalInfoState extends State<MedicalInfo>
     _toothController.dispose();
     _nameController.dispose();
     _dobController.dispose();
-    _allergiesController.dispose();
     super.dispose();
   }
 
-  void _handleSave() {
-    final updatedData = {
-      "name": _nameController.text,
-      "dob": _dobController.text,
-      "gender": _gender,
-      "diseases": selectedDiseases,
-      "allergies": _allergiesController.text,
-      "image": _image?.path ?? _imagePath,
-    };
+  // ================================
+  // MODIFIED
+  // ================================
+  Future<void> _handleSave() async {
+    if (_submitting) return;
+    if (!_validateForm()) return;
 
-    if (_isCreateMode) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ProfilePage()),
+    setState(() => _submitting = true);
+
+    final fullName = _nameController.text.trim();
+    final birthDate = _dobController.text.trim();
+    final formValues = Map<String, dynamic>.from(_formValues);
+
+    if (_isCreateMode || _patientId == null || _patientId!.isEmpty) {
+      final result = await _repository.createPatient(
+        fullName: fullName,
+        birthDate: birthDate,
+        gender: _gender,
+        formValues: formValues,
+        schema: _schema,
       );
-    } else {
-      // رجّع البيانات المعدّلة للصفحة السابقة (FamilyAccount)
-      setState(() {
-        _imagePath = updatedData["image"] as String?;
-        _isEditing = false;
-      });
-      Navigator.pop(context, updatedData);
+      if (!mounted) return;
+      await result.fold(
+        (failure) async {
+          setState(() => _submitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failure.errMessage)),
+          );
+        },
+        (data) async {
+          final id = (data['id'] ?? data['_id'])?.toString();
+          final status =
+              PatientStatusGuard.normalize(data['status']?.toString());
+          if (id != null && id.isNotEmpty) {
+            await SharedPrefs.saveSelectedPatientId(id);
+            await SharedPrefs.saveSelectedPatientStatus(status);
+            _patientId = id;
+            _patientStatus = status;
+            // Create succeeded — upload image if selected (do not lose patient).
+            await _uploadSelectedImageIfNeeded(id);
+          }
+          if (!mounted) return;
+          setState(() => _submitting = false);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        },
+      );
+      return;
     }
+
+    final result = await _repository.updatePatient(
+      id: _patientId!,
+      fullName: fullName,
+      birthDate: birthDate,
+      gender: _gender,
+      formValues: formValues,
+      schema: _schema,
+    );
+    if (!mounted) return;
+    await result.fold(
+      (failure) async {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.errMessage)),
+        );
+      },
+      (data) async {
+        _applyPatientData(data);
+        // Upload only when user picked a new local image.
+        await _uploadSelectedImageIfNeeded(_patientId!);
+        if (!mounted) return;
+        setState(() {
+          _submitting = false;
+          _isEditing = false;
+        });
+        Navigator.pop(context, data);
+      },
+    );
   }
+  // ================================
+  // MODIFIED END
+  // ================================
 
   ImageProvider? get _avatarImage {
     if (_image != null) return FileImage(_image!);
-    if (_imagePath != null && _imagePath!.startsWith('assets/')) {
+    if (_imagePath == null || _imagePath!.isEmpty) return null;
+    if (_imagePath!.startsWith('assets/')) {
       return AssetImage(_imagePath!);
     }
-    if (_imagePath != null) return FileImage(File(_imagePath!));
-    return null;
+    if (_imagePath!.startsWith('http://') ||
+        _imagePath!.startsWith('https://') ||
+        _imagePath!.startsWith('/')) {
+      return NetworkImage(_resolveImageUrl(_imagePath!));
+    }
+    return FileImage(File(_imagePath!));
   }
 
   @override
@@ -141,8 +459,8 @@ class _MedicalInfoState extends State<MedicalInfo>
         iconTheme: IconThemeData(color: primary),
         title: Text(
           _isCreateMode
-              ? "New Medical File"
-              : (_isEditing ? "Edit Medical File" : "Patient File"),
+              ? "New Medical File".tr()
+              : (_isEditing ? "Edit Medical File".tr() : "Patient File".tr()),
           style: TextStyle(color: primary, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -152,7 +470,7 @@ class _MedicalInfoState extends State<MedicalInfo>
                 _isEditing ? Icons.close : Icons.edit_outlined,
                 color: primary,
               ),
-              onPressed: () => setState(() => _isEditing = !_isEditing),
+              onPressed: _toggleEditing,
             ),
         ],
       ),
@@ -169,6 +487,52 @@ class _MedicalInfoState extends State<MedicalInfo>
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  // ================================
+                  // NEW CODE START
+                  // ================================
+                  if (_loading) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 24,
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.shadow,
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const PatientMedicalFormShimmer(
+                          dynamicFieldCount: 5,
+                        ),
+                      ),
+                    );
+                  }
+                  if (_loadError != null) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_loadError!),
+                          TextButton(
+                            onPressed: _loadInitialData,
+                            child: Text('Retry'.tr()),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  // ================================
+                  // NEW CODE END
+                  // ================================
                   return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -236,7 +600,7 @@ class _MedicalInfoState extends State<MedicalInfo>
               const SizedBox(height: 14),
               Text(
                 _nameController.text.isEmpty
-                    ? "Unnamed Patient"
+                    ? "Unnamed Patient".tr()
                     : _nameController.text,
                 style: TextStyle(
                   fontSize: 18,
@@ -264,7 +628,7 @@ class _MedicalInfoState extends State<MedicalInfo>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _gender.isEmpty ? "-" : _gender,
+                      _gender.isEmpty ? "-" : _gender.tr(),
                       style: TextStyle(
                         color: primary,
                         fontWeight: FontWeight.w500,
@@ -285,71 +649,21 @@ class _MedicalInfoState extends State<MedicalInfo>
         _infoRow(
           context,
           icon: Icons.cake_outlined,
-          label: "Birth Date",
+          label: "Birth Date".tr(),
           value: _dobController.text.isEmpty ? "-" : _dobController.text,
         ),
 
         const SizedBox(height: 18),
-
-        Row(
-          children: [
-            Icon(Icons.medical_services_outlined, size: 18, color: primary),
-            const SizedBox(width: 8),
-            Text(
-              "Chronic Diseases",
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: onSurface.withOpacity(0.7),
-              ),
+        ..._schema.map(
+          (field) => Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: _infoRow(
+              context,
+              icon: Icons.medical_information_outlined,
+              label: field.label,
+              value: formatDynamicFieldValue(field, _formValues[field.key]),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        selectedDiseases.isEmpty
-            ? Text(
-                "No chronic diseases reported",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: onSurface.withOpacity(0.5),
-                ),
-              )
-            : Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: selectedDiseases
-                    .map(
-                      (d) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          d,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-
-        const SizedBox(height: 20),
-
-        _infoRow(
-          context,
-          icon: Icons.medical_information_outlined,
-          label: "Allergies",
-          value: _allergiesController.text.isEmpty
-              ? "No known allergies"
-              : _allergiesController.text,
+          ),
         ),
 
         const SizedBox(height: 26),
@@ -358,10 +672,15 @@ class _MedicalInfoState extends State<MedicalInfo>
           width: double.infinity,
           height: 54,
           child: OutlinedButton.icon(
-            onPressed: () => setState(() => _isEditing = true),
+            onPressed: () {
+              if (!PatientStatusGuard.ensureEditable(context, _patientStatus)) {
+                return;
+              }
+              setState(() => _isEditing = true);
+            },
             icon: Icon(Icons.edit_outlined, color: primary),
             label: Text(
-              "Edit Information",
+              "Edit Information".tr(),
               style: TextStyle(
                 color: primary,
                 fontWeight: FontWeight.bold,
@@ -453,7 +772,7 @@ class _MedicalInfoState extends State<MedicalInfo>
             Column(
               children: [
                 Text(
-                  _isCreateMode ? "Medical Information" : "Edit Patient File",
+                  _isCreateMode ? "Medical Information".tr() : "Edit Patient File".tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -464,8 +783,8 @@ class _MedicalInfoState extends State<MedicalInfo>
                 const SizedBox(height: 5),
                 Text(
                   _isCreateMode
-                      ? "Please enter patient medical information"
-                      : "Update patient medical information",
+                      ? "Please enter patient medical information".tr()
+                      : "Update patient medical information".tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color:
@@ -527,19 +846,19 @@ class _MedicalInfoState extends State<MedicalInfo>
         ),
 
         Text(
-          "Patient Name",
+          "Patient Name".tr(),
           style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
         ),
         const SizedBox(height: 8),
         AppTextField(
           controller: _nameController,
-          hint: "Ahmad Mohammad",
+          hint: "Ahmad Mohammad".tr(),
           prefixIcon: Icons.person,
         ),
 
         const SizedBox(height: 20),
         Text(
-          "BirthDate",
+          "Birth Date".tr(),
           style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
         ),
         const SizedBox(height: 10),
@@ -553,7 +872,13 @@ class _MedicalInfoState extends State<MedicalInfo>
             );
             if (date != null) {
               setState(() {
-                _dobController.text = date.toIso8601String().split("T").first;
+                // ================================
+                // MODIFIED
+                // ================================
+                _dobController.text = ApiDateUtils.fromPicker(date);
+                // ================================
+                // MODIFIED END
+                // ================================
               });
             }
           },
@@ -561,7 +886,7 @@ class _MedicalInfoState extends State<MedicalInfo>
 
         const SizedBox(height: 20),
         Text(
-          "Gender",
+          "Gender".tr(),
           style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
         ),
         const SizedBox(height: 10),
@@ -570,57 +895,34 @@ class _MedicalInfoState extends State<MedicalInfo>
           onChanged: (value) => setState(() => _gender = value),
         ),
 
+        // ================================
+        // MODIFIED
+        // ================================
         const SizedBox(height: 20),
-        Text(
-          "Chronic Diseases",
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ChronicDiseasesWidget(
-                diseases: diseases,
-                selected: selectedDiseases,
-                onChanged: _toggleDisease,
-              ),
-            ],
+        ..._schema.map(
+          (field) => Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: DynamicFieldWidget(
+              field: field,
+              value: _formValues[field.key],
+              onChanged: (value) {
+                setState(() {
+                  _formValues[field.key] = value;
+                });
+              },
+            ),
           ),
         ),
-
-        const SizedBox(height: 20),
-        Text(
-          "Allergies",
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-        ),
-        const SizedBox(height: 8),
-        AppTextField(
-          controller: _allergiesController,
-          hint: 'Do You Have any allergies?(example: Penicillin or any medicine)',
-          prefixIcon: Icons.medical_information,
-          maxLines: 3,
-        ),
+        // ================================
+        // MODIFIED END
+        // ================================
 
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
           height: 54,
           child: ElevatedButton(
-            onPressed: _handleSave,
+            onPressed: _submitting ? null : _handleSave,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
@@ -632,7 +934,11 @@ class _MedicalInfoState extends State<MedicalInfo>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  _isCreateMode ? "Save My Information" : "Save Changes",
+                  _submitting
+                      ? "Saving...".tr()
+                      : (_isCreateMode
+                          ? "Save My Information".tr()
+                          : "Save Changes".tr()),
                   style: TextStyle(
                     color: AppColors.background,
                     fontSize: 16,

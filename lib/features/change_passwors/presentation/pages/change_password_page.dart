@@ -320,15 +320,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
           listener: (context, state) {
             if (state is ChangePasswordSuccess) {
               CustomStatusDialog.show(
-                context,
-                title: "Password Changed Successfully".tr(),
-                description:
-                    "Your password has been updated successfully.".tr(),
-                confirmButtonText: "Done".tr(),
-                onConfirm: () {
-                  Navigator.pop(context);
-                },
-              );
+  context,
+  type: StatusDialogType.passwordChanged,
+  onConfirm: () {
+    Navigator.pop(context);
+    Navigator.pop(context); 
+  },
+);
             } else if (state is ChangePasswordFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.errMessage)),

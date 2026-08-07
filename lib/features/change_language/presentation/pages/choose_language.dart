@@ -30,7 +30,7 @@ class _ChooseLanguageState extends State<ChooseLanguage> {
           children: [
             Positioned.fill(
               child: Image.asset(
-                'assets/backgrounds/1.png',
+                'assets/backgrounds/background5.png',
                 fit: BoxFit.cover,
                 color: Theme.of(context).colorScheme.primary,
               ),

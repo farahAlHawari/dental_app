@@ -1,32 +1,3 @@
-// import 'package:bloc/bloc.dart';
-// import 'package:bloc/bloc.dart';
-// import 'package:dental_app/features/Verify_otp/domain/repositories/verify_otp_repository_impl.dart';
-// import 'package:meta/meta.dart';
-// import '../../data/datasources/verify_otp_remote_data_source.dart';
-
-// part 'verify_otp_event.dart';
-// part 'verify_otp_state.dart';
-
-// class VerifyOtpBloc extends Bloc<VerifyOtpEvent, VerifyOtpState> {
-//   VerifyOtpRepositoryImpl verifyOtpRepository = VerifyOtpRepositoryImpl(
-//     remoteDataSource: VerifyOtpRemoteDataSource(),
-//   );
-
-//   VerifyOtpBloc() : super(VerifyOtpInitial()) {
-//     on<VerifyOtpSubmitted>((event, emit) async {
-//       emit(VerifyOtpLoading());
-//       bool isVerified = await verifyOtpRepository.verifyOtp(
-//         phone: event.phone,
-//         code: event.code,
-//       );
-//       if (isVerified) {
-//         emit(VerifyOtpSuccess());
-//       } else {
-//         emit(VerifyOtpFailure(failureMessage: 'invalid code, please try again'));
-//       }
-//     });
-//   }
-// }
 // بعد
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
@@ -34,6 +5,7 @@ import 'package:meta/meta.dart';
 import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/features/Verify_otp/domain/repositories/verify_otp_repository_impl.dart';
+import 'package:dental_app/features/Verify_otp/presentation/pages/otp_flow.dart';
 import '../../data/datasources/verify_otp_remote_data_source.dart';
 
 part 'verify_otp_event.dart';
@@ -48,6 +20,63 @@ class VerifyOtpBloc extends Bloc<VerifyOtpEvent, VerifyOtpState> {
     on<VerifyOtpSubmitted>((event, emit) async {
       emit(VerifyOtpLoading());
 
+      // Change Phone — confirm endpoint
+      if (event.flow == OtpFlow.changePhone) {
+        final changeResult = await verifyOtpRepository.confirmChangePhone(
+          code: event.code,
+        );
+
+        await changeResult.fold(
+          (failure) async {
+            emit(VerifyOtpFailure(
+              failureMessage: failure.errMessage,
+              errorCode: failure.code,
+            ));
+          },
+          (_) async {
+            await SharedPrefs.savePhone(event.phone);
+            emit(VerifyOtpSuccess(
+              activationRequired: false,
+              accountStatus: '',
+              temporaryToken: null,
+            ));
+          },
+        );
+        return;
+      }
+
+      // Forgot Password — verify-reset-otp (returns resetToken)
+      if (event.flow == OtpFlow.forgotPassword) {
+        final resetResult = await verifyOtpRepository.verifyResetOtp(
+          phone: event.phone,
+          code: event.code,
+        );
+
+        resetResult.fold(
+          (failure) => emit(VerifyOtpFailure(
+            failureMessage: failure.errMessage,
+            errorCode: failure.code,
+          )),
+          (data) {
+            // Success with resetToken → continue.
+            // Success without resetToken (e.g. already verified) → emit
+            // success with null token; UI handles without crashing.
+            final rawToken = data['resetToken'];
+            final resetToken =
+                rawToken is String && rawToken.isNotEmpty ? rawToken : null;
+
+            emit(VerifyOtpSuccess(
+              activationRequired: false,
+              accountStatus: data['accountStatus']?.toString() ?? '',
+              temporaryToken: null,
+              resetToken: resetToken,
+            ));
+          },
+        );
+        return;
+      }
+
+      // Register — existing verifyOtp path unchanged
       final result = await verifyOtpRepository.verifyOtp(
         phone: event.phone,
         code: event.code,
@@ -55,7 +84,10 @@ class VerifyOtpBloc extends Bloc<VerifyOtpEvent, VerifyOtpState> {
 
       await result.fold(
         (failure) async {
-          emit(VerifyOtpFailure(failureMessage: failure.errMessage));
+          emit(VerifyOtpFailure(
+            failureMessage: failure.errMessage,
+            errorCode: failure.code,
+          ));
         },
         (data) async {
           final activationRequired = data['activationRequired'] == true;
@@ -65,7 +97,9 @@ class VerifyOtpBloc extends Bloc<VerifyOtpEvent, VerifyOtpState> {
 
           if (!activationRequired) {
             if (accessToken != null) await SharedPrefs.saveToken(accessToken);
-            if (refreshToken != null) await SharedPrefs.saveRefreshToken(refreshToken);
+            if (refreshToken != null) {
+              await SharedPrefs.saveRefreshToken(refreshToken);
+            }
           }
 
           emit(VerifyOtpSuccess(

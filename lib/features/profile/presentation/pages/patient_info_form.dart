@@ -1,11 +1,14 @@
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/utils/api_date_utils.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/features/register/presentation/widgets/birth_date_field.dart';
-import 'package:dental_app/features/register/presentation/widgets/chronic_diseases_widget.dart';
+import 'package:dental_app/features/register/presentation/widgets/dynamic_field_widget.dart';
+import 'package:dental_app/features/register/presentation/widgets/form_field_schema.dart';
 import 'package:dental_app/features/register/presentation/widgets/gender_selector_widget.dart';
 
 class PatientInfoForm extends StatefulWidget {
@@ -13,11 +16,26 @@ class PatientInfoForm extends StatefulWidget {
   final bool isCreateMode;
   final void Function(Map<String, dynamic> data) onSave;
 
+  // ================================
+  // NEW CODE START
+  // ================================
+  final List<FormFieldSchema> schema;
+  // ================================
+  // NEW CODE END
+  // ================================
+
   const PatientInfoForm({
     super.key,
     this.initialData,
     required this.isCreateMode,
     required this.onSave,
+    // ================================
+    // NEW CODE START
+    // ================================
+    this.schema = const [],
+    // ================================
+    // NEW CODE END
+    // ================================
   });
 
   @override
@@ -31,51 +49,61 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
 
   final _nameController = TextEditingController();
   final _dobController = TextEditingController();
-  final _allergiesController = TextEditingController();
 
   String _gender = "";
-  List<String> selectedDiseases = [];
 
-  final List<String> diseases = [
-    "Diabetes",
-    "Hypertension",
-    "Asthma",
-    "Heart Disease",
-    "Thyroid",
-    "Kidney Disease",
-    "Other",
-  ];
+  // ================================
+  // NEW CODE START
+  // ================================
+  final Map<String, dynamic> _formValues = {};
+  // ================================
+  // NEW CODE END
+  // ================================
 
   @override
   void initState() {
     super.initState();
     final data = widget.initialData;
     if (data != null) {
-      _nameController.text = data["name"] ?? "";
-      _dobController.text = data["dob"] ?? "";
-      _gender = data["gender"] ?? "";
-      selectedDiseases = List<String>.from(data["diseases"] ?? []);
-      _allergiesController.text = data["allergies"] ?? "";
-      _imagePath = data["image"];
+      // ================================
+      // MODIFIED
+      // ================================
+      _nameController.text =
+          (data["fullName"] ?? data["name"] ?? "").toString();
+      _dobController.text =
+          (data["birthDate"] ?? data["dob"] ?? "").toString();
+      _gender = (data["gender"] ?? "").toString();
+      _imagePath = data["image"]?.toString();
+      final formValues = data["formValues"];
+      if (formValues is Map) {
+        formValues.forEach((key, value) {
+          _formValues[key.toString()] = value;
+        });
+      }
+      // ================================
+      // MODIFIED END
+      // ================================
     }
+
+    // ================================
+    // NEW CODE START
+    // ================================
+    for (final field in widget.schema) {
+      if (!_formValues.containsKey(field.key)) {
+        _formValues[field.key] =
+            field.type == 'MULTI_SELECT' ? <String>[] : null;
+      }
+    }
+    // ================================
+    // NEW CODE END
+    // ================================
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _dobController.dispose();
-    _allergiesController.dispose();
     super.dispose();
-  }
-
-  void _toggleDisease(String disease) {
-    setState(() {
-      if (selectedDiseases.contains(disease)) {
-        selectedDiseases.remove(disease);
-      } else {
-        selectedDiseases.add(disease);
-      }
-    });
   }
 
   Future<void> _pickImage() async {
@@ -95,14 +123,21 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
   }
 
   void _handleSubmit() {
+    // ================================
+    // MODIFIED
+    // ================================
     final updatedData = {
+      "fullName": _nameController.text,
+      "birthDate": _dobController.text,
+      "gender": _gender,
+      "formValues": Map<String, dynamic>.from(_formValues),
       "name": _nameController.text,
       "dob": _dobController.text,
-      "gender": _gender,
-      "diseases": selectedDiseases,
-      "allergies": _allergiesController.text,
       "image": _image?.path ?? _imagePath,
     };
+    // ================================
+    // MODIFIED END
+    // ================================
     widget.onSave(updatedData);
   }
 
@@ -136,7 +171,7 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
             Column(
               children: [
                 Text(
-                  widget.isCreateMode ? "Medical Information" : "Edit Patient File",
+                  widget.isCreateMode ? "Medical Information".tr() : "Edit Patient File".tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -147,8 +182,8 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
                 const SizedBox(height: 5),
                 Text(
                   widget.isCreateMode
-                      ? "Please enter patient medical information"
-                      : "Update patient medical information",
+                      ? "Please enter patient medical information".tr()
+                      : "Update patient medical information".tr(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
@@ -205,16 +240,16 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
         ),
 
         const SizedBox(height: 20),
-        Text("Patient Name", style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+        Text("Patient Name".tr(), style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
         const SizedBox(height: 8),
         AppTextField(
           controller: _nameController,
-          hint: "Ahmad Mohammad",
+          hint: "Ahmad Mohammad".tr(),
           prefixIcon: Icons.person,
         ),
 
         const SizedBox(height: 20),
-        Text("BirthDate", style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+        Text("Birth Date".tr(), style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
         const SizedBox(height: 10),
         BirthDateField(
           controller: _dobController,
@@ -226,53 +261,47 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
             );
             if (date != null) {
               setState(() {
-                _dobController.text = date.toIso8601String().split("T").first;
+                // ================================
+                // MODIFIED
+                // ================================
+                _dobController.text = ApiDateUtils.fromPicker(date);
+                // ================================
+                // MODIFIED END
+                // ================================
               });
             }
           },
         ),
 
         const SizedBox(height: 20),
-        Text("Gender", style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+        Text("Gender".tr(), style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
         const SizedBox(height: 10),
         GenderSelector(
           selectedGender: _gender,
           onChanged: (value) => setState(() => _gender = value),
         ),
 
+        // ================================
+        // MODIFIED
+        // ================================
         const SizedBox(height: 20),
-        Text("Chronic Diseases", style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-        const SizedBox(height: 10),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ChronicDiseasesWidget(
-            diseases: diseases,
-            selected: selectedDiseases,
-            onChanged: _toggleDisease,
+        ...widget.schema.map(
+          (field) => Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: DynamicFieldWidget(
+              field: field,
+              value: _formValues[field.key],
+              onChanged: (value) {
+                setState(() {
+                  _formValues[field.key] = value;
+                });
+              },
+            ),
           ),
         ),
-
-        const SizedBox(height: 20),
-        Text("Allergies", style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
-        const SizedBox(height: 8),
-        AppTextField(
-          controller: _allergiesController,
-          hint: 'Do You Have any allergies?(example: Penicillin or any medicine)',
-          prefixIcon: Icons.medical_information,
-          maxLines: 3,
-        ),
+        // ================================
+        // MODIFIED END
+        // ================================
 
         const SizedBox(height: 20),
         SizedBox(
@@ -286,7 +315,7 @@ class _PatientInfoFormState extends State<PatientInfoForm> {
               elevation: 0,
             ),
             child: Text(
-              widget.isCreateMode ? "Save My Information" : "Save Changes",
+              widget.isCreateMode ? "Save My Information".tr() : "Save Changes".tr(),
               style: TextStyle(
                 color: AppColors.background,
                 fontSize: 16,

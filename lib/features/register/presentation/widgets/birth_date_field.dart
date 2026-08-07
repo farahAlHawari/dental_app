@@ -1,7 +1,6 @@
 import 'package:dental_app/core/widgets/app_text_field.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:dental_app/core/theme/app_colors.dart';
-
 
 class BirthDateField extends StatelessWidget {
   final TextEditingController controller;
@@ -17,7 +16,7 @@ class BirthDateField extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppTextField(
       controller: controller,
-      hint: "Birth Date",
+      hint: "Birth Date".tr(),
       prefixIcon: Icons.calendar_today,
       readOnly: true,
       onTap: onTap,

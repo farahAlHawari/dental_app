@@ -1,41 +1,40 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+enum StatusDialogType {
+  passwordChanged,
+  passwordReset,
+  phoneChanged,
+  accountActivated,
+}
+
 class CustomStatusDialog extends StatelessWidget {
-  final String title;
-  final String description;
-  final String confirmButtonText;
+  final StatusDialogType type;
   final VoidCallback onConfirm;
-  final String? cancelButtonText; // اختياري (إذا كان الديالوغ يحتاج زر إلغاء)
+  final String? cancelButtonText;
   final VoidCallback? onCancel;
 
   const CustomStatusDialog({
     super.key,
-    required this.title,
-    required this.description,
-    required this.confirmButtonText,
+    required this.type,
     required this.onConfirm,
     this.cancelButtonText,
     this.onCancel,
   });
 
-  
   static void show(
     BuildContext context, {
-    required String title,
-    required String description,
-    required String confirmButtonText,
+    required StatusDialogType type,
     required VoidCallback onConfirm,
     String? cancelButtonText,
     VoidCallback? onCancel,
   }) {
     showDialog(
       context: context,
-      barrierDismissible: false, // لمنع إغلاق الديالوغ بالضغط خارجه إلا عند التفاعل
+      barrierDismissible: false,
       builder: (context) => CustomStatusDialog(
-        title: title,
-        description: description,
-        confirmButtonText: confirmButtonText,
+        type: type,
         onConfirm: onConfirm,
         cancelButtonText: cancelButtonText,
         onCancel: onCancel,
@@ -43,30 +42,85 @@ class CustomStatusDialog extends StatelessWidget {
     );
   }
 
+String get title {
+  switch (type) {
+    case StatusDialogType.passwordChanged:
+      return "Password Changed Successfully".tr();
+
+    case StatusDialogType.passwordReset:
+      return "Password Reset Successfully".tr();
+
+    case StatusDialogType.phoneChanged:
+      return "Phone Number Updated".tr();
+
+    case StatusDialogType.accountActivated:
+      return "Account Activated Successfully".tr();
+  }
+}
+
+String get description {
+  switch (type) {
+    case StatusDialogType.passwordChanged:
+      return "Your password has been changed successfully.".tr();
+
+    case StatusDialogType.passwordReset:
+      return "Your password has been reset successfully. Please log in using your new password."
+          .tr();
+
+    case StatusDialogType.phoneChanged:
+      return "Your phone number has been updated successfully.".tr();
+
+    case StatusDialogType.accountActivated:
+      return "Your account has been activated successfully. You can now log in with your new password."
+          .tr();
+  }
+}
+
+String get confirmButtonText {
+  switch (type) {
+    case StatusDialogType.passwordChanged:
+      return "OK".tr();
+
+    case StatusDialogType.phoneChanged:
+      return "OK".tr();
+
+    case StatusDialogType.passwordReset:
+      return "Log In".tr();
+
+    case StatusDialogType.accountActivated:
+      return "Log In".tr();
+  }
+}
+
+  String get animationPath {
+    switch (type) {
+      case StatusDialogType.passwordChanged:
+      case StatusDialogType.passwordReset:
+      case StatusDialogType.phoneChanged:
+      case StatusDialogType.accountActivated:
+        return "assets/animations/ss.json";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24), // حواف ناعمة متناسقة مع تطبيقك
+        borderRadius: BorderRadius.circular(24),
       ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // ليأخذ حجم المحتوى فقط ولا يملأ الشاشة
+          mainAxisSize: MainAxisSize.min,
           children: [
-            
-           LottieBuilder.asset("assets/animations/ss.json",width: 120,
-              height: 120,repeat: true,),
-            // Image.asset(
-            //   imagePath,
-            //   width: 120,
-            //   height: 120,
-            //   fit: BoxFit.contain,
-            // ),
-            
+            LottieBuilder.asset(
+              animationPath,
+              width: 120,
+              height: 120,
+              repeat: true,
+            ),
 
-            // 2. العنوان الرئيسي
             Text(
               title,
               textAlign: TextAlign.center,
@@ -76,9 +130,9 @@ class CustomStatusDialog extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
+
             const SizedBox(height: 10),
 
-            // 3. النص الوصفي
             Text(
               description,
               textAlign: TextAlign.center,
@@ -88,19 +142,20 @@ class CustomStatusDialog extends StatelessWidget {
                 height: 1.4,
               ),
             ),
+
             const SizedBox(height: 24),
 
-            // 4. أزرار التحكم
             Row(
               children: [
-                // زر الإلغاء (يظهر فقط إذا تم تمرير نص له)
                 if (cancelButtonText != null) ...[
                   Expanded(
                     child: OutlinedButton(
                       onPressed: onCancel ?? () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -117,12 +172,12 @@ class CustomStatusDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                 ],
 
-                // زر التأكيد الرئيسي
                 Expanded(
                   child: ElevatedButton(
                     onPressed: onConfirm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -132,7 +187,8 @@ class CustomStatusDialog extends StatelessWidget {
                     child: Text(
                       confirmButtonText,
                       style: TextStyle(
-                        color: Theme.of(context).scaffoldBackgroundColor,
+                        color:
+                            Theme.of(context).scaffoldBackgroundColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

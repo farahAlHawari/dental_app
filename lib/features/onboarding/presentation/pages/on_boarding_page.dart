@@ -1,4 +1,5 @@
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/features/login/presentation/pages/login_page.dart';
 import 'package:dental_app/features/onboarding/presentation/widgets/on_boarding_card.dart';
 import 'package:dental_app/features/onboarding/presentation/widgets/on_boarding_dot_indicator.dart';
@@ -43,9 +44,18 @@ final List<String> descriptions = [
     super.dispose();
   }
 
+  Future<void> _finishMarketingOnboarding() async {
+    await SharedPrefs.setHasSeenOnboarding(true);
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
+  }
+
   void _goToNextPage() {
     if (_isLastPage) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage(),));
+      _finishMarketingOnboarding();
       return;
     }
     _pageController.nextPage(

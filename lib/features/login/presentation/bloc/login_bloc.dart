@@ -21,26 +21,52 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         phone: event.phone,
         password: event.password,
       );
-     // بعد
-await result.fold(
-  (failure) async => emit(LoginFailure(errMessage: failure.errMessage)),
-  (data) async {
-    final accessToken = data['accessToken'] as String?;
-    final refreshToken = data['refreshToken'] as String?;
-    final activationRequired = data['activationRequired'] == true;
 
-    if (accessToken != null) await SharedPrefs.saveToken(accessToken);
-    if (refreshToken != null) await SharedPrefs.saveRefreshToken(refreshToken);
+      await result.fold(
+        (failure) async => emit(LoginFailure(errMessage: failure.errMessage)),
+        (data) async {
+          final activationRequired = data['activationRequired'] == true;
+          final otpRequired = data['otpRequired'] == true;
 
-    if (activationRequired) {
-      emit(LoginRequiresPasswordChange(
-        temporaryToken: data['temporaryToken'] as String? ?? accessToken ?? '',
-      ));
-    } else {
-      emit(LoginSuccess());
-    }
-  },
-);
+          // INVITED — Complete Activation (temporaryToken in memory only).
+          if (activationRequired) {
+            final temporaryToken = data['temporaryToken'] as String? ?? '';
+            await SharedPrefs.savePhone(event.phone);
+            emit(LoginRequiresPasswordChange(temporaryToken: temporaryToken));
+            return;
+          }
+
+          // ================================
+          // NEW CODE START — PENDING_ACTIVATION: OTP like Register
+          // Ignore temporaryToken from this response. Go to Verify OTP.
+          // access/refresh are saved AFTER successful OTP verify (VerifyOtpBloc).
+          // ================================
+          if (otpRequired) {
+            await SharedPrefs.savePhone(event.phone);
+            emit(LoginRequiresOtp(phone: event.phone));
+            return;
+          }
+          // ================================
+          // NEW CODE END
+          // ================================
+
+          // Normal ACTIVE login
+          final accessToken = data['accessToken'] as String?;
+          final refreshToken = data['refreshToken'] as String?;
+          final accountStatus = data['accountStatus'] as String?;
+
+          if (accessToken != null) await SharedPrefs.saveToken(accessToken);
+          if (refreshToken != null) {
+            await SharedPrefs.saveRefreshToken(refreshToken);
+          }
+          if (accountStatus != null && accountStatus.isNotEmpty) {
+            await SharedPrefs.saveAccountStatus(accountStatus);
+          }
+          await SharedPrefs.savePhone(event.phone);
+
+          emit(LoginSuccess());
+        },
+      );
     });
   }
 }

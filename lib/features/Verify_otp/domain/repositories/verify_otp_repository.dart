@@ -7,4 +7,19 @@ abstract class VerifyOtpRepository {
     required String phone,
     required String code,
   });
+
+  // ================================
+  // NEW CODE START — Change Phone only
+  // ================================
+  Future<Either<Failure, Map<String, dynamic>>> confirmChangePhone({
+    required String code,
+  });
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  Future<Either<Failure, Map<String, dynamic>>> verifyResetOtp({
+    required String phone,
+    required String code,
+  });
 }

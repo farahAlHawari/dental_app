@@ -39,4 +39,37 @@ class VerifyOtpRemoteDataSource {
     );
     return (response as Map<String, dynamic>)['data'] as Map<String, dynamic>;
   }
+
+  // ================================
+  // NEW CODE START — Change Phone only
+  // ================================
+  Future<Map<String, dynamic>> confirmChangePhone({
+    required String code,
+  }) async {
+    final response = await api.post(
+      EndPoints.changePhoneConfirm,
+      data: {"code": code},
+    );
+    final map = response as Map<String, dynamic>;
+    final data = map['data'];
+    if (data is Map<String, dynamic>) return data;
+    return <String, dynamic>{};
+  }
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  Future<Map<String, dynamic>> verifyResetOtp({
+    required String phone,
+    required String code,
+  }) async {
+    final response = await api.post(
+      EndPoints.verifyResetOtp,
+      data: {"phone": phone, "code": code},
+    );
+    final map = response as Map<String, dynamic>;
+    final data = map['data'];
+    if (data is Map<String, dynamic>) return data;
+    return map;
+  }
 }

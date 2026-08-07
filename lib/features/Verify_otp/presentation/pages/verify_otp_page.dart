@@ -1,8 +1,12 @@
 import 'dart:async';
 
+import 'package:dental_app/core/navigation/post_auth_navigation.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
+import 'package:dental_app/core/widgets/dialog.dart';
+import 'package:dental_app/core/widgets/masked_phone_chip.dart';
 import 'package:dental_app/features/Verify_otp/presentation/bloc/verify_otp_bloc.dart';
 import 'package:dental_app/features/Verify_otp/presentation/pages/otp_flow.dart';
-import 'package:dental_app/features/register/presentation/pages/patient_type.dart';
+import 'package:dental_app/features/account_settings/presentation/pages/account_settings.dart';
 import 'package:dental_app/features/reset_password/presentation/reset_password_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +57,14 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
     });
   }
 
+  String _formatTimer(int totalSeconds) {
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
   Future<void> _handleResend() async {
+    if (_resending) return;
     setState(() => _resending = true);
     bool success = await widget.onResend();
     setState(() => _resending = false);
@@ -93,24 +104,57 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         body: BlocConsumer<VerifyOtpBloc, VerifyOtpState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is VerifyOtpSuccess) {
               switch (widget.flow) {
                 case OtpFlow.register:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => PatientType()),
-                  );
+                  // After OTP: no patients → PatientType (force create);
+                  // has patients → Profile. Same gate as post-login.
+                  if (!context.mounted) return;
+                  await PostAuthNavigation.go(context);
                   break;
                 case OtpFlow.forgotPassword:
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => ResetPasswordPage()));
+                  final token = state.resetToken;
+                  if (token != null && token.isNotEmpty) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ResetPasswordPage(resetToken: token),
+                      ),
+                    );
+                  }
+                  // Already verified / no resetToken: stay on page, no crash.
                   break;
                 case OtpFlow.changePhone:
-                  Navigator.pop(context);
+                CustomStatusDialog.show(
+  context,
+  type: StatusDialogType.phoneChanged,
+  onConfirm: () {
+    Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => AccountSettings()
+    ),
+    (route) => false,
+  );
+  },
+);
+               
                   break;
               }
             } else if (state is VerifyOtpFailure) {
-              setState(() => _attempts++);
+              final needle =
+                  '${state.failureMessage} ${state.errorCode ?? ''}'.toUpperCase();
+              setState(() {
+                _attempts++;
+                if (needle.contains('OTP_MAX_ATTEMPTS')) {
+                  _attempts = _maxAttempts;
+                }
+                if (needle.contains('OTP_EXPIRED')) {
+                  _seconds = 0;
+                  _timer?.cancel();
+                }
+              });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.failureMessage)),
               );
@@ -211,20 +255,33 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                                       ),
                                     ),
                                     SizedBox(height: 5),
-                                    Center(
-                                      child: Text(
-                                        "Enter the verification code sent to your mobile number"
-                                            .tr(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.7),
-                                          fontSize: 10,
+                                    // ================================
+                                    // MODIFIED — Change Phone: masked destination phone
+                                    // ================================
+                                    if (widget.flow == OtpFlow.changePhone) ...[
+                                      const SizedBox(height: 12),
+                                      MaskedPhoneChip(
+                                        label: "Verification code sent to".tr(),
+                                        phone: widget.phone,
+                                      ),
+                                    ] else
+                                      Center(
+                                        child: Text(
+                                          "Enter the verification code sent to your mobile number"
+                                              .tr(),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.7),
+                                            fontSize: 10,
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                    // ================================
+                                    // MODIFIED END
+                                    // ================================
                                     const SizedBox(height: 30),
                                     Center(
                                       child: Pinput(
@@ -303,8 +360,11 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                                                     ),
                                             )
                                           : Text(
-                                              "Resend in 00:".tr() +
-                                                  "${_seconds.toString().padLeft(2, '0')}",
+                                              'Resend in {time}'.tr(
+                                                namedArgs: {
+                                                  'time': _formatTimer(_seconds),
+                                                },
+                                              ),
                                               style: TextStyle(
                                                 color: Theme.of(context)
                                                     .colorScheme
@@ -325,6 +385,13 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                                                       VerifyOtpSubmitted(
                                                         phone: widget.phone,
                                                         code: _otpController.text,
+                                                        // ================================
+                                                        // NEW CODE START
+                                                        // ================================
+                                                        flow: widget.flow,
+                                                        // ================================
+                                                        // NEW CODE END
+                                                        // ================================
                                                       ),
                                                     );
                                               },

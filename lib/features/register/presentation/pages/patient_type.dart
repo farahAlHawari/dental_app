@@ -1,6 +1,7 @@
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/features/register/presentation/pages/medical_info.dart';
 import 'package:dental_app/features/register/presentation/pages/signup_page.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -314,11 +315,18 @@ SizedBox(width: 5,),
                           
                                   child: ElevatedButton(
                           
-                                    onPressed: () {
-                                                  // context.read<ThemeBloc>().add(ToggleTheme());
-
-                                      Navigator.push(context, MaterialPageRoute(builder: (context) => MedicalInfo(), ));
-                          
+                                    onPressed: () async {
+                                      await SharedPrefs.savePatientOnboardingStep(
+                                        SharedPrefs.onboardingMedicalForm,
+                                      );
+                                      if (!context.mounted) return;
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const MedicalInfo(),
+                                        ),
+                                      );
                                     },
                           
                                     style: ElevatedButton.styleFrom(

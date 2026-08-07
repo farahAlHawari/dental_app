@@ -15,4 +15,15 @@ class LoginDataSource {
     });
    return (response as Map<String, dynamic>)['data'] as Map<String, dynamic>;
   }
+
+  // ================================
+  // NEW CODE START
+  // ================================
+  Future<Map<String, dynamic>> getMe() async {
+    final response = await api.get(EndPoints.authMe);
+    return (response as Map<String, dynamic>)['data'] as Map<String, dynamic>;
+  }
+  // ================================
+  // NEW CODE END
+  // ================================
 }

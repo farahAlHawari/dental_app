@@ -10,6 +10,18 @@ final class LoginRequiresPasswordChange extends LoginState {
   final String temporaryToken;
   LoginRequiresPasswordChange({required this.temporaryToken});
 }
+
+// ================================
+// NEW CODE START — PENDING_ACTIVATION from Login → same OTP as Register
+// ================================
+final class LoginRequiresOtp extends LoginState {
+  final String phone;
+  LoginRequiresOtp({required this.phone});
+}
+// ================================
+// NEW CODE END
+// ================================
+
 final class LoginFailure extends LoginState {
   final String errMessage;
   LoginFailure({required this.errMessage});

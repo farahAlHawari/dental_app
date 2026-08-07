@@ -51,7 +51,7 @@
 //           children: [
 //              Positioned.fill(
 //             child: Image.asset(
-//               "assets/backgrounds/1.png",
+//               "assets/backgrounds/background5.png",
 //               color: Theme.of(context).colorScheme.primary,
 //               fit: BoxFit.cover,
 //             ),
@@ -206,7 +206,7 @@ class _InvoiceDetailsState extends State<InvoiceDetails> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: Image.asset("assets/backgrounds/1.png", fit: BoxFit.cover),
+              child: Image.asset("assets/backgrounds/background5.png", fit: BoxFit.cover,color: Theme.of(context).colorScheme.primary,),
             ),
             SingleChildScrollView(
               child: Padding(

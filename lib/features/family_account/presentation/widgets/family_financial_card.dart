@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 
@@ -66,7 +67,7 @@ class FamilyFinancialCard extends StatelessWidget {
               children: [
 
                 Text(
-                  "Family Financial Statement",
+                  "Family Financial Statement".tr(),
 
                   style: Theme.of(context)
                       .textTheme
@@ -82,7 +83,7 @@ class FamilyFinancialCard extends StatelessWidget {
 
 
                 Text(
-                  "View all invoices and payments",
+                  "View all invoices and payments".tr(),
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall,

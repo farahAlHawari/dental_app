@@ -24,7 +24,13 @@ class RegisterRepositoryImpl extends RegisterRepository {
       );
       return Right(result);
     } on ServerException catch (e) {
-      return Left(Failure(errMessage: e.errorModel.errorMessage));
+      return Left(
+        Failure(
+          errMessage: e.errorModel.errorMessage,
+          code: e.errorModel.code,
+          statusCode: e.errorModel.statusCode,
+        ),
+      );
     }
   }
 }

@@ -13,5 +13,6 @@ final class RegisterSuccess extends RegisterState {
 
 final class RegisterFailure extends RegisterState {
   final String errMessage;
-  RegisterFailure({required this.errMessage});
+  final int? statusCode;
+  RegisterFailure({required this.errMessage, this.statusCode});
 }

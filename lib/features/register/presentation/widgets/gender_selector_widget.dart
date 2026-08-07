@@ -1,4 +1,5 @@
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class GenderSelector extends StatelessWidget {
@@ -68,7 +69,7 @@ class GenderSelector extends StatelessWidget {
         Expanded(
           child: _genderCard(
             context,
-            "Male",
+            "Male".tr(),
             Icons.male,
             selectedGender == "Male",
             () => onChanged("Male"),
@@ -78,7 +79,7 @@ class GenderSelector extends StatelessWidget {
         Expanded(
           child: _genderCard(
             context,
-            "Female",
+            "Female".tr(),
             Icons.female,
             selectedGender == "Female",
             () => onChanged("Female"),

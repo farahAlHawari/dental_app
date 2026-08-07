@@ -1,19 +1,19 @@
-import 'package:dio/dio.dart';
+import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/api/end_points.dart';
 
+/// Forgot Password only — POST /auth/forgot-password
 class ForgetPasswordRemoteDataSource {
-  Dio dio = Dio();
+  final DioConsumer api;
+  ForgetPasswordRemoteDataSource({required this.api});
 
-  Future<bool> forgetPassword({required String phone}) async {
-    try {
-      final response = await dio.post(
-        '${EndPoints.baserUrl}${EndPoints.forgotPassword}',
-        data: {"phone": phone},
-      );
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      print(e);
-      return false;
-    }
+  Future<Map<String, dynamic>> forgetPassword({required String phone}) async {
+    final response = await api.post(
+      EndPoints.forgotPassword,
+      data: {"phone": phone},
+    );
+    final map = response as Map<String, dynamic>;
+    final data = map['data'];
+    if (data is Map<String, dynamic>) return data;
+    return map;
   }
 }

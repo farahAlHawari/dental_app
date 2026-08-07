@@ -1,4 +1,5 @@
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -56,7 +57,7 @@ class _PrescrptionsPageState extends State<PrescrptionsPage> {
                          
                           // Title
                           Text(
-                                 "Perscription1",
+                                 "Perscription1".tr(),
                                  style: TextStyle(
                                    color: AppColors.textPrimary,
                                    fontSize: 18,
@@ -71,7 +72,7 @@ class _PrescrptionsPageState extends State<PrescrptionsPage> {
                                    Icon(Icons.medical_information_outlined, color: AppColors.primary, size: 16),
                                    const SizedBox(width: 8),
                                    Text(
-                                     "Root Canal Treatment",
+                                     "Root Canal Treatment".tr(),
                                      style: TextStyle(
                        color: AppColors.textPrimary,
                        fontSize: 13,

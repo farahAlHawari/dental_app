@@ -1,7 +1,32 @@
+import 'package:dental_app/core/utils/patient_profile_image.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
+import 'package:dental_app/core/widgets/patient_avatar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class SwitchAccountBottomSheet extends StatelessWidget {
-  const SwitchAccountBottomSheet({super.key});
+  // ================================
+  // NEW CODE START
+  // ================================
+  final List<Map<String, dynamic>> patients;
+  final String? selectedPatientId;
+  final ValueChanged<Map<String, dynamic>>? onPatientSelected;
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  const SwitchAccountBottomSheet({
+    super.key,
+    // ================================
+    // NEW CODE START
+    // ================================
+    this.patients = const [],
+    this.selectedPatientId,
+    this.onPatientSelected,
+    // ================================
+    // NEW CODE END
+    // ================================
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +48,8 @@ class SwitchAccountBottomSheet extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Switch Account",
+             Text(
+              "Switch Account".tr(),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -33,26 +58,33 @@ class SwitchAccountBottomSheet extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            _accountTile(
-              context,
-              "فرح الحواري",
-              "Male",
-              "assets/images/profile1.jpg",
-            ),
-
-            _accountTile(
-              context,
-              "محمد الحواري",
-              "Male",
-              "assets/images/profile1.jpg",
-            ),
-
-            _accountTile(
-              context,
-              "ريم الحواري",
-              "Male",
-              "assets/images/profile1.jpg",
-            ),
+            // ================================
+            // MODIFIED
+            // ================================
+            if (patients.isEmpty)
+               Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text("No patients found".tr()),
+              )
+            else
+              ...patients.map((patient) {
+                final id = (patient['id'] ?? patient['_id'] ?? '').toString();
+                final name =
+                    (patient['fullName'] ?? patient['name'] ?? '').toString();
+                final gender = (patient['gender'] ?? '').toString();
+                return _accountTile(
+                  context,
+                  id: id,
+                  name: name.isEmpty ? 'Unnamed Patient'.tr() : name,
+                  gender: gender.isEmpty ? '-' : gender,
+                  imageUrl: PatientProfileImage.urlOf(patient),
+                  selected: id == selectedPatientId,
+                  patient: patient,
+                );
+              }),
+            // ================================
+            // MODIFIED END
+            // ================================
 
             const SizedBox(height: 12),
 
@@ -65,24 +97,49 @@ class SwitchAccountBottomSheet extends StatelessWidget {
   }
 
   Widget _accountTile(
-    BuildContext context,
-    String name,
-    String file,
-    String image,
-  ) {
+    BuildContext context, {
+    // ================================
+    // MODIFIED
+    // ================================
+    required String id,
+    required String name,
+    required String gender,
+    required String? imageUrl,
+    required bool selected,
+    required Map<String, dynamic> patient,
+    // ================================
+    // MODIFIED END
+    // ================================
+  }) {
     return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: AssetImage(image),
+      leading: PatientAvatar(
+        imageUrl: imageUrl,
+        radius: 22,
       ),
       title: Text(name),
-      subtitle: Text("$file"),
-      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-      onTap: () {
-        Navigator.pop(context);
+      // ================================
+      // MODIFIED
+      // ================================
+      subtitle: Text(gender),
+      trailing: Icon(
+        selected ? Icons.check_circle : Icons.arrow_forward_ios_rounded,
+        size: 16,
+        color: selected ? Theme.of(context).colorScheme.primary : null,
+      ),
+      onTap: () async {
+  if (id.isNotEmpty) {
+    await SharedPrefs.saveSelectedPatientId(id);
+  }
 
-        /// هون لاحقاً مع Bloc
-        /// switch patient
-      },
+  onPatientSelected?.call(patient);
+
+  if (context.mounted) {
+    Navigator.pop(context, true);
+  }
+},
+      // ================================
+      // MODIFIED END
+      // ================================
     );
   }
 }

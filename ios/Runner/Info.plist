@@ -43,7 +43,20 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
+<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>whatsapp</string>
+		<string>https</string>
+	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>نستخدم Face ID لتسجيل الدخول بشكل آمن وسريع</string>
+		<key>NSFaceIDUsageDescription</key>
+	<string>نستخدم Face ID لتسجيل الدخول بشكل آمن وسريع</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>نحتاج حفظ صورة الأشعة في معرض الصور</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>نحتاج الوصول لمعرض الصور لحفظ الأشعة</string>
 </dict>
 </plist>

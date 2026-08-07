@@ -20,7 +20,35 @@ class LoginRepositoryImpl extends LoginRepository {
       );
       return Right(result);
     } on ServerException catch (e) {
-      return Left(Failure(errMessage: e.errorModel.errorMessage));
+      return Left(
+        Failure(
+          errMessage: e.errorModel.errorMessage,
+          code: e.errorModel.code,
+          statusCode: e.errorModel.statusCode,
+        ),
+      );
     }
   }
+
+  // ================================
+  // NEW CODE START
+  // ================================
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getMe() async {
+    try {
+      final result = await loginDataSource.getMe();
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(
+        Failure(
+          errMessage: e.errorModel.errorMessage,
+          code: e.errorModel.code,
+          statusCode: e.errorModel.statusCode,
+        ),
+      );
+    }
+  }
+  // ================================
+  // NEW CODE END
+  // ================================
 }

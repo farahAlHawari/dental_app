@@ -188,7 +188,7 @@
 //         children: [
 //           Positioned.fill(
 //             child: Image.asset(
-//               "assets/backgrounds/1.png",
+//               "assets/backgrounds/background5.png",
 //               fit: BoxFit.cover,
 //             ),
 //           ),
@@ -424,7 +424,7 @@
 // //             children: [
 // //               Positioned.fill(
 // //                 child: Image.asset(
-// //                   'assets/backgrounds/1.png',
+// //                   'assets/backgrounds/background5.png',
 // //                   fit: BoxFit.cover,
 // //                 ),
 // //               ),
@@ -869,7 +869,7 @@ Widget _buildSummaryCard() {
         child: Stack(
           children: [
             Positioned.fill(
-              child: Image.asset("assets/backgrounds/1.png",color: Theme.of(context).colorScheme.primary, fit: BoxFit.cover),
+              child: Image.asset("assets/backgrounds/background5.png",color: Theme.of(context).colorScheme.primary, fit: BoxFit.cover),
             ),
             Column(
               children: [

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class MedicalTabviewWidget extends StatelessWidget {
@@ -44,10 +45,10 @@ class MedicalTabviewWidget extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 35),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35),
               child: Text(
-                "Place your widgets here.\nCards, ListView, GridView or any content.",
+                "Place your widgets here.\nCards, ListView, GridView or any content.".tr(),
                 textAlign: TextAlign.center,
               ),
             ),

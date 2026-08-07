@@ -1,5 +1,4 @@
-import 'dart:async';
-
+import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/features/Verify_otp/presentation/pages/otp_flow.dart';
@@ -7,6 +6,7 @@ import 'package:dental_app/features/Verify_otp/presentation/pages/verify_otp_pag
 import 'package:dental_app/features/reset_password/data/datasources/forget_password_remote_data_source.dart';
 import 'package:dental_app/features/reset_password/domain/repositories/forget_password_repository_impl.dart';
 import 'package:dental_app/features/reset_password/presentation/bloc/forget_password_bloc.dart';
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,7 +26,9 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
 
   final ForgetPasswordRepositoryImpl _forgetPasswordRepository =
       ForgetPasswordRepositoryImpl(
-    remoteDataSource: ForgetPasswordRemoteDataSource(),
+    remoteDataSource: ForgetPasswordRemoteDataSource(
+      api: DioConsumer(dio: Dio()),
+    ),
   );
 
   @override
@@ -60,9 +62,11 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
                   builder: (_) => VerifyOtpPage(
                     phone: state.phone,
                     flow: OtpFlow.forgotPassword,
-                    onResend: () => _forgetPasswordRepository.forgetPassword(
-                      phone: state.phone,
-                    ),
+                    onResend: () async {
+                      final result = await _forgetPasswordRepository
+                          .forgetPassword(phone: state.phone);
+                      return result.fold((_) => false, (_) => true);
+                    },
                   ),
                 ),
               );
@@ -158,7 +162,7 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
                                       ),
                                       Center(
                                         child: Text(
-                                          "Did you forget your password?",
+                                          "Did you forget your password?".tr(),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
@@ -170,7 +174,7 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
                                       SizedBox(height: 5),
                                       Center(
                                         child: Text(
-                                          "enter your phone number and we will sent you a varification code.",
+                                          "Enter your phone number and we will send you a varification code.".tr(),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             color: Theme.of(context)
@@ -183,7 +187,7 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
                                       ),
                                       SizedBox(height: 20),
                                       Text(
-                                        "Phone number",
+                                        "Phone Number".tr(),
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.onSurface,
                                           fontSize: 13,
@@ -217,7 +221,7 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
                                           if (!_formKey.currentState!.validate()) return;
                                           context.read<ForgetPasswordBloc>().add(
                                                 ForgetPasswordSubmitted(
-                                                  phone: _phonenumber.text,
+                                                  phone: _phonenumber.text.trim(),
                                                 ),
                                               );
                                         },
@@ -242,7 +246,7 @@ class _InsertPhonenumberPageState extends State<InsertPhonenumberPage>
                                                   mainAxisAlignment: MainAxisAlignment.center,
                                                   children: [
                                                     Text(
-                                                      "Send verification code",
+                                                      "Send verification code".tr(),
                                                       style: TextStyle(
                                                         color: AppColors.background,
                                                         fontSize: 16,
