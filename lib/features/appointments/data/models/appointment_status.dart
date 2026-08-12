@@ -12,7 +12,29 @@ enum AppointmentStatus {
   inTreatment,
   completed,
   cancelled,
-  noShow,
+  noShow;
+
+  /// تحويل من قيمة الـ API (PENDING_CONFIRMATION، CONFIRMED، …).
+  static AppointmentStatus fromApiValue(String raw) {
+    switch (raw.toUpperCase()) {
+      case 'PENDING_CONFIRMATION':
+        return AppointmentStatus.pendingConfirmation;
+      case 'CONFIRMED':
+        return AppointmentStatus.confirmed;
+      case 'CHECKED_IN':
+        return AppointmentStatus.checkedIn;
+      case 'IN_TREATMENT':
+        return AppointmentStatus.inTreatment;
+      case 'COMPLETED':
+        return AppointmentStatus.completed;
+      case 'CANCELLED':
+        return AppointmentStatus.cancelled;
+      case 'NO_SHOW':
+        return AppointmentStatus.noShow;
+      default:
+        return AppointmentStatus.pendingConfirmation;
+    }
+  }
 }
 
 extension AppointmentStatusX on AppointmentStatus {

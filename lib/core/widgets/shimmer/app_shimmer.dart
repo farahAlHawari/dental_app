@@ -248,6 +248,240 @@ class ArchivedVisitsListShimmer extends StatelessWidget {
   }
 }
 
+/// Skeleton matching appointment cards in My Appointments.
+class AppointmentCardShimmer extends StatelessWidget {
+  const AppointmentCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: ShimmerBox(
+                    width: double.infinity,
+                    height: 18,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ShimmerBox(
+                  width: 88,
+                  height: 22,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ShimmerBox(
+              width: w * 0.62,
+              height: 12,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: ShimmerBox(
+                    width: double.infinity,
+                    height: 44,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ShimmerBox(
+                    width: double.infinity,
+                    height: 44,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AppointmentsListShimmer extends StatelessWidget {
+  final int itemCount;
+
+  const AppointmentsListShimmer({super.key, this.itemCount = 4});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 90),
+      itemCount: itemCount,
+      itemBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: AppointmentCardShimmer(),
+      ),
+    );
+  }
+}
+
+/// Skeleton matching bookable session cards.
+class BookableSessionCardShimmer extends StatelessWidget {
+  const BookableSessionCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withOpacity(0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ShimmerBox(
+              width: w * 0.4,
+              height: 22,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            const SizedBox(height: 14),
+            ShimmerBox(
+              width: w * 0.55,
+              height: 16,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ShimmerBox(
+                  width: w * 0.28,
+                  height: 28,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                ShimmerBox(
+                  width: w * 0.34,
+                  height: 28,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ShimmerBox(
+              width: double.infinity,
+              height: 44,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BookableSessionsListShimmer extends StatelessWidget {
+  final int itemCount;
+
+  const BookableSessionsListShimmer({super.key, this.itemCount = 3});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: itemCount,
+      itemBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.only(bottom: 16),
+        child: BookableSessionCardShimmer(),
+      ),
+    );
+  }
+}
+
+/// Skeleton for the home upcoming appointment hero card.
+class UpcomingAppointmentCardShimmer extends StatelessWidget {
+  const UpcomingAppointmentCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      height: 168,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: AppShimmer(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ShimmerBox(
+                width: w * 0.42,
+                height: 12,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              const SizedBox(height: 16),
+              ShimmerBox(
+                width: w * 0.55,
+                height: 18,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              const SizedBox(height: 10),
+              ShimmerBox(
+                width: w * 0.7,
+                height: 14,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              const Spacer(),
+              ShimmerBox(
+                width: double.infinity,
+                height: 40,
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Full patient medical page skeleton for view / create / edit.
 /// Covers fixed fields (avatar, name, birth date, gender) + dynamic schema fields.
 class PatientMedicalFormShimmer extends StatelessWidget {
@@ -520,6 +754,115 @@ class ProfileHomeCardShimmer extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Skeleton matching a promotional gallery post card.
+class GalleryPostCardShimmer extends StatelessWidget {
+  const GalleryPostCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow,
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+              child: Row(
+                children: [
+                  const ShimmerBox(
+                    width: 34,
+                    height: 34,
+                    borderRadius: BorderRadius.all(Radius.circular(17)),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShimmerBox(
+                        width: w * 0.28,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      const SizedBox(height: 6),
+                      ShimmerBox(
+                        width: w * 0.18,
+                        height: 10,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            ShimmerBox(
+              width: double.infinity,
+              height: w * 0.72,
+              borderRadius: BorderRadius.zero,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerBox(
+                    width: w * 0.62,
+                    height: 16,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  const SizedBox(height: 10),
+                  ShimmerBox(
+                    width: w * 0.9,
+                    height: 12,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  const SizedBox(height: 6),
+                  ShimmerBox(
+                    width: w * 0.75,
+                    height: 12,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class GalleryPostsListShimmer extends StatelessWidget {
+  final int itemCount;
+
+  const GalleryPostsListShimmer({super.key, this.itemCount = 3});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: itemCount,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (_, __) => const GalleryPostCardShimmer(),
     );
   }
 }

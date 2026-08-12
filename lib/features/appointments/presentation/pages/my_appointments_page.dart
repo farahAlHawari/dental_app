@@ -1,130 +1,192 @@
+import 'dart:async';
+
+import 'package:dental_app/core/utils/shared_prefs.dart';
+import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
-import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
-import 'package:dental_app/features/appointments/data/mock_appointments_store.dart';
+import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
+import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_model.dart';
-import 'package:dental_app/features/appointments/data/models/appointment_status.dart';
+import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:dental_app/features/appointments/presentation/pages/qr_checkin_scanner_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_date_time_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/appointment_card.dart';
+import 'package:dental_app/features/appointments/presentation/widgets/cancel_appointment_dialog.dart';
 import 'package:dental_app/features/medical_archive/presentation/widgets/animated_tab_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// تبويب "مواعيدي" - تابين: القادمة (pending/confirmed/checked-in/in-treatment)
-/// والسابقة (completed/cancelled/no-show). البيانات mock محلياً حالياً - نفس
-/// نمط باقي تبويبات التطبيق لحد ما يتوفر الـ backend.
-class MyAppointmentsPage extends StatefulWidget {
+/// تبويب "مواعيدي" — نفس نمط فرح: Bloc + Shimmer + EmptyListState.
+class MyAppointmentsPage extends StatelessWidget {
   const MyAppointmentsPage({super.key});
 
   @override
-  State<MyAppointmentsPage> createState() => _MyAppointmentsPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AppointmentsBloc(),
+      child: const _MyAppointmentsView(),
+    );
+  }
 }
 
-class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
-  final _store = MockAppointmentsStore.instance;
+class _MyAppointmentsView extends StatefulWidget {
+  const _MyAppointmentsView();
+
+  @override
+  State<_MyAppointmentsView> createState() => _MyAppointmentsViewState();
+}
+
+class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
   int _tabIndex = 0;
+  String? _patientId;
+  List<Appointment> _upcoming = [];
+  List<Appointment> _previous = [];
 
   @override
   void initState() {
     super.initState();
-    _store.addListener(_onStoreChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  @override
-  void dispose() {
-    _store.removeListener(_onStoreChanged);
-    super.dispose();
-  }
+  Future<void> _load() async {
+    final patientId = await SharedPrefs.getSelectedPatientId();
+    if (!mounted) return;
 
-  void _onStoreChanged() {
-    if (mounted) setState(() {});
-  }
+    if (patientId == null || patientId.isEmpty) {
+      setState(() {
+        _patientId = null;
+        _upcoming = [];
+        _previous = [];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No patient selected'.tr())),
+      );
+      return;
+    }
 
-  List<Appointment> get _appointments => _store.appointments;
-
-  List<Appointment> get _upcoming {
-    final list = _appointments.where((a) => a.status.isUpcoming).toList();
-    list.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
-    return list;
-  }
-
-  List<Appointment> get _previous {
-    final list = _appointments.where((a) => !a.status.isUpcoming).toList();
-    list.sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
-    return list;
-  }
-
-  void _updateAppointment(Appointment updated) {
-    _store.replace(updated);
-  }
-
-  void _confirmCancel(Appointment appointment) {
-    CustomConfirmationDialog.show(
-      context,
-      title: 'Cancel this appointment?'.tr(),
-      description:
-          'Are you sure you want to cancel this appointment? This action cannot be undone.'
-              .tr(),
-      confirmButtonText: 'Yes, Cancel'.tr(),
-      cancelButtonText: 'Keep Appointment'.tr(),
-      isDestructive: true,
-      onConfirm: () {
-        Navigator.pop(context);
-        _updateAppointment(
-          appointment.copyWith(status: AppointmentStatus.cancelled),
+    _patientId = patientId;
+    await ShimmerPreview.wait();
+    if (!mounted) return;
+    context.read<AppointmentsBloc>().add(
+          LoadAppointmentsListRequested(patientId: patientId),
         );
-      },
+  }
+
+  Future<void> _confirmCancel(Appointment appointment) async {
+    final reason = await CancelAppointmentDialog.show(context);
+    if (reason == null || !mounted) return;
+
+    context.read<AppointmentsBloc>().add(
+          CancelAppointmentRequested(
+            appointmentId: appointment.id,
+            cancellationReason: reason.isEmpty ? null : reason,
+          ),
+        );
+  }
+
+  Future<void> _openReschedule(Appointment appointment) async {
+    final bloc = context.read<AppointmentsBloc>();
+    var prepareDialogOpen = false;
+    final completer = Completer<AppointmentsState>();
+
+    final subscription = bloc.stream.listen((state) {
+      if (state is ReschedulePrepareLoading && mounted && !prepareDialogOpen) {
+        prepareDialogOpen = true;
+        showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => PopScope(
+            canPop: false,
+            child: Center(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+      if ((state is ReschedulePreparedSuccess ||
+              state is ReschedulePreparedFailure) &&
+          !completer.isCompleted) {
+        completer.complete(state);
+      }
+    });
+
+    bloc.add(PrepareRescheduleAppointmentRequested(appointment: appointment));
+
+    final prepareState = await completer.future;
+    await subscription.cancel();
+    if (prepareDialogOpen && mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (!mounted) return;
+
+    if (prepareState is ReschedulePreparedFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(prepareState.errMessage.tr())),
+      );
+      return;
+    }
+
+    await _pushRescheduleDatePicker(
+      (prepareState as ReschedulePreparedSuccess).appointment,
     );
   }
 
-  void _openReschedule(Appointment appointment) {
-    Navigator.push(
+  Future<void> _pushRescheduleDatePicker(Appointment appointment) async {
+    final appointmentsBloc = context.read<AppointmentsBloc>();
+    final scheduledAt = await Navigator.push<String>(
       context,
       MaterialPageRoute(
-        builder: (context) => SelectDateTimePage(
-          isReschedule: true,
-          onDateTimeSelected: (date, time) {
-            final timeParts = _parseTimeOfDay(time);
-            final newDate = DateTime(
-              date.year,
-              date.month,
-              date.day,
-              timeParts.hour,
-              timeParts.minute,
-            );
-            // تغيير الموعد بيحدّث الوقت بس، وبيحافظ على نفس الحالة الحالية
-            // (لو كان "قيد الانتظار" بضل "قيد الانتظار"، ولو كان "مؤكد"
-            // بضل "مؤكد") - إعادة الجدولة ما بتغيّر حالة التأكيد نفسها.
-            _updateAppointment(appointment.copyWith(scheduledAt: newDate));
-          },
+        builder: (_) => BlocProvider.value(
+          value: appointmentsBloc,
+          child: SelectDateTimePage(
+            isReschedule: true,
+            rescheduleAppointmentId: appointment.id,
+            visitTypeLabel: appointment.visitTypeLabel,
+            bookingType:
+                appointment.bookingType ?? AppointmentBookingType.consultation,
+            treatmentSessionId: appointment.treatmentSessionId,
+          ),
         ),
       ),
     );
+    if (scheduledAt == null || !mounted) return;
+
+    context.read<AppointmentsBloc>().add(
+          RescheduleAppointmentRequested(
+            appointmentId: appointment.id,
+            scheduledAt: scheduledAt,
+          ),
+        );
   }
 
   Future<void> _openQrCheckIn(Appointment appointment) async {
+    final patientId = _patientId;
+    if (patientId == null) return;
+
+    final appointmentsBloc = context.read<AppointmentsBloc>();
     final checkedIn = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (context) => const QrCheckinScannerPage()),
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: appointmentsBloc,
+          child: QrCheckinScannerPage(
+            patientId: patientId,
+            appointmentId: appointment.id,
+          ),
+        ),
+      ),
     );
     if (checkedIn == true) {
-      _updateAppointment(
-        appointment.copyWith(status: AppointmentStatus.checkedIn),
-      );
+      _load();
     }
-  }
-
-  ({int hour, int minute}) _parseTimeOfDay(String label) {
-    // متوقع شكل "9:00 AM" / "1:00 PM" - نفس الشكل يلي بيولده SelectDateTimePage.
-    final isPm = label.toUpperCase().contains('PM');
-    final digitsPart = label.replaceAll(RegExp(r'[^0-9:]'), '');
-    final parts = digitsPart.split(':');
-    var hour = int.tryParse(parts.first) ?? 0;
-    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
-    if (isPm && hour != 12) hour += 12;
-    if (!isPm && hour == 12) hour = 0;
-    return (hour: hour, minute: minute);
   }
 
   void _openBooking() {
@@ -136,8 +198,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     final items = _tabIndex == 0 ? _upcoming : _previous;
 
     return Scaffold(
@@ -178,57 +239,187 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
               ),
             ),
             SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: AnimatedTabBar(
-                      tabs: ['Upcoming'.tr(), 'Previous'.tr()],
-                      selectedIndex: _tabIndex,
-                      onChanged: (index) => setState(() => _tabIndex = index),
-                    ),
-                  ),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) =>
-                          FadeTransition(opacity: animation, child: child),
-                      child: items.isEmpty
-                          ? _EmptyState(
-                              key: ValueKey('empty_$_tabIndex'),
-                              isUpcoming: _tabIndex == 0,
-                            )
-                          : ListView.builder(
-                              key: ValueKey('list_$_tabIndex'),
-                              padding: const EdgeInsets.fromLTRB(
-                                16,
-                                10,
-                                16,
-                                90,
-                              ),
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final appointment = items[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 14),
-                                  child: FadeSlideIn(
-                                    delay: Duration(milliseconds: 60 * index),
-                                    child: AppointmentCard(
-                                      appointment: appointment,
-                                      onCancel: () =>
-                                          _confirmCancel(appointment),
-                                      onReschedule: () =>
-                                          _openReschedule(appointment),
-                                      onScanQr: () =>
-                                          _openQrCheckIn(appointment),
-                                    ),
+              child: BlocConsumer<AppointmentsBloc, AppointmentsState>(
+                listener: (context, state) {
+                  if (state is AppointmentsListSuccess) {
+                    setState(() {
+                      _upcoming = List.from(state.upcoming);
+                      _previous = List.from(state.previous);
+                    });
+                  } else if (state is AppointmentsListFailure) {
+                    setState(() {
+                      _upcoming = [];
+                      _previous = [];
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.errMessage)),
+                    );
+                  } else if (state is CancelAppointmentSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Appointment cancelled'.tr())),
+                    );
+                    _load();
+                  } else if (state is CancelAppointmentFailure) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.errMessage)),
+                    );
+                  } else if (state is RescheduleAppointmentSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Appointment rescheduled'.tr())),
+                    );
+                    _load();
+                  } else if (state is RescheduleAppointmentFailure) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.errMessage)),
+                    );
+                  }
+                },
+                buildWhen: (previous, current) =>
+                    current is AppointmentsListLoading ||
+                    current is AppointmentsListSuccess ||
+                    current is AppointmentsListFailure ||
+                    current is AppointmentsInitial,
+                builder: (context, state) {
+                  final loading = state is AppointmentsListLoading ||
+                      (state is AppointmentsInitial &&
+                          _upcoming.isEmpty &&
+                          _previous.isEmpty);
+
+                  if (loading) {
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: AnimatedTabBar(
+                            tabs: ['Upcoming'.tr(), 'Previous'.tr()],
+                            selectedIndex: _tabIndex,
+                            onChanged: (index) =>
+                                setState(() => _tabIndex = index),
+                          ),
+                        ),
+                        const Expanded(child: AppointmentsListShimmer()),
+                      ],
+                    );
+                  }
+
+                  if (state is AppointmentsListFailure &&
+                      _upcoming.isEmpty &&
+                      _previous.isEmpty) {
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: AnimatedTabBar(
+                            tabs: ['Upcoming'.tr(), 'Previous'.tr()],
+                            selectedIndex: _tabIndex,
+                            onChanged: (index) =>
+                                setState(() => _tabIndex = index),
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    state.errMessage,
+                                    textAlign: TextAlign.center,
                                   ),
-                                );
-                              },
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: _load,
+                                    child: Text('Retry'.tr()),
+                                  ),
+                                ],
+                              ),
                             ),
-                    ),
-                  ),
-                ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: AnimatedTabBar(
+                          tabs: ['Upcoming'.tr(), 'Previous'.tr()],
+                          selectedIndex: _tabIndex,
+                          onChanged: (index) =>
+                              setState(() => _tabIndex = index),
+                        ),
+                      ),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: _load,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                            child: items.isEmpty
+                                ? ListView(
+                                    key: ValueKey('empty_$_tabIndex'),
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    children: [
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.22,
+                                      ),
+                                      EmptyListState(
+                                        message: (_tabIndex == 0
+                                                ? 'No upcoming appointments'
+                                                : 'No previous visits yet')
+                                            .tr(),
+                                        animationSize: 140,
+                                      ),
+                                    ],
+                                  )
+                                : ListView.builder(
+                                    key: ValueKey('list_$_tabIndex'),
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      10,
+                                      16,
+                                      90,
+                                    ),
+                                    itemCount: items.length,
+                                    itemBuilder: (context, index) {
+                                      final appointment = items[index];
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 14),
+                                        child: FadeSlideIn(
+                                          delay:
+                                              Duration(milliseconds: 60 * index),
+                                          child: AppointmentCard(
+                                            appointment: appointment,
+                                            onCancel: () =>
+                                                _confirmCancel(appointment),
+                                            onReschedule: () =>
+                                                _openReschedule(appointment),
+                                            onScanQr: () =>
+                                                _openQrCheckIn(appointment),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -237,77 +428,3 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
     );
   }
 }
-
-class _EmptyState extends StatelessWidget {
-  final bool isUpcoming;
-
-  const _EmptyState({super.key, required this.isUpcoming});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.calendar_month_outlined,
-              size: 56,
-              color: colors.onSurface.withOpacity(0.3),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              (isUpcoming
-                      ? 'No upcoming appointments'
-                      : 'No previous visits yet')
-                  .tr(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: colors.onSurface.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// /// زر حجز موعد جديد - يظهر بس بنص الواجهة بعد آخر كرت بتبويب "القادمة".
-// class _BookAppointmentButton extends StatelessWidget {
-//   final VoidCallback onTap;
-
-//   const _BookAppointmentButton({required this.onTap});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final colors = Theme.of(context).colorScheme;
-
-//     return Center(
-//       child: ElevatedButton.icon(
-//         onPressed: onTap,
-//         icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-//         label: Text(
-//           'Book New Appointment'.tr(),
-//           style: const TextStyle(
-//             color: Colors.white,
-//             fontWeight: FontWeight.w700,
-//           ),
-//         ),
-//         style: ElevatedButton.styleFrom(
-//           backgroundColor: colors.primary,
-//           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
-//           elevation: 0,
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(30),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }

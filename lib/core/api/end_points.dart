@@ -47,6 +47,9 @@ static const String language = "auth/language";
   static String treatmentSessions(String patientId) =>
       "treatment/patients/$patientId/treatment-sessions";
 
+  static String treatmentSessionsForBooking(String patientId) =>
+      "treatment/patients/$patientId/treatment-sessions/for-booking";
+
   static String rateTreatmentSession(String patientId, String sessionId) =>
       "treatment/patients/$patientId/treatment-sessions/$sessionId/rate";
 
@@ -58,6 +61,32 @@ static const String language = "auth/language";
   // ================================
   // NEW CODE END
   // ================================
+
+  // ================================
+  // Appointments — availability (patient app)
+  // ================================
+  static const String appointmentAvailabilityDays =
+      "appointments/availability/days";
+  static const String appointmentAvailabilitySlots =
+      "appointments/availability/slots";
+
+  static const String appointments = "appointments";
+  static const String appointmentsUpcoming = "appointments/upcoming";
+  static const String appointmentsCheckIn = "appointments/check-in";
+
+  static String appointmentById(String id) => "appointments/$id";
+  static String appointmentReschedule(String id) =>
+      "appointments/$id/reschedule";
+  static String appointmentCancel(String id) => "appointments/$id/cancel";
+
+  static const String chatbotMessage = "chatbot/message";
+  static const String chatbotSummarize = "chatbot/summarize";
+
+  // ================================
+  // App contents — promotional gallery (patient app)
+  // ================================
+  static const String appContents = "app/contents";
+  static String appContentById(String id) => "app/contents/$id";
 
   /// Public auth endpoints — no Authorization header.
   static const Set<String> publicAuthPaths = {

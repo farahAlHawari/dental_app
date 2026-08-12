@@ -1,13 +1,27 @@
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:dental_app/features/appointments/presentation/pages/consultation_reason_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_follow_up_session_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/visit_type_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SelectVisitTypePage extends StatelessWidget {
   const SelectVisitTypePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AppointmentsBloc(),
+      child: const _SelectVisitTypeView(),
+    );
+  }
+}
+
+class _SelectVisitTypeView extends StatelessWidget {
+  const _SelectVisitTypeView();
 
   @override
   Widget build(BuildContext context) {
@@ -129,12 +143,17 @@ class SelectVisitTypePage extends StatelessWidget {
                         icon: Icons.person_outline_rounded,
                         accentColor: AppColors.primary,
                         onTap: () {
+                          final appointmentsBloc =
+                              context.read<AppointmentsBloc>();
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ConsultationReasonPage(
-                                visitTypeLabel:
-                                    'Initial Consultation / First Visit'.tr(),
+                              builder: (_) => BlocProvider.value(
+                                value: appointmentsBloc,
+                                child: ConsultationReasonPage(
+                                  visitTypeLabel:
+                                      'Initial Consultation / First Visit'.tr(),
+                                ),
                               ),
                             ),
                           );
@@ -158,10 +177,15 @@ class SelectVisitTypePage extends StatelessWidget {
                         icon: Icons.assignment_outlined,
                         accentColor: AppColors.primary,
                         onTap: () {
+                          final appointmentsBloc =
+                              context.read<AppointmentsBloc>();
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SelectFollowUpSessionPage(),
+                              builder: (_) => BlocProvider.value(
+                                value: appointmentsBloc,
+                                child: SelectFollowUpSessionPage(),
+                              ),
                             ),
                           );
                         },

@@ -53,3 +53,32 @@ String formatMockTimeLabel(String rawTime) {
   final period = parts[1].toUpperCase() == 'AM' ? 'AM'.tr() : 'PM'.tr();
   return '${parts[0]} $period';
 }
+
+/// بيعرض وقت API بصيغة HH:mm (مثل "09:15") كـ 12-hour مع AM/PM مترجم.
+String formatApiTimeLabel(String startTime) {
+  final parts = startTime.trim().split(':');
+  if (parts.length < 2) return startTime;
+  final hour24 = int.tryParse(parts[0]) ?? 0;
+  final minute = parts[1].padLeft(2, '0');
+  final isAm = hour24 < 12;
+  final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+  final period = (isAm ? 'AM' : 'PM').tr();
+  return '$hour12:$minute $period';
+}
+
+/// تاريخ بصيغة YYYY-MM-DD لباراميتر الـ API.
+String formatApiDate(DateTime date) {
+  final y = date.year.toString().padLeft(4, '0');
+  final m = date.month.toString().padLeft(2, '0');
+  final d = date.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
+}
+
+/// يبني scheduledAt UTC ISO من تاريخ محلي + وقت HH:mm (نفس منطق العيادة المحلي).
+String buildScheduledAtUtcIso(DateTime date, String hhMm) {
+  final parts = hhMm.trim().split(':');
+  final hour = int.tryParse(parts.first) ?? 0;
+  final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+  final local = DateTime(date.year, date.month, date.day, hour, minute);
+  return local.toUtc().toIso8601String();
+}

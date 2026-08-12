@@ -1,50 +1,21 @@
-import 'package:dental_app/core/widgets/before_after_slider.dart';
+import 'package:dental_app/features/promotional_gallery/data/models/app_content.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// بوست وحدة بالمعرض التسويقي. لازم نص أو صورة عالأقل (ممكن الاتنين
-/// سوا)، أو بوست "قبل/بعد" (سلايدر مقارنة) عبر [GalleryPost.beforeAfter].
-/// ما في أي حقل تفاعل (لايك/تعليق) لإنه المريض بس بيشوف، ما بيعمل
-/// أي إجراء - متطابق مع الوصف يلي حكيتيه.
-class GalleryPost {
-  final String? text;
-  final String? imagePath;
-  final String? beforeImagePath;
-  final String? afterImagePath;
-
-  const GalleryPost({this.text, this.imagePath})
-    : beforeImagePath = null,
-      afterImagePath = null,
-      assert(
-        text != null || imagePath != null,
-        'لازم يكون في نص أو صورة عالأقل بكل بوست',
-      );
-
-  /// بوست "قبل/بعد" - عرض نتيجة علاج فعلية بسلايدر تفاعلي للمقارنة،
-  /// بدل صورة ثابتة وحدة. النص هون اختياري ومنعرضه كتعليق تحت السلايدر.
-  const GalleryPost.beforeAfter({
-    this.text,
-    required this.beforeImagePath,
-    required this.afterImagePath,
-  }) : imagePath = null;
-
-  bool get isBeforeAfter => beforeImagePath != null && afterImagePath != null;
-}
-
-/// كارد عرض بوست وحدة - عرض بس، بدون أي زر أو إجراء.
+/// كارد عرض محتوى من المعرض التسويقي — عرض فقط، بدون أي تفاعل.
 class GalleryPostCard extends StatelessWidget {
-  final GalleryPost post;
+  final AppContent content;
 
-  const GalleryPostCard({super.key, required this.post});
+  const GalleryPostCard({super.key, required this.content});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final hasImage = post.imagePath != null;
-    final hasText = post.text != null && post.text!.trim().isNotEmpty;
-    final isBeforeAfter = post.isBeforeAfter;
+    final imageUrls = content.imageUrls;
+    final hasTitle = content.title.isNotEmpty;
+    final hasBody = content.hasBody;
 
     return Container(
       width: double.infinity,
@@ -63,8 +34,6 @@ class GalleryPostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // هيدر بسيط بهوية العيادة - عرض فقط، ما في أي إجراء عليه.
-          // بدّلي "Our Clinic" بالترجمة الفعلية لاسم عيادتكن بملفات اللغة.
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
             child: Row(
@@ -77,57 +46,182 @@ class GalleryPostCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.local_hospital_rounded,
+                    content.type.icon,
                     size: 18,
                     color: colors.primary,
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  'Our Clinic'.tr(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: colors.onSurface,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Our Clinic'.tr(),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: colors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        content.type.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          if (isBeforeAfter)
+          if (imageUrls.isNotEmpty)
             AspectRatio(
               aspectRatio: 4 / 3,
-              child: BeforeAfterSlider(
-                beforeImagePath: post.beforeImagePath!,
-                afterImagePath: post.afterImagePath!,
-                // بلا راديوس هون - الكارد نفسه عم يقص الزوايا (Clip.antiAlias
-                // فوق)، متل ما عم يصير بالصورة العادية تماماً.
-                borderRadius: 0,
-              ),
-            )
-          else if (hasImage)
-            AspectRatio(
-              aspectRatio: 4 / 3,
-              child: Image.asset(post.imagePath!, fit: BoxFit.cover),
+              child: imageUrls.length == 1
+                  ? _GalleryNetworkImage(url: imageUrls.first, colors: colors)
+                  : _GalleryImagePager(urls: imageUrls, colors: colors),
             ),
-          // لو ما في نص (والحالة الوحيدة الممكنة هون إنه في صورة أو
-          // سلايدر قبل/بعد، حسب الـ constructors فوق)، ما منضيف أي
-          // مسافة بعد المحتوى - بيوصل لآخر الكارد مباشرة (وزواياه
-          // بتنقص تلقائياً مع زوايا الكارد الدائرية بفضل الـ
-          // clipBehavior فوق)، بدل فراغ فاضي بلا داعي.
-          if (hasText)
+          if (hasTitle || hasBody)
             Padding(
               padding: const EdgeInsets.all(14),
-              child: Text(
-                post.text!.tr(),
-                style: TextStyle(
-                  fontSize: 13.5,
-                  height: 1.5,
-                  color: colors.onSurface.withOpacity(0.8),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasTitle)
+                    Text(
+                      content.title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colors.onSurface,
+                        height: 1.35,
+                      ),
+                    ),
+                  if (hasTitle && hasBody) const SizedBox(height: 8),
+                  if (hasBody)
+                    Text(
+                      content.body!,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.5,
+                        color: colors.onSurface.withOpacity(0.8),
+                      ),
+                    ),
+                ],
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _GalleryNetworkImage extends StatelessWidget {
+  final String url;
+  final ColorScheme colors;
+
+  const _GalleryNetworkImage({
+    required this.url,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      errorBuilder: (_, __, ___) => _ImageFallback(colors: colors),
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: colors.surfaceContainerHighest,
+          alignment: Alignment.center,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colors.primary,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _GalleryImagePager extends StatefulWidget {
+  final List<String> urls;
+  final ColorScheme colors;
+
+  const _GalleryImagePager({
+    required this.urls,
+    required this.colors,
+  });
+
+  @override
+  State<_GalleryImagePager> createState() => _GalleryImagePagerState();
+}
+
+class _GalleryImagePagerState extends State<_GalleryImagePager> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        PageView.builder(
+          itemCount: widget.urls.length,
+          onPageChanged: (value) => setState(() => _index = value),
+          itemBuilder: (context, index) => _GalleryNetworkImage(
+            url: widget.urls[index],
+            colors: widget.colors,
+          ),
+        ),
+        if (widget.urls.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(widget.urls.length, (index) {
+                final active = index == _index;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: active ? 8 : 6,
+                  height: active ? 8 : 6,
+                  decoration: BoxDecoration(
+                    color: active
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.55),
+                    shape: BoxShape.circle,
+                  ),
+                );
+              }),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ImageFallback extends StatelessWidget {
+  final ColorScheme colors;
+
+  const _ImageFallback({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: colors.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        size: 40,
+        color: colors.onSurface.withOpacity(0.35),
       ),
     );
   }

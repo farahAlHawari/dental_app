@@ -1,20 +1,22 @@
 import 'package:dental_app/core/services/whatsapp_service.dart';
 import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
+import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-/// شاشة مسح رمز QR لتأكيد وصول المريض للعيادة (Check-In)، بنفس المنطق
-/// الموصوف بالـ SRS: "مسح رمز QR من التطبيق" ينقل الموعد لحالة CHECKED_IN.
-///
-/// بترجع `true` للشاشة يلي فتحتها لما يصير التأكيد بنجاح، حتى تقدر تحدّث
-/// حالة الموعد محلياً.
-///
-/// TODO: حالياً أي رمز QR (أو أي كود يدوي غير فاضي) منقبله كنجاح فوري -
-/// لما يجهز الـ backend، لازم نبعت محتوى الرمز/الكود لسيرفر العيادة
-/// للتحقق الفعلي (إنه يخص هالعيادة وهالموعد بالذات) قبل ما نأكد الحضور.
+/// شاشة مسح رمز QR لتأكيد وصول المريض للعيادة — POST appointments/check-in
 class QrCheckinScannerPage extends StatefulWidget {
-  const QrCheckinScannerPage({super.key});
+  final String patientId;
+  final String? appointmentId;
+
+  const QrCheckinScannerPage({
+    super.key,
+    required this.patientId,
+    this.appointmentId,
+  });
 
   @override
   State<QrCheckinScannerPage> createState() => _QrCheckinScannerPageState();
@@ -27,6 +29,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
   );
   late final AnimationController _scanLineController;
   bool _handled = false;
+  bool _checkingIn = false;
 
   static const _frameColor = Color(0xFF35D6C4);
 
@@ -47,13 +50,63 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
   }
 
   void _onDetect(BarcodeCapture capture) {
-    if (_handled || capture.barcodes.isEmpty) return;
-    _handleSuccess();
+    if (_handled || _checkingIn || capture.barcodes.isEmpty) return;
+    final raw = capture.barcodes.first.rawValue?.trim();
+    if (raw == null || raw.length < 8) return;
+    _performCheckIn(raw);
   }
 
-  void _handleSuccess() {
-    _handled = true;
+  Future<Position?> _getCurrentPosition() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return null;
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return null;
+    }
+
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    );
+  }
+
+  Future<void> _performCheckIn(String clinicCheckInCode) async {
+    if (_handled || _checkingIn) return;
+
+    setState(() => _checkingIn = true);
     _controller.stop();
+
+    final result = await _getCurrentPosition();
+    if (!mounted) return;
+
+    if (result == null) {
+      setState(() => _checkingIn = false);
+      _controller.start();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Location permission is required for check-in.'.tr())),
+      );
+      return;
+    }
+
+    context.read<AppointmentsBloc>().add(
+          CheckInAppointmentRequested(
+            patientId: widget.patientId,
+            clinicCheckInCode: clinicCheckInCode,
+            latitude: result.latitude,
+            longitude: result.longitude,
+            appointmentId: widget.appointmentId,
+          ),
+        );
+  }
+
+  void _showSuccessDialog() {
+    _handled = true;
     CustomConfirmationDialog.show(
       context,
       title: 'Attendance Confirmed'.tr(),
@@ -61,13 +114,15 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
           'Your arrival at the clinic has been confirmed successfully.'.tr(),
       confirmButtonText: 'Done'.tr(),
       onConfirm: () {
-        Navigator.pop(context); // بسكر الديالوغ
-        Navigator.pop(context, true); // بسكر شاشة المسح برجوع نجاح
+        Navigator.pop(context);
+        Navigator.pop(context, true);
       },
     );
   }
 
   Future<void> _enterCodeManually() async {
+    if (_handled || _checkingIn) return;
+
     final controller = TextEditingController();
     final colors = Theme.of(context).colorScheme;
 
@@ -105,8 +160,8 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
       ),
     );
 
-    if (!_handled && code != null && code.isNotEmpty) {
-      _handleSuccess();
+    if (code != null && code.length >= 8) {
+      await _performCheckIn(code);
     }
   }
 
@@ -127,16 +182,30 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
       width: frameSize,
       height: frameSize,
     );
-    const topRowHeight = 52.0; // ارتفاع زري الفلاش/الإغلاق فوق + الـ padding
+    const topRowHeight = 52.0;
     final spacerHeight =
         (frameRect.bottom - mediaQuery.padding.top - topRowHeight).clamp(
           0.0,
           double.infinity,
         );
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+    return BlocListener<AppointmentsBloc, AppointmentsState>(
+      listener: (context, state) {
+        if (state is CheckInAppointmentLoading) {
+          setState(() => _checkingIn = true);
+        } else if (state is CheckInAppointmentSuccess) {
+          _showSuccessDialog();
+        } else if (state is CheckInAppointmentFailure) {
+          setState(() => _checkingIn = false);
+          _controller.start();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errMessage)),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
         fit: StackFit.expand,
         children: [
           MobileScanner(
@@ -154,6 +223,22 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
               ),
             ),
           ),
+          if (_checkingIn)
+            Container(
+              color: Colors.black54,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: _frameColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Confirming your arrival...'.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
           CustomPaint(
             painter: _ScannerOverlayPainter(
               frameRect: frameRect,
@@ -211,7 +296,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
                             icon: torchOn
                                 ? Icons.flash_on_rounded
                                 : Icons.flash_off_rounded,
-                            onTap: torchAvailable
+                            onTap: torchAvailable && !_checkingIn
                                 ? () => _controller.toggleTorch()
                                 : null,
                           );
@@ -219,7 +304,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
                       ),
                       _CircleIconButton(
                         icon: Icons.close_rounded,
-                        onTap: () => Navigator.pop(context),
+                        onTap: _checkingIn ? null : () => Navigator.pop(context),
                       ),
                     ],
                   ),
@@ -257,7 +342,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       TextButton.icon(
-                        onPressed: _contactHelp,
+                        onPressed: _checkingIn ? null : _contactHelp,
                         icon: const Icon(
                           Icons.info_outline_rounded,
                           color: Colors.white70,
@@ -270,7 +355,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
                       ),
                       Container(width: 1, height: 16, color: Colors.white24),
                       TextButton(
-                        onPressed: _enterCodeManually,
+                        onPressed: _checkingIn ? null : _enterCodeManually,
                         child: Text(
                           'Enter code manually'.tr(),
                           style: const TextStyle(color: Colors.white70),
@@ -284,11 +369,11 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
           ),
         ],
       ),
+    ),
     );
   }
 }
 
-/// زر دائري شفاف فوق الكاميرا (الفلاش/الإغلاق).
 class _CircleIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -317,8 +402,6 @@ class _CircleIconButton extends StatelessWidget {
   }
 }
 
-/// يرسم طبقة تعتيم فوق الكاميرا مع "فتحة" شفافة بمنطقة الفريم، بالإضافة
-/// لأربع زوايا مميزة بلون فاتح حتى توضح للمريض وين يحط رمز الـ QR بالضبط.
 class _ScannerOverlayPainter extends CustomPainter {
   final Rect frameRect;
   final Color borderColor;

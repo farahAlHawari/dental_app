@@ -1,58 +1,51 @@
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/features/chatbot/data/models/chatbot_api_mode.dart';
+import 'package:dental_app/features/chatbot/presentation/bloc/chatbot_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 
-/// وضع الشات بوت:
-/// - [home]: محادثة عامة من الرئيسية (لوجيك مختلف لاحقاً).
-/// - [booking]: محادثة ضمن مسار حجز الاستشارة — كل حجز = شات جديدة،
-///   وزر إنهاء مرتبط بفلَاغ من الباك (هلق mock).
+/// وضع الشاشة:
+/// - [home]: محادثة عامة (EDUCATION).
+/// - [booking]: محادثة ضمن مسار الحجز (TRIAGE) + summarize.
 enum ChatbotMode { home, booking }
 
-class _ChatMessage {
-  final String text;
-  final bool isBot;
-
-  const _ChatMessage({required this.text, required this.isBot});
-}
-
-/// شاشة محادثة المريض مع المساعد الذكي.
-///
-/// بوضع [ChatbotMode.booking]:
-/// 1) كل رسالة → ريكوست 1 للباك (mock) → رد البوت + احتمال فلَاغ
-///    `canExtractDiagnosis`.
-/// 2) لما الفلَاغ true → زر "إنهاء المحادثة واستخراج التشخيص" enable.
-/// 3) ضغط الزر → ريكوست 2 (mock) → ملخص يرجع لشاشة سبب الزيارة.
-///
-/// ما في تخزين محادثات — كل فتح = شات جديدة من الصفر.
-class ChatbotPage extends StatefulWidget {
+/// شاشة محادثة المريض مع المساعد الذكي — مربوطة مع الباك عبر [ChatbotBloc].
+class ChatbotPage extends StatelessWidget {
   final ChatbotMode mode;
 
   const ChatbotPage({super.key, this.mode = ChatbotMode.home});
 
+  ChatbotApiMode get _apiMode =>
+      mode == ChatbotMode.booking
+          ? ChatbotApiMode.triage
+          : ChatbotApiMode.education;
+
+  bool get _isBooking => mode == ChatbotMode.booking;
+
   @override
-  State<ChatbotPage> createState() => _ChatbotPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ChatbotBloc()
+        ..add(ChatbotSessionStarted(apiMode: _apiMode)),
+      child: _ChatbotView(isBooking: _isBooking),
+    );
+  }
 }
 
-class _ChatbotPageState extends State<ChatbotPage> {
+class _ChatbotView extends StatefulWidget {
+  final bool isBooking;
+
+  const _ChatbotView({required this.isBooking});
+
+  @override
+  State<_ChatbotView> createState() => _ChatbotViewState();
+}
+
+class _ChatbotViewState extends State<_ChatbotView> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  final List<_ChatMessage> _messages = [
-    const _ChatMessage(text: 'Hello! How can I help you today?', isBot: true),
-  ];
-
-  bool _isTyping = false;
-  bool _isExtracting = false;
-
-  /// بيجي من الباك مع رد البوت لما الإيجنت صار عنده كفاية معلومات.
-  /// TODO: ربط مع الـ API الحقيقي.
-  bool _canExtractDiagnosis = false;
-
-  /// عدد رسائل المريض — mock لمتى نفعّل الفلَاغ (بعد رسالتين).
-  int _patientMessageCount = 0;
-
-  bool get _isBooking => widget.mode == ChatbotMode.booking;
 
   @override
   void dispose() {
@@ -72,64 +65,19 @@ class _ChatbotPageState extends State<ChatbotPage> {
     });
   }
 
-  /// ريكوست 1 (mock): إرسال رسالة المريض واستلام رد البوت + الفلَاغ.
-  Future<void> _sendMessage() async {
+  void _sendMessage() {
     final text = _inputController.text.trim();
-    if (text.isEmpty || _isTyping || _isExtracting) return;
-
-    setState(() {
-      _messages.add(_ChatMessage(text: text, isBot: false));
-      _patientMessageCount++;
-      _isTyping = true;
-    });
+    if (text.isEmpty) return;
+    context.read<ChatbotBloc>().add(ChatMessageSendRequested(message: text));
     _inputController.clear();
-    _scrollToBottom();
-
-    // TODO: استبدال بـ API call حقيقي:
-    // POST /chat/message { message, sessionId? } → { reply, canExtractDiagnosis }
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-
-    final unlockDiagnosis = _isBooking && _patientMessageCount >= 2;
-    final replyKey = unlockDiagnosis && !_canExtractDiagnosis
-        ? 'I think I have enough information. You can end the chat to extract your diagnosis.'
-        : 'Thanks for sharing that. Can you tell me more?';
-
-    setState(() {
-      _isTyping = false;
-      _messages.add(_ChatMessage(text: replyKey, isBot: true));
-      if (unlockDiagnosis) {
-        _canExtractDiagnosis = true;
-      }
-    });
     _scrollToBottom();
   }
 
-  /// ريكوست 2 (mock): إنهاء المحادثة واستخراج ملخص التشخيص من الباك.
-  Future<void> _extractDiagnosis() async {
-    if (!_canExtractDiagnosis || _isExtracting) return;
-
-    setState(() => _isExtracting = true);
-
-    // TODO: استبدال بـ API call حقيقي:
-    // POST /chat/end { messages / sessionId } → { summary }
-    await Future.delayed(const Duration(milliseconds: 1400));
-    if (!mounted) return;
-
-    final patientParts = _messages
-        .where((m) => !m.isBot)
-        .map((m) => m.text)
-        .join(' — ');
-
-    final summary = patientParts.isEmpty
-        ? 'Suspected dental concern based on the consultation chat.'.tr()
-        : '${'Patient reported'.tr()}: $patientParts. ${'Preliminary assessment pending clinical exam.'.tr()}';
-
-    Navigator.of(context).pop(summary);
+  void _extractDiagnosis() {
+    context.read<ChatbotBloc>().add(ChatSummarizeRequested());
   }
 
   void _onBack() {
-    // الرجوع بدون إنهاء رسمي — ما منبعت ريكوست 2 وما منرجّع ملخص.
     Navigator.of(context).pop();
   }
 
@@ -138,100 +86,214 @@ class _ChatbotPageState extends State<ChatbotPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Scaffold(
-      backgroundColor: colors.surfaceContainerHighest,
-      appBar: AppBar(
-        backgroundColor: colors.surfaceContainerHighest,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_forward, color: colors.onSurface),
-          onPressed: _isExtracting ? null : _onBack,
-        ),
-        title: Text(
-          'Smart Diagnosis'.tr(),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: colors.onSurface,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    itemCount: _messages.length + (_isTyping ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _messages.length) {
-                        return const _TypingBubble();
-                      }
-                      final message = _messages[index];
-                      return FadeSlideIn(
-                        duration: const Duration(milliseconds: 250),
-                        child: _ChatBubble(message: message),
-                      );
-                    },
-                  ),
-                ),
-                if (_isBooking)
-                  _ExtractDiagnosisBar(
-                    enabled: _canExtractDiagnosis && !_isExtracting,
-                    onTap: _extractDiagnosis,
-                  ),
-                _ChatInputBar(
-                  controller: _inputController,
-                  onSend: _sendMessage,
-                  enabled: !_isExtracting,
-                ),
-              ],
+    return BlocConsumer<ChatbotBloc, ChatbotState>(
+      listener: (context, state) {
+        if (state is ChatbotSessionActive) {
+          if (state.completedSummary != null) {
+            Navigator.of(context).pop(state.completedSummary);
+            return;
+          }
+          _scrollToBottom();
+        } else if (state is ChatMessageSendFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errMessage)),
+          );
+          if (state.unavailable && widget.isBooking) {
+            Navigator.of(context).pop();
+          }
+        } else if (state is ChatSummarizeFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errMessage)),
+          );
+        }
+      },
+      buildWhen: (previous, current) =>
+          current is ChatbotSessionActive ||
+          current is ChatbotInitial ||
+          current is ChatMessageSendFailure ||
+          current is ChatSummarizeFailure,
+      builder: (context, state) {
+        ChatbotSessionActive? session;
+        if (state is ChatbotSessionActive) {
+          session = state;
+        } else if (state is ChatMessageSendFailure) {
+          session = state.session;
+        } else if (state is ChatSummarizeFailure) {
+          session = state.session;
+        }
+
+        final isSending = session?.isSending ?? false;
+        final isSummarizing = session?.isSummarizing ?? false;
+        final messages = session?.messages ?? [];
+        final canExtract = session?.canSummarize ?? false;
+        final canSend = session?.canSend ?? false;
+        final isEmergency = session?.isEmergency ?? false;
+        final unavailable = session?.unavailable ?? false;
+
+        return Scaffold(
+          backgroundColor: colors.surfaceContainerHighest,
+          appBar: AppBar(
+            backgroundColor: colors.surfaceContainerHighest,
+            elevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_forward, color: colors.onSurface),
+              onPressed: isSummarizing ? null : _onBack,
             ),
-            if (_isExtracting)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: colors.scrim.withOpacity(0.25),
-                  child: Center(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 40),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 22,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: colors.primary,
+            title: Text(
+              widget.isBooking ? 'Smart Diagnosis'.tr() : 'Dental Assistant'.tr(),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
+            ),
+          ),
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    if (isEmergency)
+                      _EmergencyBanner(
+                        onContact: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Please contact the clinic immediately for urgent care.'
+                                    .tr(),
+                              ),
                             ),
+                          );
+                        },
+                      ),
+                    if (unavailable && !widget.isBooking)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: Text(
+                          'The chatbot is currently unavailable. You can enter the visit reason manually'
+                              .tr(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: colors.error,
+                            height: 1.4,
                           ),
-                          const SizedBox(height: 14),
-                          Text(
-                            'Extracting diagnosis...'.tr(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: colors.onSurface,
-                            ),
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        itemCount: messages.length + (isSending ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == messages.length) {
+                            return const _TypingBubble();
+                          }
+                          final message = messages[index];
+                          return FadeSlideIn(
+                            duration: const Duration(milliseconds: 250),
+                            child: _ChatBubble(message: message),
+                          );
+                        },
+                      ),
+                    ),
+                    if (widget.isBooking)
+                      _ExtractDiagnosisBar(
+                        enabled: canExtract,
+                        forcedByLimit: session?.forcedByLimit ?? false,
+                        onTap: _extractDiagnosis,
+                      ),
+                    _ChatInputBar(
+                      controller: _inputController,
+                      onSend: _sendMessage,
+                      enabled: canSend,
+                    ),
+                  ],
+                ),
+                if (isSummarizing)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: colors.scrim.withOpacity(0.25),
+                      child: Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 40),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 22,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 36,
+                                height: 36,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  color: colors.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'Extracting diagnosis...'.tr(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _EmergencyBanner extends StatelessWidget {
+  final VoidCallback onContact;
+
+  const _EmergencyBanner({required this.onContact});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Material(
+      color: colors.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: colors.error, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Your symptoms may need urgent attention. Please contact the clinic.'
+                    .tr(),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onErrorContainer,
+                  height: 1.35,
                 ),
               ),
+            ),
+            TextButton(
+              onPressed: onContact,
+              child: Text('Contact'.tr()),
+            ),
           ],
         ),
       ),
@@ -239,12 +301,16 @@ class _ChatbotPageState extends State<ChatbotPage> {
   }
 }
 
-/// زر إنهاء المحادثة واستخراج التشخيص — معطّل لحد ما يجي الفلَاغ من الباك.
 class _ExtractDiagnosisBar extends StatelessWidget {
   final bool enabled;
+  final bool forcedByLimit;
   final VoidCallback onTap;
 
-  const _ExtractDiagnosisBar({required this.enabled, required this.onTap});
+  const _ExtractDiagnosisBar({
+    required this.enabled,
+    required this.forcedByLimit,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -255,16 +321,29 @@ class _ExtractDiagnosisBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!enabled)
+          if (!enabled && !forcedByLimit)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                'Keep chatting until the assistant has enough information.'
-                    .tr(),
+                'Keep chatting until the assistant has enough information.'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11.5,
                   color: colors.onSurface.withOpacity(0.45),
+                ),
+              ),
+            ),
+          if (forcedByLimit)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Conversation limit reached. Please extract the diagnosis to continue.'
+                    .tr(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: colors.error,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -275,9 +354,7 @@ class _ExtractDiagnosisBar extends StatelessWidget {
               icon: Icon(
                 Icons.auto_awesome_rounded,
                 size: 18,
-                color: enabled
-                    ? Colors.white
-                    : colors.onSurface.withOpacity(0.35),
+                color: enabled ? Colors.white : colors.onSurface.withOpacity(0.35),
               ),
               label: Text(
                 'End conversation & extract diagnosis'.tr(),
@@ -307,7 +384,7 @@ class _ExtractDiagnosisBar extends StatelessWidget {
 }
 
 class _ChatBubble extends StatelessWidget {
-  final _ChatMessage message;
+  final ChatUiMessage message;
 
   const _ChatBubble({required this.message});
 
@@ -320,7 +397,9 @@ class _ChatBubble extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 260),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isBot ? colors.surface : colors.primary,
+        color: message.isSystem
+            ? colors.errorContainer.withOpacity(0.55)
+            : (isBot ? colors.surface : colors.primary),
         borderRadius: BorderRadiusDirectional.only(
           topStart: const Radius.circular(16),
           topEnd: const Radius.circular(16),
@@ -340,7 +419,9 @@ class _ChatBubble extends StatelessWidget {
         style: TextStyle(
           fontSize: 13.5,
           height: 1.5,
-          color: isBot ? colors.onSurface : Colors.white,
+          color: message.isSystem
+              ? colors.onErrorContainer
+              : (isBot ? colors.onSurface : Colors.white),
         ),
       ),
     );
@@ -356,8 +437,8 @@ class _ChatBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: isBot
               ? [
-                  const _BotAvatar(),
-                  const SizedBox(width: 8),
+                  if (!message.isSystem) const _BotAvatar(),
+                  if (!message.isSystem) const SizedBox(width: 8),
                   Flexible(child: bubble),
                 ]
               : [Flexible(child: bubble)],

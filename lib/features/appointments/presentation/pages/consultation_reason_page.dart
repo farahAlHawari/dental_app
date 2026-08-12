@@ -1,10 +1,13 @@
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
+import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:dental_app/features/appointments/presentation/pages/chatbot_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_date_time_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/assistant_prompt_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// الشاشة يلي بتطلع لما المريض يختار "استشارة أولية" — بيكتب فيها سبب
 /// الزيارة، أو يحكي مع المساعد الذكي وياخد ملخص المحادثة يعبّي فيه
@@ -219,14 +222,25 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
                             child: ElevatedButton.icon(
                               onPressed: canContinue
                                   ? () {
+                                      final appointmentsBloc =
+                                          context.read<AppointmentsBloc>();
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              SelectDateTimePage(
-                                                visitTypeLabel:
-                                                    widget.visitTypeLabel,
-                                              ),
+                                          builder: (_) => BlocProvider.value(
+                                            value: appointmentsBloc,
+                                            child: SelectDateTimePage(
+                                              visitTypeLabel:
+                                                  widget.visitTypeLabel,
+                                              bookingType:
+                                                  AppointmentBookingType
+                                                      .consultation,
+                                              reasonForVisit:
+                                                  _reasonController.text
+                                                      .trim(),
+                                              chatbotSummary: _chatSummary,
+                                            ),
+                                          ),
                                         ),
                                       );
                                     }

@@ -58,5 +58,7 @@
 	<string>نحتاج الوصول لمعرض الصور لحفظ الأشعة</string>
 	<key>NSCameraUsageDescription</key>
 	<string>نحتاج الوصول للكاميرا لمسح رمز QR بالعيادة لتأكيد وصولك تلقائياً.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>نحتاج موقعك لتأكيد وصولك للعيادة ضمن نطاق GPS المحدد.</string>
 </dict>
 </plist>
