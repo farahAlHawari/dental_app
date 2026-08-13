@@ -23,12 +23,12 @@ class AppColors {
   static const textPrimary = Color(0xFF1F2937);
   static const textSecondary = Color(0xFF6E696B);
 
-// Language Cards
-static const CardLight = Color.fromARGB(255, 213, 234, 243);
-static const CardSelectedLight = Color.fromARGB(255, 195, 222, 232);
+  // Language Cards
+  static const CardLight = Color.fromARGB(255, 213, 234, 243);
+  static const CardSelectedLight = Color.fromARGB(255, 195, 222, 232);
 
-static const CardDark = Color(0xFF202E3B);
-static const CardSelectedDark = Color.fromARGB(255, 50, 69, 80);
+  static const CardDark = Color(0xFF202E3B);
+  static const CardSelectedDark = Color.fromARGB(255, 50, 69, 80);
 
   static const accent = Color(0xFFF4B400);
   static const success = Color(0xFF22C55E);

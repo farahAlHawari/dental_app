@@ -2,8 +2,7 @@ import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// كارد "خطتك العلاجية النشطة". بيانات تجريبية حالياً (TODO: وصلها
-/// بالخطة الفعلية النشطة للمريض لما يجهز الـ backend).
+/// كارد "خطتك العلاجية النشطة" على الرئيسية.
 class ActiveTreatmentPlanCard extends StatelessWidget {
   final String planName;
   final int currentSession;

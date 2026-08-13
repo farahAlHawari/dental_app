@@ -3,7 +3,7 @@ import 'package:dental_app/features/home/presentation/pages/home_page.dart';
 import 'package:dental_app/features/home/presentation/widgets/app_bottom_nav_bar.dart';
 import 'package:dental_app/features/profile/presentation/pages/profile_page.dart';
 import 'package:dental_app/features/promotional_gallery/presentation/pages/promotional_gallery_page.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:dental_app/features/treatment_plans/presentation/pages/treatment_plans_page.dart';
 import 'package:flutter/material.dart';
 
 /// Main shell after login — bottom nav + IndexedStack of feature tabs.
@@ -35,14 +35,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = AppBottomNavBar.emphasizedIndex;
   int _homeVisitCount = 0;
   int _appointmentsRefreshToken = 0;
-
-  static const List<String> _tabTitleKeys = [
-    'My Profile',
-    'My Appointments',
-    'Home',
-    'My Treatment Plans',
-    'Promotional Gallery',
-  ];
 
   @override
   void initState() {
@@ -98,36 +90,13 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           const ProfilePage(),
           MyAppointmentsPage(refreshToken: _appointmentsRefreshToken),
           HomePage(homeVisitCount: _homeVisitCount),
-          _PlaceholderTab(titleKey: _tabTitleKeys[3]),
+          const TreatmentPlansPage(),
           const PromotionalGalleryPage(),
         ],
       ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _goToTab,
-      ),
-    );
-  }
-}
-
-/// Temporary placeholder until treatment plans tab is built.
-class _PlaceholderTab extends StatelessWidget {
-  final String titleKey;
-
-  const _PlaceholderTab({required this.titleKey});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Center(
-      child: Text(
-        titleKey.tr(),
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: colors.onSurface,
-        ),
       ),
     );
   }

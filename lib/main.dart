@@ -13,16 +13,19 @@ void main() async {
   await EasyLocalization.ensureInitialized();
 
   final savedLang = await SharedPrefs.getLanguage();
-  final startLocale =
-      savedLang == 'en' ? const Locale('en') : const Locale('ar');
+  final startLocale = savedLang == 'en'
+      ? const Locale('en')
+      : const Locale('ar');
 
-  runApp(EasyLocalization(
-    supportedLocales: const [Locale('en'), Locale('ar')],
-    startLocale: startLocale,
-    path: 'assets/translations',
-    fallbackLocale: const Locale('ar'),
-    child: const MyApp(),
-  ));
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      startLocale: startLocale,
+      path: 'assets/translations',
+      fallbackLocale: const Locale('ar'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -47,9 +50,9 @@ class MyApp extends StatelessWidget {
 
               return Theme(
                 data: Theme.of(context).copyWith(
-                  textTheme: Theme.of(context).textTheme.apply(
-                        fontFamily: isArabic ? 'cr' : 'ir',
-                      ),
+                  textTheme: Theme.of(
+                    context,
+                  ).textTheme.apply(fontFamily: isArabic ? 'cr' : 'ir'),
                 ),
                 child: child!,
               );

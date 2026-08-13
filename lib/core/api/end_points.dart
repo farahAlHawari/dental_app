@@ -56,6 +56,12 @@ static const String language = "auth/language";
   static String treatmentPlans(String patientId) =>
       "treatment/patients/$patientId/treatment-plans";
 
+  static String treatmentPlanById(String patientId, String planId) =>
+      "treatment/patients/$patientId/treatment-plans/$planId";
+
+  static String treatmentPlanSessionFiles(String patientId, String planId) =>
+      "treatment/patients/$patientId/treatment-plans/$planId/session-files";
+
   static String medicalArchive(String patientId) =>
       "treatment/patients/$patientId/medical-archive";
   // ================================
@@ -78,6 +84,12 @@ static const String language = "auth/language";
   static String appointmentReschedule(String id) =>
       "appointments/$id/reschedule";
   static String appointmentCancel(String id) => "appointments/$id/cancel";
+
+  // ================================
+  // Financial — patient app (plan invoices)
+  // ================================
+  static const String invoices = "invoices";
+  static String invoiceById(String id) => "invoices/$id";
 
   static const String chatbotMessage = "chatbot/message";
   static const String chatbotSummarize = "chatbot/summarize";

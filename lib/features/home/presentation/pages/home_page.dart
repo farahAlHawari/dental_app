@@ -23,6 +23,9 @@ import 'package:dental_app/features/home/presentation/widgets/upcoming_appointme
 import 'package:dental_app/features/medical_archive/presentation/pages/medical_archive_page.dart';
 import 'package:dental_app/features/profile/data/datasources/patient_remote_data_source.dart';
 import 'package:dental_app/features/profile/domain/repositories/patient_repository_impl.dart';
+import 'package:dental_app/features/treatment_plans/data/models/treatment_plan.dart';
+import 'package:dental_app/features/treatment_plans/presentation/bloc/treatment_plans_bloc.dart';
+import 'package:dental_app/features/treatment_plans/presentation/pages/treatment_plan_details_page.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +48,7 @@ class HomePage extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => ArchivedVisitsBloc()),
         BlocProvider(create: (_) => AppointmentsBloc()),
+        BlocProvider(create: (_) => TreatmentPlansBloc()),
       ],
       child: _HomePageView(homeVisitCount: homeVisitCount),
     );
@@ -71,6 +75,8 @@ class _HomePageViewState extends State<_HomePageView> {
   bool _patientProfileLoading = true;
   Appointment? _upcomingAppointment;
   bool _upcomingLoaded = false;
+  TreatmentPlan? _activePlan;
+  bool _activePlanLoaded = false;
 
   String get _patientDisplayName {
     final name = (_patient?['fullName'] ?? _patient?['name'] ?? '').toString();
@@ -84,6 +90,7 @@ class _HomePageViewState extends State<_HomePageView> {
       _requestHome();
       _loadPatientProfile();
       _loadUpcoming();
+      _loadActivePlan();
     });
   }
 
@@ -94,6 +101,7 @@ class _HomePageViewState extends State<_HomePageView> {
       _requestHome();
       _loadPatientProfile();
       _loadUpcoming();
+      _loadActivePlan();
     }
   }
 
@@ -145,6 +153,41 @@ class _HomePageViewState extends State<_HomePageView> {
     context.read<AppointmentsBloc>().add(
           LoadUpcomingAppointmentRequested(patientId: patientId),
         );
+  }
+
+  Future<void> _loadActivePlan() async {
+    final patientId = await SharedPrefs.getSelectedPatientId();
+    if (!mounted) return;
+    if (patientId == null || patientId.isEmpty) {
+      setState(() {
+        _activePlan = null;
+        _activePlanLoaded = true;
+      });
+      return;
+    }
+
+    setState(() => _activePlanLoaded = false);
+    await ShimmerPreview.wait();
+    if (!mounted) return;
+    context.read<TreatmentPlansBloc>().add(
+          LoadActiveTreatmentPlansRequested(patientId: patientId),
+        );
+  }
+
+  Future<void> _openActivePlanDetails() async {
+    final plan = _activePlan;
+    if (plan == null) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => TreatmentPlansBloc(),
+          child: TreatmentPlanDetailsPage(planId: plan.id),
+        ),
+      ),
+    );
+    if (mounted) await _loadActivePlan();
   }
 
   Future<void> _requestHome() async {
@@ -264,6 +307,21 @@ class _HomePageViewState extends State<_HomePageView> {
             }
           },
         ),
+        BlocListener<TreatmentPlansBloc, TreatmentPlansState>(
+          listener: (context, state) {
+            if (state is TreatmentPlansListSuccess) {
+              setState(() {
+                _activePlan = TreatmentPlan.newestByCreatedAt(state.active);
+                _activePlanLoaded = true;
+              });
+            } else if (state is TreatmentPlansListFailure) {
+              setState(() {
+                _activePlan = null;
+                _activePlanLoaded = true;
+              });
+            }
+          },
+        ),
       ],
       child: Scaffold(
         backgroundColor: colors.surfaceContainerHighest,
@@ -278,6 +336,7 @@ class _HomePageViewState extends State<_HomePageView> {
                       _requestHome(),
                       _loadPatientProfile(),
                       _loadUpcoming(),
+                      _loadActivePlan(),
                     ]);
                   },
                   child: CustomScrollView(
@@ -463,22 +522,30 @@ class _HomePageViewState extends State<_HomePageView> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          FadeSlideIn(
-                            delay: const Duration(milliseconds: 180),
-                            child: ActiveTreatmentPlanCard(
-                              key: ValueKey(
-                                'treatment_plan_${widget.homeVisitCount}',
+                          if (!_activePlanLoaded)
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 180),
+                              child: const TreatmentPlanCardShimmer(),
+                            )
+                          else if (_activePlan != null)
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 180),
+                              child: ActiveTreatmentPlanCard(
+                                key: ValueKey(
+                                  'treatment_plan_${_activePlan!.id}_${widget.homeVisitCount}',
+                                ),
+                                planName: _activePlan!.name.isEmpty
+                                    ? 'Treatment plan'.tr()
+                                    : _activePlan!.name,
+                                currentSession: _activePlan!.currentSession,
+                                totalSessions: _activePlan!.sessionCount,
+                                progress: _activePlan!.progress,
+                                onViewDetails: _openActivePlanDetails,
                               ),
-                              planName: 'Metal Braces'.tr(),
-                              currentSession: 2,
-                              totalSessions: 5,
-                              progress: 0.4,
-                              onViewDetails: () {
-                                // TODO: navigate to treatment plan details page.
-                              },
                             ),
-                          ),
-                          const SizedBox(height: 20),
+                          if (!_activePlanLoaded || _activePlan != null)
+                            const SizedBox(height: 16),
+                          const SizedBox(height: 4),
                           FadeSlideIn(
                             delay: const Duration(milliseconds: 240),
                             child: Padding(

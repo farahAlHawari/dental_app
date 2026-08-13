@@ -913,3 +913,339 @@ class TimeSlotsShimmer extends StatelessWidget {
     );
   }
 }
+
+/// Skeleton matching a treatment plan summary card.
+class TreatmentPlanCardShimmer extends StatelessWidget {
+  const TreatmentPlanCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: ShimmerBox(
+                    width: w * 0.5,
+                    height: 16,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                ShimmerBox(
+                  width: 88,
+                  height: 22,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ShimmerBox(
+                  width: 40,
+                  height: 12,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                ShimmerBox(
+                  width: 90,
+                  height: 12,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ShimmerBox(
+              width: double.infinity,
+              height: 8,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 16),
+            ShimmerBox(
+              width: double.infinity,
+              height: 44,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TreatmentPlansListShimmer extends StatelessWidget {
+  final int itemCount;
+
+  const TreatmentPlansListShimmer({super.key, this.itemCount = 3});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: itemCount,
+      itemBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: TreatmentPlanCardShimmer(),
+      ),
+    );
+  }
+}
+
+class TreatmentPlanDetailsShimmer extends StatelessWidget {
+  const TreatmentPlanDetailsShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        const TreatmentPlanCardShimmer(),
+        const SizedBox(height: 22),
+        AppShimmer(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ShimmerBox(
+              width: w * 0.28,
+              height: 16,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        ...List.generate(
+          4,
+          (index) => Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppShimmer(
+                  child: Column(
+                    children: [
+                      const ShimmerBox(
+                        width: 32,
+                        height: 32,
+                        borderRadius: BorderRadius.all(Radius.circular(16)),
+                      ),
+                      if (index < 3)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 6),
+                          child: ShimmerBox(
+                            width: 4,
+                            height: 56,
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: scheme.surface,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: AppShimmer(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ShimmerBox(
+                            width: 92,
+                            height: 18,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          const SizedBox(height: 10),
+                          ShimmerBox(
+                            width: w * 0.55,
+                            height: 14,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          const SizedBox(height: 8),
+                          ShimmerBox(
+                            width: w * 0.4,
+                            height: 12,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class PlanInvoicesShimmer extends StatelessWidget {
+  const PlanInvoicesShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: AppShimmer(
+            child: Row(
+              children: List.generate(3, (index) {
+                return Expanded(
+                  child: Column(
+                    children: [
+                      const ShimmerBox(
+                        width: 18,
+                        height: 18,
+                        borderRadius: BorderRadius.all(Radius.circular(9)),
+                      ),
+                      const SizedBox(height: 8),
+                      ShimmerBox(
+                        width: 64,
+                        height: 16,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      const SizedBox(height: 6),
+                      ShimmerBox(
+                        width: 44,
+                        height: 11,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(
+          3,
+          (_) => const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: _InvoiceCardShimmer(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class PlanInvoiceDetailsShimmer extends StatelessWidget {
+  const PlanInvoiceDetailsShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      physics: const NeverScrollableScrollPhysics(),
+      children: const [
+        _InvoiceCardShimmer(),
+        SizedBox(height: 16),
+        _InvoiceCardShimmer(),
+        SizedBox(height: 10),
+        _InvoiceCardShimmer(),
+      ],
+    );
+  }
+}
+
+class _InvoiceCardShimmer extends StatelessWidget {
+  const _InvoiceCardShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: ShimmerBox(
+                    width: w * 0.4,
+                    height: 12,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                ShimmerBox(
+                  width: 72,
+                  height: 22,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ShimmerBox(
+              width: w * 0.35,
+              height: 12,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                ShimmerBox(
+                  width: w * 0.28,
+                  height: 12,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                const Spacer(),
+                ShimmerBox(
+                  width: 88,
+                  height: 16,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

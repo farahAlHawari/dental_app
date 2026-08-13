@@ -7,14 +7,25 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class MedicalArchivePage extends StatefulWidget {
-  const MedicalArchivePage({super.key});
+  final int initialTabIndex;
+
+  const MedicalArchivePage({
+    super.key,
+    this.initialTabIndex = 0,
+  });
 
   @override
   State<MedicalArchivePage> createState() => _MedicalArchivePageState();
 }
 
 class _MedicalArchivePageState extends State<MedicalArchivePage> {
-  int selectedIndex = 0;
+  late int selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialTabIndex.clamp(0, 3);
+  }
 
   @override
   Widget build(BuildContext context) {
