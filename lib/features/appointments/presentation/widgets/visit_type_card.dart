@@ -27,9 +27,6 @@ class _VisitTypeCardState extends State<VisitTypeCard> {
 
   void _setPressed(bool pressed) => setState(() => _scale = pressed ? 0.97 : 1);
 
-  // اللون الأصلي (accentColor) منيح كخلفية/شريط، بس كنص للقراءة ممكن
-  // يطلع فاتح وما يبين منيح فوق خلفية فاتحة (بالأخص لون الـ accent
-  // الذهبي)، فبنغمّقه شوي هون بس للنص والسهم.
   Color get _readableAccent =>
       Color.alphaBlend(Colors.black.withOpacity(0.22), widget.accentColor);
 
@@ -64,8 +61,6 @@ class _VisitTypeCardState extends State<VisitTypeCard> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // شريط لون رفيع يميّز نوع الكرت بلمحة، قبل ما توصل عيون
-              // المريض للنص أصلاً.
               Container(
                 width: 4,
                 height: 90,

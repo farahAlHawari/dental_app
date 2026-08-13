@@ -43,17 +43,6 @@ String formatAppointmentTime(DateTime date) {
   return '$hour12:$minute $period';
 }
 
-/// بيترجم بس جزء AM/PM من نص وقت جاهز متل "9:00 AM" (نفس شكل خانات
-/// الوقت التجريبية بشاشة اختيار التاريخ/الوقت وشاشة تأكيد الحجز) - القيمة
-/// الخام الإنكليزية بتضل هي يلي بتترمرر/بتتخزّن بين الشاشات، وهاد بس
-/// لعرضها مترجمة عالشاشة.
-String formatMockTimeLabel(String rawTime) {
-  final parts = rawTime.trim().split(' ');
-  if (parts.length != 2) return rawTime;
-  final period = parts[1].toUpperCase() == 'AM' ? 'AM'.tr() : 'PM'.tr();
-  return '${parts[0]} $period';
-}
-
 /// بيعرض وقت API بصيغة HH:mm (مثل "09:15") كـ 12-hour مع AM/PM مترجم.
 String formatApiTimeLabel(String startTime) {
   final parts = startTime.trim().split(':');

@@ -42,6 +42,10 @@ class AppContent {
 
     final createdRaw = json['createdAt']?.toString();
     final updatedRaw = json['updatedAt']?.toString();
+    final createdAt = DateTime.tryParse(createdRaw ?? '')?.toLocal() ??
+        DateTime.now();
+    final updatedAt = DateTime.tryParse(updatedRaw ?? '')?.toLocal() ??
+        createdAt;
 
     return AppContent(
       id: '${json['id']}',
@@ -49,12 +53,8 @@ class AppContent {
       title: json['title']?.toString().trim() ?? '',
       body: json['body']?.toString().trim(),
       mediaFiles: media,
-      createdAt: createdRaw != null
-          ? DateTime.parse(createdRaw).toLocal()
-          : DateTime.now(),
-      updatedAt: updatedRaw != null
-          ? DateTime.parse(updatedRaw).toLocal()
-          : DateTime.now(),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 

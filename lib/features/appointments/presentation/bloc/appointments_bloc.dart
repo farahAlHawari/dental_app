@@ -1,17 +1,20 @@
 import 'package:bloc/bloc.dart';
 import 'package:dental_app/core/api/dio_consumer.dart';
+import 'package:dental_app/core/bloc/sequential.dart';
 import 'package:dental_app/features/appointments/data/datasources/appointment_availability_remote_data_source.dart';
 import 'package:dental_app/features/appointments/data/datasources/appointment_remote_data_source.dart';
 import 'package:dental_app/features/appointments/data/datasources/treatment_booking_remote_data_source.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_list_scope.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_model.dart';
+import 'package:dental_app/features/appointments/data/models/appointment_status.dart';
 import 'package:dental_app/features/appointments/data/models/bookable_session.dart';
 import 'package:dental_app/features/appointments/data/models/available_day.dart';
 import 'package:dental_app/features/appointments/data/models/available_slot.dart';
 import 'package:dental_app/features/appointments/domain/repositories/appointment_availability_repository_impl.dart';
 import 'package:dental_app/features/appointments/domain/repositories/appointment_repository_impl.dart';
 import 'package:dental_app/features/appointments/domain/repositories/treatment_booking_repository_impl.dart';
+import 'package:dental_app/features/appointments/presentation/utils/appointment_error_messages.dart';
 import 'package:dental_app/features/appointments/presentation/utils/appointment_failure_extension.dart';
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
@@ -20,35 +23,56 @@ part 'appointments_event.dart';
 part 'appointments_state.dart';
 
 class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
+  static final _api = DioConsumer(dio: Dio());
+
   final _repository = AppointmentRepositoryImpl(
-    remoteDataSource: AppointmentRemoteDataSource(
-      api: DioConsumer(dio: Dio()),
-    ),
+    remoteDataSource: AppointmentRemoteDataSource(api: _api),
   );
 
   final _availabilityRepository = AppointmentAvailabilityRepositoryImpl(
-    remoteDataSource: AppointmentAvailabilityRemoteDataSource(
-      api: DioConsumer(dio: Dio()),
-    ),
+    remoteDataSource: AppointmentAvailabilityRemoteDataSource(api: _api),
   );
 
   final _treatmentBookingRepository = TreatmentBookingRepositoryImpl(
-    remoteDataSource: TreatmentBookingRemoteDataSource(
-      api: DioConsumer(dio: Dio()),
-    ),
+    remoteDataSource: TreatmentBookingRemoteDataSource(api: _api),
   );
 
   AppointmentsBloc() : super(AppointmentsInitial()) {
-    on<LoadAppointmentsListRequested>(_onLoadList);
-    on<LoadUpcomingAppointmentRequested>(_onLoadUpcoming);
-    on<CancelAppointmentRequested>(_onCancel);
-    on<RescheduleAppointmentRequested>(_onReschedule);
-    on<PrepareRescheduleAppointmentRequested>(_onPrepareReschedule);
-    on<LoadBookableSessionsRequested>(_onLoadBookableSessions);
-    on<LoadAvailableDaysRequested>(_onLoadAvailableDays);
-    on<LoadAvailableSlotsRequested>(_onLoadAvailableSlots);
-    on<CreateAppointmentRequested>(_onCreateAppointment);
-    on<CheckInAppointmentRequested>(_onCheckIn);
+    on<LoadAppointmentsListRequested>(_onLoadList, transformer: sequential());
+    on<LoadUpcomingAppointmentRequested>(
+      _onLoadUpcoming,
+      transformer: sequential(),
+    );
+    on<CancelAppointmentRequested>(_onCancel, transformer: sequential());
+    on<RescheduleAppointmentRequested>(
+      _onReschedule,
+      transformer: sequential(),
+    );
+    on<PrepareRescheduleAppointmentRequested>(
+      _onPrepareReschedule,
+      transformer: sequential(),
+    );
+    on<LoadBookableSessionsRequested>(
+      _onLoadBookableSessions,
+      transformer: sequential(),
+    );
+    on<LoadAvailableDaysRequested>(
+      _onLoadAvailableDays,
+      transformer: sequential(),
+    );
+    on<LoadAvailableSlotsRequested>(
+      _onLoadAvailableSlots,
+      transformer: sequential(),
+    );
+    on<CreateAppointmentRequested>(
+      _onCreateAppointment,
+      transformer: sequential(),
+    );
+    on<CheckInAppointmentRequested>(_onCheckIn, transformer: sequential());
+    on<LoadActiveConsultationGateRequested>(
+      _onLoadActiveConsultationGate,
+      transformer: sequential(),
+    );
   }
 
   Future<void> _onLoadList(
@@ -66,21 +90,22 @@ class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
       scope: AppointmentListScope.past,
     );
 
-    String? error;
+    String? upcomingError;
+    String? pastError;
     List<Appointment> upcoming = [];
     List<Appointment> previous = [];
 
     upcomingResult.fold(
-      (f) => error = f.displayMessage,
+      (f) => upcomingError = f.displayMessage,
       (r) => upcoming = r.items,
     );
     pastResult.fold(
-      (f) => error ??= f.displayMessage,
+      (f) => pastError = f.displayMessage,
       (r) => previous = r.items,
     );
 
-    if (error != null) {
-      emit(AppointmentsListFailure(errMessage: error!));
+    if (upcomingError != null && pastError != null) {
+      emit(AppointmentsListFailure(errMessage: upcomingError!));
       return;
     }
 
@@ -88,6 +113,7 @@ class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
       AppointmentsListSuccess(
         upcoming: upcoming,
         previous: previous,
+        warningMessage: upcomingError ?? pastError,
       ),
     );
   }
@@ -140,12 +166,10 @@ class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
     Emitter<AppointmentsState> emit,
   ) async {
     final listItem = event.appointment;
-    final bookingType =
-        listItem.bookingType ?? AppointmentBookingType.consultation;
     final hasSessionId = listItem.treatmentSessionId != null &&
         listItem.treatmentSessionId!.trim().isNotEmpty;
 
-    if (bookingType != AppointmentBookingType.followUp || hasSessionId) {
+    if (hasSessionId) {
       emit(ReschedulePreparedSuccess(appointment: listItem));
       return;
     }
@@ -155,21 +179,29 @@ class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
     result.fold(
       (f) => emit(ReschedulePreparedFailure(errMessage: f.displayMessage)),
       (detail) {
+        final bookingType =
+            detail.bookingType ?? listItem.bookingType;
         final sessionId = detail.treatmentSessionId?.trim();
-        if (sessionId == null || sessionId.isEmpty) {
+        final isFollowUp = bookingType == AppointmentBookingType.followUp;
+
+        if (isFollowUp && (sessionId == null || sessionId.isEmpty)) {
           emit(
             ReschedulePreparedFailure(
-              errMessage:
-                  'A treatment session is required for follow-up booking.',
+              errMessage: resolveAppointmentFailure(
+                code: 'TREATMENT_SESSION_REQUIRED',
+                fallback:
+                    'A treatment session is required for follow-up booking.',
+              ),
             ),
           );
           return;
         }
+
         emit(
           ReschedulePreparedSuccess(
             appointment: listItem.copyWith(
               treatmentSessionId: detail.treatmentSessionId,
-              bookingType: detail.bookingType ?? bookingType,
+              bookingType: bookingType,
               reasonForVisit: detail.reasonForVisit ?? listItem.reasonForVisit,
               durationMinutes:
                   detail.durationMinutes ?? listItem.durationMinutes,
@@ -286,6 +318,36 @@ class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
       (f) => emit(CheckInAppointmentFailure(errMessage: f.displayMessage)),
       (appointment) =>
           emit(CheckInAppointmentSuccess(appointment: appointment)),
+    );
+  }
+
+  Future<void> _onLoadActiveConsultationGate(
+    LoadActiveConsultationGateRequested event,
+    Emitter<AppointmentsState> emit,
+  ) async {
+    emit(ActiveConsultationGateLoading());
+    final result = await _repository.list(
+      patientId: event.patientId,
+      scope: AppointmentListScope.upcoming,
+    );
+    result.fold(
+      (f) => emit(ActiveConsultationGateFailure(errMessage: f.displayMessage)),
+      (data) {
+        Appointment? active;
+        for (final item in data.items) {
+          if (item.bookingType == AppointmentBookingType.consultation &&
+              item.status.isUpcoming) {
+            active = item;
+            break;
+          }
+        }
+        emit(
+          ActiveConsultationGateReady(
+            consultationBlocked: active != null,
+            activeConsultation: active,
+          ),
+        );
+      },
     );
   }
 }

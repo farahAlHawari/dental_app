@@ -7,6 +7,4 @@ abstract class AppContentRepository {
     int page,
     int pageSize,
   });
-
-  Future<Either<Failure, AppContent>> getById(String id);
 }

@@ -113,3 +113,10 @@ final class CheckInAppointmentRequested extends AppointmentsEvent {
     this.appointmentId,
   });
 }
+
+/// Pre-check before opening consultation booking (matches backend gate).
+final class LoadActiveConsultationGateRequested extends AppointmentsEvent {
+  final String patientId;
+
+  LoadActiveConsultationGateRequested({required this.patientId});
+}

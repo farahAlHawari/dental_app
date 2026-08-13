@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
@@ -12,6 +10,7 @@ import 'package:dental_app/features/appointments/presentation/pages/select_date_
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/appointment_card.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/cancel_appointment_dialog.dart';
+import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
 import 'package:dental_app/features/medical_archive/presentation/widgets/animated_tab_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -19,19 +18,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// تبويب "مواعيدي" — نفس نمط فرح: Bloc + Shimmer + EmptyListState.
 class MyAppointmentsPage extends StatelessWidget {
-  const MyAppointmentsPage({super.key});
+  final int refreshToken;
+
+  const MyAppointmentsPage({super.key, this.refreshToken = 0});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => AppointmentsBloc(),
-      child: const _MyAppointmentsView(),
+      child: _MyAppointmentsView(refreshToken: refreshToken),
     );
   }
 }
 
 class _MyAppointmentsView extends StatefulWidget {
-  const _MyAppointmentsView();
+  final int refreshToken;
+
+  const _MyAppointmentsView({required this.refreshToken});
 
   @override
   State<_MyAppointmentsView> createState() => _MyAppointmentsViewState();
@@ -42,11 +45,21 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
   String? _patientId;
   List<Appointment> _upcoming = [];
   List<Appointment> _previous = [];
+  bool _actionsBusy = false;
+  bool _prepareDialogOpen = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void didUpdateWidget(covariant _MyAppointmentsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -66,7 +79,6 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
     }
 
     _patientId = patientId;
-    await ShimmerPreview.wait();
     if (!mounted) return;
     context.read<AppointmentsBloc>().add(
           LoadAppointmentsListRequested(patientId: patientId),
@@ -74,6 +86,7 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
   }
 
   Future<void> _confirmCancel(Appointment appointment) async {
+    if (_actionsBusy) return;
     final reason = await CancelAppointmentDialog.show(context);
     if (reason == null || !mounted) return;
 
@@ -85,58 +98,38 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
         );
   }
 
-  Future<void> _openReschedule(Appointment appointment) async {
-    final bloc = context.read<AppointmentsBloc>();
-    var prepareDialogOpen = false;
-    final completer = Completer<AppointmentsState>();
+  void _openReschedule(Appointment appointment) {
+    if (_actionsBusy) return;
+    context.read<AppointmentsBloc>().add(
+          PrepareRescheduleAppointmentRequested(appointment: appointment),
+        );
+  }
 
-    final subscription = bloc.stream.listen((state) {
-      if (state is ReschedulePrepareLoading && mounted && !prepareDialogOpen) {
-        prepareDialogOpen = true;
-        showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => PopScope(
-            canPop: false,
-            child: Center(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+  void _showPrepareDialog() {
+    if (_prepareDialogOpen || !mounted) return;
+    _prepareDialogOpen = true;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: Center(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
-        );
-      }
-      if ((state is ReschedulePreparedSuccess ||
-              state is ReschedulePreparedFailure) &&
-          !completer.isCompleted) {
-        completer.complete(state);
-      }
-    });
+        ),
+      ),
+    ).whenComplete(() => _prepareDialogOpen = false);
+  }
 
-    bloc.add(PrepareRescheduleAppointmentRequested(appointment: appointment));
-
-    final prepareState = await completer.future;
-    await subscription.cancel();
-    if (prepareDialogOpen && mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
-    }
-    if (!mounted) return;
-
-    if (prepareState is ReschedulePreparedFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(prepareState.errMessage.tr())),
-      );
-      return;
-    }
-
-    await _pushRescheduleDatePicker(
-      (prepareState as ReschedulePreparedSuccess).appointment,
-    );
+  void _dismissPrepareDialog() {
+    if (!_prepareDialogOpen || !mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
   Future<void> _pushRescheduleDatePicker(Appointment appointment) async {
@@ -168,6 +161,7 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
   }
 
   Future<void> _openQrCheckIn(Appointment appointment) async {
+    if (_actionsBusy) return;
     final patientId = _patientId;
     if (patientId == null) return;
 
@@ -186,10 +180,12 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
     );
     if (checkedIn == true) {
       _load();
+      MainNavigationPage.notifyDataChanged();
     }
   }
 
   void _openBooking() {
+    if (_actionsBusy) return;
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SelectVisitTypePage()),
@@ -217,7 +213,7 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90),
         child: FloatingActionButton.extended(
-          onPressed: _openBooking,
+          onPressed: _actionsBusy ? null : _openBooking,
           backgroundColor: colors.primary,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.add_rounded),
@@ -245,30 +241,60 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
                     setState(() {
                       _upcoming = List.from(state.upcoming);
                       _previous = List.from(state.previous);
+                      _actionsBusy = false;
                     });
+                    if (state.warningMessage != null &&
+                        state.warningMessage!.isNotEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.warningMessage!)),
+                      );
+                    }
                   } else if (state is AppointmentsListFailure) {
                     setState(() {
                       _upcoming = [];
                       _previous = [];
+                      _actionsBusy = false;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(state.errMessage)),
                     );
+                  } else if (state is CancelAppointmentLoading ||
+                      state is RescheduleAppointmentLoading) {
+                    setState(() => _actionsBusy = true);
                   } else if (state is CancelAppointmentSuccess) {
+                    setState(() => _actionsBusy = false);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Appointment cancelled'.tr())),
                     );
+                    MainNavigationPage.notifyDataChanged();
                     _load();
                   } else if (state is CancelAppointmentFailure) {
+                    setState(() => _actionsBusy = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.errMessage)),
+                    );
+                  } else if (state is ReschedulePrepareLoading) {
+                    setState(() => _actionsBusy = true);
+                    _showPrepareDialog();
+                  } else if (state is ReschedulePreparedSuccess) {
+                    _dismissPrepareDialog();
+                    setState(() => _actionsBusy = false);
+                    _pushRescheduleDatePicker(state.appointment);
+                  } else if (state is ReschedulePreparedFailure) {
+                    _dismissPrepareDialog();
+                    setState(() => _actionsBusy = false);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(state.errMessage)),
                     );
                   } else if (state is RescheduleAppointmentSuccess) {
+                    setState(() => _actionsBusy = false);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Appointment rescheduled'.tr())),
                     );
+                    MainNavigationPage.notifyDataChanged();
                     _load();
                   } else if (state is RescheduleAppointmentFailure) {
+                    setState(() => _actionsBusy = false);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(state.errMessage)),
                     );
@@ -278,7 +304,16 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
                     current is AppointmentsListLoading ||
                     current is AppointmentsListSuccess ||
                     current is AppointmentsListFailure ||
-                    current is AppointmentsInitial,
+                    current is AppointmentsInitial ||
+                    current is CancelAppointmentLoading ||
+                    current is CancelAppointmentSuccess ||
+                    current is CancelAppointmentFailure ||
+                    current is RescheduleAppointmentLoading ||
+                    current is RescheduleAppointmentSuccess ||
+                    current is RescheduleAppointmentFailure ||
+                    current is ReschedulePrepareLoading ||
+                    current is ReschedulePreparedSuccess ||
+                    current is ReschedulePreparedFailure,
                 builder: (context, state) {
                   final loading = state is AppointmentsListLoading ||
                       (state is AppointmentsInitial &&
@@ -399,10 +434,11 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
                                         padding:
                                             const EdgeInsets.only(bottom: 14),
                                         child: FadeSlideIn(
-                                          delay:
-                                              Duration(milliseconds: 60 * index),
+                                          delay: Duration(
+                                              milliseconds: 60 * index),
                                           child: AppointmentCard(
                                             appointment: appointment,
+                                            actionsEnabled: !_actionsBusy,
                                             onCancel: () =>
                                                 _confirmCancel(appointment),
                                             onReschedule: () =>

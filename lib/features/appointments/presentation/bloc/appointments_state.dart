@@ -10,10 +10,12 @@ final class AppointmentsListLoading extends AppointmentsState {}
 final class AppointmentsListSuccess extends AppointmentsState {
   final List<Appointment> upcoming;
   final List<Appointment> previous;
+  final String? warningMessage;
 
   AppointmentsListSuccess({
     required this.upcoming,
     required this.previous,
+    this.warningMessage,
   });
 }
 
@@ -133,4 +135,22 @@ final class CheckInAppointmentSuccess extends AppointmentsState {
 final class CheckInAppointmentFailure extends AppointmentsState {
   final String errMessage;
   CheckInAppointmentFailure({required this.errMessage});
+}
+
+final class ActiveConsultationGateLoading extends AppointmentsState {}
+
+final class ActiveConsultationGateReady extends AppointmentsState {
+  final bool consultationBlocked;
+  final Appointment? activeConsultation;
+
+  ActiveConsultationGateReady({
+    required this.consultationBlocked,
+    this.activeConsultation,
+  });
+}
+
+final class ActiveConsultationGateFailure extends AppointmentsState {
+  final String errMessage;
+
+  ActiveConsultationGateFailure({required this.errMessage});
 }

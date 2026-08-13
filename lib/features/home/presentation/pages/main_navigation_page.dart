@@ -6,22 +6,23 @@ import 'package:dental_app/features/promotional_gallery/presentation/pages/promo
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// إطار التطبيق الرئيسي بعد تسجيل الدخول - بيحمل الناف بار السفلي
-/// وبيبدّل بين 5 تبويبات. الصفحات هلق مجرد مكان محجوز (placeholder)؛
-/// كل تبويب رح ياخد شاشته الحقيقية لاحقاً.
+/// Main shell after login — bottom nav + IndexedStack of feature tabs.
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
-  /// اسم الراوت لحتى نقدر نرجّع له من مسار الحجز بدون ما نطلع
-  /// لشاشات الأونبوردنغ/اللغة/تسجيل الدخول يلي تحتها بالستاك.
   static const String routeName = '/main';
 
-  /// index تبويب "مواعيدي" بنفس ترتيب IndexedStack / الناف بار.
   static const int appointmentsTabIndex = 1;
+  static const int homeTabIndex = AppBottomNavBar.emphasizedIndex;
 
-  /// بيتنادى من فوق مسار الحجز بعد التأكيد حتى نرجع للناف ونفتح مواعيدي.
+  /// After booking confirmation: open appointments and refresh lists/home.
   static void goToAppointmentsTab() {
-    _MainNavigationPageState._instance?._goToTab(appointmentsTabIndex);
+    _MainNavigationPageState._instance?._goToAppointmentsTab(refresh: true);
+  }
+
+  /// Bump refresh tokens so IndexedStack tabs reload remote data.
+  static void notifyDataChanged() {
+    _MainNavigationPageState._instance?._bumpRefreshTokens();
   }
 
   @override
@@ -31,15 +32,10 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   static _MainNavigationPageState? _instance;
 
-  // بتبلش الشاشة عالرئيسية (نفس index العنصر المبرز بالناف بار).
   int _currentIndex = AppBottomNavBar.emphasizedIndex;
-
-  // بيزيد وحدة كل ما ندخل عالرئيسية - منمررها كـ key لكارد الخطة
-  // العلاجية بالرئيسية حتى يعيد أنيميشن شريط التقدم من الصفر كل مرة
-  // (بدل ما يشتغل مرة وحدة بس أول ما تفتح التطبيق).
   int _homeVisitCount = 0;
+  int _appointmentsRefreshToken = 0;
 
-  // نفس ترتيب أيقونات AppBottomNavBar بالظبط.
   static const List<String> _tabTitleKeys = [
     'My Profile',
     'My Appointments',
@@ -60,18 +56,33 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     super.dispose();
   }
 
-  void _goToTab(int index) {
+  void _bumpRefreshTokens() {
     if (!mounted) return;
     setState(() {
-      _currentIndex = index;
-      if (index == AppBottomNavBar.emphasizedIndex) {
+      _appointmentsRefreshToken++;
+      _homeVisitCount++;
+    });
+  }
+
+  void _goToAppointmentsTab({bool refresh = false}) {
+    if (!mounted) return;
+    setState(() {
+      _currentIndex = MainNavigationPage.appointmentsTabIndex;
+      if (refresh) {
+        _appointmentsRefreshToken++;
         _homeVisitCount++;
       }
     });
   }
 
-  void _onTabTapped(int index) {
-    _goToTab(index);
+  void _goToTab(int index) {
+    if (!mounted) return;
+    setState(() {
+      _currentIndex = index;
+      if (index == MainNavigationPage.homeTabIndex) {
+        _homeVisitCount++;
+      }
+    });
   }
 
   @override
@@ -84,23 +95,22 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const ProfilePage(), // ملفي الشخصي - جاهزة
-          const MyAppointmentsPage(), // مواعيدي - جاهزة
-
-          HomePage(homeVisitCount: _homeVisitCount), // الرئيسية
-          _PlaceholderTab(titleKey: _tabTitleKeys[3]), // خططي العلاجية
-          const PromotionalGalleryPage(), // المعرض التسويقي
+          const ProfilePage(),
+          MyAppointmentsPage(refreshToken: _appointmentsRefreshToken),
+          HomePage(homeVisitCount: _homeVisitCount),
+          _PlaceholderTab(titleKey: _tabTitleKeys[3]),
+          const PromotionalGalleryPage(),
         ],
       ),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+        onTap: _goToTab,
       ),
     );
   }
 }
 
-/// مكان محجوز مؤقت لحد ما تبني كل تبويب شاشته الفعلية.
+/// Temporary placeholder until treatment plans tab is built.
 class _PlaceholderTab extends StatelessWidget {
   final String titleKey;
 

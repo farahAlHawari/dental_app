@@ -1,11 +1,12 @@
 import 'package:dental_app/core/api/dio_consumer.dart';
+import 'package:dental_app/core/utils/clinic_contact.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/core/widgets/patient_avatar.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_model.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
 import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
-import 'package:dental_app/features/appointments/presentation/pages/chatbot_page.dart';
+import 'package:dental_app/features/chatbot/presentation/pages/chatbot_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/qr_checkin_scanner_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
 import 'package:dental_app/features/appointments/presentation/utils/appointment_date_format.dart';
@@ -111,10 +112,15 @@ class _HomePageViewState extends State<_HomePageView> {
     final result = await _patientRepository.getPatientById(patientId);
     if (!mounted) return;
     result.fold(
-      (_) => setState(() {
-        _patient = null;
-        _patientProfileLoading = false;
-      }),
+      (_) {
+        setState(() {
+          _patient = null;
+          _patientProfileLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load patient profile'.tr())),
+        );
+      },
       (data) => setState(() {
         _patient = data;
         _patientProfileLoading = false;
@@ -265,8 +271,18 @@ class _HomePageViewState extends State<_HomePageView> {
           child: Stack(
             children: [
               SafeArea(
-                child: CustomScrollView(
-                  slivers: [
+                child: RefreshIndicator(
+                  color: colors.primary,
+                  onRefresh: () async {
+                    await Future.wait([
+                      _requestHome(),
+                      _loadPatientProfile(),
+                      _loadUpcoming(),
+                    ]);
+                  },
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
                     SliverAppBar(
                       pinned: true,
                       backgroundColor: colors.surface,
@@ -340,8 +356,15 @@ class _HomePageViewState extends State<_HomePageView> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: AnimatedNotificationIcon(
-                                  // TODO: نقل لشاشة الإشعارات لما تجهز (قسم فرح، FR-P-13).
-                                  onTap: () {},
+                                  onTap: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Notifications coming soon'.tr(),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -350,7 +373,7 @@ class _HomePageViewState extends State<_HomePageView> {
                       ),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           BlocBuilder<AppointmentsBloc, AppointmentsState>(
@@ -514,8 +537,20 @@ class _HomePageViewState extends State<_HomePageView> {
                                   label: 'Emergency Appointment'.tr(),
                                   subtitle: 'Get urgent care now'.tr(),
                                   isDanger: true,
-                                  onTap: () {
-                                    // TODO: navigate to emergency contact flow.
+                                  onTap: () async {
+                                    final opened =
+                                        await ClinicContact.openWhatsApp();
+                                    if (!opened && context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Please contact the clinic immediately for urgent care.'
+                                                .tr(),
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                                 ),
                                 QuickActionCard(
@@ -539,6 +574,7 @@ class _HomePageViewState extends State<_HomePageView> {
                     ),
                   ],
                 ),
+              ),
               ),
             ],
           ),

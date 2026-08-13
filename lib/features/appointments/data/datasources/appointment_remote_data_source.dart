@@ -74,14 +74,15 @@ class AppointmentRemoteDataSource {
     String? chatbotSummary,
   }) async {
     final body = <String, dynamic>{
-      'patientId': int.parse(patientId),
+      'patientId': _parseRequiredInt(patientId, 'patientId'),
       'type': type.apiValue,
       'scheduledAt': scheduledAt,
     };
     if (type == AppointmentBookingType.followUp &&
         treatmentSessionId != null &&
         treatmentSessionId.isNotEmpty) {
-      body['treatmentSessionId'] = int.parse(treatmentSessionId);
+      body['treatmentSessionId'] =
+          _parseRequiredInt(treatmentSessionId, 'treatmentSessionId');
     }
     if (reasonForVisit != null && reasonForVisit.trim().isNotEmpty) {
       body['reasonForVisit'] = reasonForVisit.trim();
@@ -143,13 +144,14 @@ class AppointmentRemoteDataSource {
     String? appointmentId,
   }) async {
     final body = <String, dynamic>{
-      'patientId': int.parse(patientId),
+      'patientId': _parseRequiredInt(patientId, 'patientId'),
       'clinicCheckInCode': clinicCheckInCode,
       'latitude': latitude,
       'longitude': longitude,
     };
     if (appointmentId != null && appointmentId.isNotEmpty) {
-      body['appointmentId'] = int.parse(appointmentId);
+      body['appointmentId'] =
+          _parseRequiredInt(appointmentId, 'appointmentId');
     }
     final response = await api.post(EndPoints.appointmentsCheckIn, data: body);
     final data = _extractData(response);
@@ -165,5 +167,13 @@ class AppointmentRemoteDataSource {
     if (data == null) return null;
     if (data is Map) return Map<String, dynamic>.from(data);
     return null;
+  }
+
+  int _parseRequiredInt(String raw, String field) {
+    final value = int.tryParse(raw.trim());
+    if (value == null) {
+      throw FormatException('Invalid $field');
+    }
+    return value;
   }
 }

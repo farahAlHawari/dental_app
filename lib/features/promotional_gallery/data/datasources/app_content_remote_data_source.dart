@@ -38,16 +38,6 @@ class AppContentRemoteDataSource {
     return AppContentListResult(items: items, total: total);
   }
 
-  /// GET app/contents/:id
-  Future<AppContent> getById(String id) async {
-    final response = await api.get(EndPoints.appContentById(id));
-    final data = _extractData(response);
-    if (data == null) {
-      throw StateError('Empty content response');
-    }
-    return AppContent.fromJson(data);
-  }
-
   Map<String, dynamic>? _extractData(dynamic response) {
     if (response is! Map) return null;
     final map = Map<String, dynamic>.from(response);

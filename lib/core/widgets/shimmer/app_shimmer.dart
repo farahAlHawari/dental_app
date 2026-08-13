@@ -24,11 +24,9 @@ class AppShimmer extends StatelessWidget {
   }
 }
 
-/// Short preview delay so shimmer is visible before fast API responses.
+/// Optional shimmer preview delay (disabled for production latency).
 class ShimmerPreview {
-  static const Duration delay = Duration(milliseconds: 1200);
-
-  static Future<void> wait() => Future<void>.delayed(delay);
+  static Future<void> wait() async {}
 }
 
 class ShimmerBox extends StatelessWidget {
@@ -863,6 +861,55 @@ class GalleryPostsListShimmer extends StatelessWidget {
       itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (_, __) => const GalleryPostCardShimmer(),
+    );
+  }
+}
+
+/// Calendar month grid placeholder on SelectDateTimePage.
+class CalendarDaysShimmer extends StatelessWidget {
+  const CalendarDaysShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppShimmer(
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 35,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 7,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+        ),
+        itemBuilder: (_, __) => const ShimmerBox(
+          width: double.infinity,
+          height: double.infinity,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+    );
+  }
+}
+
+/// Time slots row placeholder on SelectDateTimePage.
+class TimeSlotsShimmer extends StatelessWidget {
+  const TimeSlotsShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppShimmer(
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: List.generate(
+          6,
+          (_) => const ShimmerBox(
+            width: 88,
+            height: 40,
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+        ),
+      ),
     );
   }
 }

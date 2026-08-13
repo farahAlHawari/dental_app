@@ -1,4 +1,5 @@
 import 'package:dental_app/core/services/whatsapp_service.dart';
+import 'package:dental_app/core/utils/clinic_contact.dart';
 import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
 import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -167,7 +168,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
 
   void _contactHelp() {
     WhatsAppService.openWhatsApp(
-      phone: '963959296517',
+      phone: ClinicContact.whatsAppNumber,
       message: 'مرحبا، عندي مشكلة بتأكيد الوصول عبر رمز QR بالعيادة.',
     );
   }

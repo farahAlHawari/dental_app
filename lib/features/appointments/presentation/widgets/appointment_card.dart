@@ -9,16 +9,12 @@ import '../../../home/presentation/widgets/checkin_scan_prompt.dart';
 /// كرت عرض موعد واحد - يعرض بيانات الموعد وشارة حالته، وأزرار الإلغاء/التعديل
 /// بس لما تسمح حالة الموعد فيها (`AppointmentStatus.allowsCancelOrReschedule`)،
 /// بالإضافة لزر "مسح QR لتأكيد الوصول" لما يكون الموعد بحالة "مؤكد".
-///
-/// TODO: فعالية زري الإلغاء/التعديل حالياً ثابتة (تظهر دايماً لما تسمح
-/// الحالة) - لما يوصل الـ backend لازم تُبنى فعلياً على flags جاهزة من
-/// استجابة الـ API (canCancel / canReschedule) يلي بتاخد بعين الاعتبار مهلة
-/// الإلغاء القابلة للتخصيص لكل عيادة.
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final VoidCallback? onCancel;
   final VoidCallback? onReschedule;
   final VoidCallback? onScanQr;
+  final bool actionsEnabled;
 
   const AppointmentCard({
     super.key,
@@ -26,6 +22,7 @@ class AppointmentCard extends StatelessWidget {
     this.onCancel,
     this.onReschedule,
     this.onScanQr,
+    this.actionsEnabled = true,
   });
 
   @override
@@ -104,11 +101,9 @@ class AppointmentCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: onCancel,
+                    onPressed: actionsEnabled ? onCancel : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.error,
-                      // side: BorderSide(color: colors.error.withOpacity(0.4)),
-                      // backgroundColor: colors.error.withOpacity(0.06),
                       side: BorderSide.none,
                       backgroundColor: colors.error.withOpacity(0.14),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -126,7 +121,7 @@ class AppointmentCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: onReschedule,
+                    onPressed: actionsEnabled ? onReschedule : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.onSurface,
                       side: BorderSide(color: colors.outline.withOpacity(0.35)),

@@ -86,7 +86,6 @@ static const String language = "auth/language";
   // App contents — promotional gallery (patient app)
   // ================================
   static const String appContents = "app/contents";
-  static String appContentById(String id) => "app/contents/$id";
 
   /// Public auth endpoints — no Authorization header.
   static const Set<String> publicAuthPaths = {

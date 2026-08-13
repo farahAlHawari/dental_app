@@ -144,10 +144,23 @@ class ChatbotBloc extends Bloc<ChatbotEvent, ChatbotState> {
       },
       (response) {
         final summary = normalizeChatbotSummary(response.summary);
+        if (summary.isEmpty) {
+          final session = current.copyWith(isSummarizing: false);
+          emit(
+            ChatSummarizeFailure(
+              session: session,
+              errMessage:
+                  'Keep chatting until the assistant has enough information.'
+                      .tr(),
+            ),
+          );
+          emit(session);
+          return;
+        }
         emit(
           current.copyWith(
             isSummarizing: false,
-            completedSummary: summary.isEmpty ? null : summary,
+            completedSummary: summary,
           ),
         );
       },

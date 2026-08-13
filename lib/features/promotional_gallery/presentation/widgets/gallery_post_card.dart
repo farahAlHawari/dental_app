@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:dental_app/features/promotional_gallery/data/models/app_content.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -174,6 +176,7 @@ class _GalleryImagePagerState extends State<_GalleryImagePager> {
       alignment: Alignment.bottomCenter,
       children: [
         PageView.builder(
+          reverse: Directionality.of(context) == ui.TextDirection.rtl,
           itemCount: widget.urls.length,
           onPageChanged: (value) => setState(() => _index = value),
           itemBuilder: (context, index) => _GalleryNetworkImage(

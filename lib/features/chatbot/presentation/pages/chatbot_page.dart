@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/clinic_contact.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/features/chatbot/data/models/chatbot_api_mode.dart';
 import 'package:dental_app/features/chatbot/presentation/bloc/chatbot_bloc.dart';
@@ -155,15 +156,18 @@ class _ChatbotViewState extends State<_ChatbotView> {
                   children: [
                     if (isEmergency)
                       _EmergencyBanner(
-                        onContact: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Please contact the clinic immediately for urgent care.'
-                                    .tr(),
+                        onContact: () async {
+                          final opened = await ClinicContact.openWhatsApp();
+                          if (!opened && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Please contact the clinic immediately for urgent care.'
+                                      .tr(),
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                     if (unavailable && !widget.isBooking)
@@ -415,7 +419,7 @@ class _ChatBubble extends StatelessWidget {
         ],
       ),
       child: Text(
-        message.text.tr(),
+        message.isSystem ? message.text.tr() : message.text,
         style: TextStyle(
           fontSize: 13.5,
           height: 1.5,

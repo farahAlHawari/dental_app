@@ -84,11 +84,6 @@ class _AssistantPromptCardState extends State<AssistantPromptCard>
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // TODO: حطي هون مسار الـ Lottie يلي رح تختاريه، مثلاً
-              // assets/animations/chat_assistant.json (وضيفيه بمجلد
-              // assets/animations - هو مسجل بالـ pubspec أصلاً).
-              // لحد ما تختاريه، الـ errorBuilder بيبين أيقونة بديلة
-              // فالشاشة ما بتنكسر.
               SizedBox(
                 width: 64,
                 height: 64,

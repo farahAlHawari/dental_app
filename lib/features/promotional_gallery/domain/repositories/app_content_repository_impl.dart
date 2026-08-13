@@ -33,16 +33,4 @@ class AppContentRepositoryImpl extends AppContentRepository {
       return Left(Failure(errMessage: e.toString()));
     }
   }
-
-  @override
-  Future<Either<Failure, AppContent>> getById(String id) async {
-    try {
-      final result = await remoteDataSource.getById(id);
-      return Right(result);
-    } on ServerException catch (e) {
-      return Left(_map(e));
-    } catch (e) {
-      return Left(Failure(errMessage: e.toString()));
-    }
-  }
 }

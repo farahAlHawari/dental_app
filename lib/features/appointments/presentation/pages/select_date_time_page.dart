@@ -1,5 +1,6 @@
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
+import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
 import 'package:dental_app/features/appointments/data/models/available_day.dart';
 import 'package:dental_app/features/appointments/data/models/available_slot.dart';
@@ -133,8 +134,6 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
         _displayedMonth.month == _todayDate.month;
     return displayedIsCurrentMonth && _isSameDay(_selectedDate!, _todayDate);
   }
-
-  String _mapAvailabilityError(String message) => message;
 
   void _dispatchCreateAppointment({
     required DateTime date,
@@ -371,8 +370,11 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                       _loadingDays = false;
                       _daysByDate.clear();
                       _selectedDate = null;
-                      _daysError = _mapAvailabilityError(state.errMessage);
+                      _daysError = state.errMessage;
                     });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.errMessage)),
+                    );
                   } else if (state is AvailableSlotsLoading) {
                     setState(() {
                       _loadingSlots = true;
@@ -386,8 +388,11 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                   } else if (state is AvailableSlotsFailure) {
                     setState(() {
                       _loadingSlots = false;
-                      _slotsError = _mapAvailabilityError(state.errMessage);
+                      _slotsError = state.errMessage;
                     });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.errMessage)),
+                    );
                   }
                 },
               child: Column(
@@ -571,11 +576,9 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                                   if (_loadingDays)
                                     const Padding(
                                       padding: EdgeInsets.symmetric(
-                                        vertical: 36,
+                                        vertical: 16,
                                       ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
+                                      child: CalendarDaysShimmer(),
                                     )
                                   else if (_daysError != null)
                                     Padding(
@@ -764,7 +767,7 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                                       child: BookingConfirmationPage(
                                       visitTypeLabel:
                                             widget.visitTypeLabel ??
-                                            'موعد استشارة',
+                                            'Consultation'.tr(),
                                         date: date,
                                         time: time,
                                         onConfirm: () =>
@@ -834,8 +837,8 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
 
     if (_loadingSlots) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: TimeSlotsShimmer(),
       );
     }
 

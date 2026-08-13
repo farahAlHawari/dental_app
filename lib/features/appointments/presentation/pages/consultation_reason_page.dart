@@ -2,7 +2,7 @@ import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
 import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
-import 'package:dental_app/features/appointments/presentation/pages/chatbot_page.dart';
+import 'package:dental_app/features/chatbot/presentation/pages/chatbot_page.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_date_time_page.dart';
 import 'package:dental_app/features/appointments/presentation/widgets/assistant_prompt_card.dart';
 import 'package:easy_localization/easy_localization.dart';

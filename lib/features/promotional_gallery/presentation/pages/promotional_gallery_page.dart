@@ -30,6 +30,7 @@ class _PromotionalGalleryView extends StatefulWidget {
 
 class _PromotionalGalleryViewState extends State<_PromotionalGalleryView> {
   List<AppContent> _items = [];
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -38,7 +39,6 @@ class _PromotionalGalleryViewState extends State<_PromotionalGalleryView> {
   }
 
   Future<void> _load() async {
-    await ShimmerPreview.wait();
     if (!mounted) return;
     context.read<PromotionalGalleryBloc>().add(LoadAppContentsRequested());
   }
@@ -74,9 +74,15 @@ class _PromotionalGalleryViewState extends State<_PromotionalGalleryView> {
               child: BlocConsumer<PromotionalGalleryBloc, PromotionalGalleryState>(
                 listener: (context, state) {
                   if (state is AppContentsSuccess) {
-                    setState(() => _items = List.from(state.items));
+                    setState(() {
+                      _items = List.from(state.items);
+                      _errorMessage = null;
+                    });
                   } else if (state is AppContentsFailure) {
-                    setState(() => _items = []);
+                    setState(() {
+                      _items = [];
+                      _errorMessage = state.errMessage;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(state.errMessage)),
                     );
@@ -89,10 +95,34 @@ class _PromotionalGalleryViewState extends State<_PromotionalGalleryView> {
                     current is PromotionalGalleryInitial,
                 builder: (context, state) {
                   final loading = state is AppContentsLoading ||
-                      (state is PromotionalGalleryInitial && _items.isEmpty);
+                      (state is PromotionalGalleryInitial &&
+                          _items.isEmpty &&
+                          _errorMessage == null);
 
                   if (loading) {
                     return const GalleryPostsListShimmer();
+                  }
+
+                  if (_errorMessage != null && _items.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _errorMessage!,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _load,
+                              child: Text('Retry'.tr()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   }
 
                   if (_items.isEmpty) {
@@ -118,7 +148,7 @@ class _PromotionalGalleryViewState extends State<_PromotionalGalleryView> {
                     color: colors.primary,
                     child: ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
                       itemCount: _items.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
                       itemBuilder: (context, index) => FadeSlideIn(
