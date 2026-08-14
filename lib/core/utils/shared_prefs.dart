@@ -17,6 +17,8 @@ class SharedPrefs {
   static const String _hasSeenOnboardingKey = 'has_seen_onboarding';
   /// Brand splash (logo + phrase) — first launch only, like language/onboarding.
   static const String _hasSeenSplashKey = 'has_seen_splash';
+  /// Last FCM token registered with the backend (for DELETE on logout).
+  static const String _fcmTokenKey = 'fcm_device_token';
 
   /// Onboarding steps after register OTP (patient flow — separate).
   static const String onboardingPatientType = 'patient_type';
@@ -165,6 +167,21 @@ class SharedPrefs {
   static Future<bool> hasSeenSplash() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_hasSeenSplashKey) ?? false;
+  }
+
+  static Future<void> saveFcmToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_fcmTokenKey, token);
+  }
+
+  static Future<String?> getFcmToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_fcmTokenKey);
+  }
+
+  static Future<void> clearFcmToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_fcmTokenKey);
   }
 
   /// Masks phone for display, e.g. 0912345678 -> 0912••••78

@@ -438,5 +438,15 @@
   "Fourth Payment": "الدفعة الرابعة",
   "Fifth Payment": "الدفعة الخامسة",
   "Payment {n}": "الدفعة {n}",
-  "Your smile .. starts here": "ابتسامتك .. تبدأ من هنا"
+  "Your smile .. starts here": "ابتسامتك .. تبدأ من هنا",
+
+  "Notifications": "الإشعارات",
+  "Your notifications": "إشعاراتك",
+  "Notifications count": "{count} إشعار",
+  "No notifications": "لا توجد إشعارات حالياً",
+  "Mark all read": "تعليم الكل كمقروء",
+  "Unread": "غير مقروءة",
+  "Read": "مقروءة",
+  "Notification": "إشعار",
+  "Yesterday": "أمس"
 }

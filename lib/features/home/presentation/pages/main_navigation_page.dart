@@ -1,3 +1,4 @@
+import 'package:dental_app/core/notifications/device_token_sync.dart';
 import 'package:dental_app/features/appointments/presentation/pages/my_appointments_page.dart';
 import 'package:dental_app/features/home/presentation/pages/home_page.dart';
 import 'package:dental_app/features/home/presentation/widgets/app_bottom_nav_bar.dart';
@@ -57,6 +58,8 @@ class _MainNavigationPageState extends State<MainNavigationPage>
     super.initState();
     _instance = this;
     WidgetsBinding.instance.addObserver(this);
+    // Register FCM with backend for this authenticated session.
+    DeviceTokenSync.registerCurrentToken();
   }
 
   @override

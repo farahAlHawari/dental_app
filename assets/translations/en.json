@@ -439,5 +439,15 @@
   "Fourth Payment": "Fourth Payment",
   "Fifth Payment": "Fifth Payment",
   "Payment {n}": "Payment {n}",
-  "Your smile .. starts here": "Your smile .. starts here"
+  "Your smile .. starts here": "Your smile .. starts here",
+
+  "Notifications": "Notifications",
+  "Your notifications": "Your notifications",
+  "Notifications count": "{count} notifications",
+  "No notifications": "No notifications yet",
+  "Mark all read": "Mark all read",
+  "Unread": "Unread",
+  "Read": "Read",
+  "Notification": "Notification",
+  "Yesterday": "Yesterday"
 }

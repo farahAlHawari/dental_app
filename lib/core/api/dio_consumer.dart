@@ -187,6 +187,15 @@ class DioConsumer {
       _handleDioException(e);
     }
   }
+
+  Future<dynamic> delete(String path, {dynamic data}) async {
+    try {
+      final response = await dio.delete(path, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      _handleDioException(e);
+    }
+  }
   // ================================
   // NEW CODE END
   // ================================

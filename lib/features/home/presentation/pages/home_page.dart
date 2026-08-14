@@ -8,6 +8,7 @@ import 'package:dental_app/features/appointments/presentation/utils/appointment_
 import 'package:dental_app/features/archived_visits/domain/session_rating_helper.dart';
 import 'package:dental_app/features/archived_visits/presentation/bloc/archived_visits_bloc.dart';
 import 'package:dental_app/features/archived_visits/presentation/widgets/ratingDialog.dart';
+import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/features/financial_and_billing/presentation/pages/financial_page.dart';
 import 'package:dental_app/features/home/presentation/widgets/active_treatment_plan_card.dart';
 import 'package:dental_app/features/home/presentation/widgets/animated_notification_icon.dart';
@@ -16,6 +17,10 @@ import 'package:dental_app/features/home/presentation/widgets/daily_tip_card.dar
 import 'package:dental_app/features/home/presentation/widgets/quick_action_card.dart';
 import 'package:dental_app/features/home/presentation/widgets/upcoming_appointment_card.dart';
 import 'package:dental_app/features/medical_archive/presentation/pages/medical_archive_page.dart';
+import 'package:dental_app/features/notifications/data/datasources/notifications_remote_data_source.dart';
+import 'package:dental_app/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:dental_app/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,6 +72,7 @@ class _HomePageViewState extends State<_HomePageView> {
   bool _dialogOpen = false;
   String? _pendingSessionId;
   String? _patientId;
+  int _unreadNotifications = 0;
 
   // TODO: بدّلها بحالة الموعد القادم الفعلية من الـ backend.
   AppointmentStatus _upcomingStatus = AppointmentStatus.confirmed;
@@ -79,10 +85,19 @@ class _HomePageViewState extends State<_HomePageView> {
   // بضل عربي بغض النظر عن اللغة، نفس فكرة اسم الطبيب بالمواعيد التجريبية.
   static const String _patientName = 'سارة خالد';
 
+  final _notificationsRepository = NotificationsRepository(
+    remoteDataSource: NotificationsRemoteDataSource(
+      api: DioConsumer(dio: Dio()),
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPendingRating());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPendingRating();
+      _loadUnreadCount();
+    });
   }
 
   @override
@@ -90,7 +105,26 @@ class _HomePageViewState extends State<_HomePageView> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.ratingCheckTick != widget.ratingCheckTick) {
       _checkPendingRating();
+      _loadUnreadCount();
     }
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final result = await _notificationsRepository.getUnreadCount();
+    if (!mounted) return;
+    result.fold(
+      (_) {},
+      (count) => setState(() => _unreadNotifications = count),
+    );
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+    );
+    if (!mounted) return;
+    await _loadUnreadCount();
   }
 
   Future<void> _checkPendingRating() async {
@@ -247,8 +281,8 @@ class _HomePageViewState extends State<_HomePageView> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: AnimatedNotificationIcon(
-                                  // TODO: نقل لشاشة الإشعارات لما تجهز (قسم فرح، FR-P-13).
-                                  onTap: () {},
+                                  unreadCount: _unreadNotifications,
+                                  onTap: _openNotifications,
                                 ),
                               ),
                             ],

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "419608757359",
+    "project_id": "senn-2f0ea",
+    "storage_bucket": "senn-2f0ea.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419608757359:android:135d10d0e1c0845174b99a",
+        "android_client_info": {
+          "package_name": "com.example.dental_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi2hqa2MNetOSNEPEFq7YY-K6AU-ACqlo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419608757359:android:39f4d9c47a8ed14a74b99a",
+        "android_client_info": {
+          "package_name": "com.senni.senni"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi2hqa2MNetOSNEPEFq7YY-K6AU-ACqlo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

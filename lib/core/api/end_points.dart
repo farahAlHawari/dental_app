@@ -1,5 +1,5 @@
 class EndPoints {
-  static const String baserUrl = "http://10.33.174.243:3000/api/v1/";
+  static const String baserUrl = "http://10.17.222.243:3000/api/v1/";
   static const String register = "auth/register";
   static const String verifyOtp = "auth/register/verify";
    static const String forgotPassword = "auth/forgot-password";
@@ -64,6 +64,18 @@ static const String language = "auth/language";
   // ================================
   static const String financialSummary = "financial-summary";
   static String invoiceById(String id) => "invoices/$id";
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  // ================================
+  // NEW CODE START — notifications / FCM device tokens
+  // ================================
+  static const String deviceTokens = "device-tokens";
+  static const String notifications = "notifications";
+  static const String notificationsUnreadCount = "notifications/unread-count";
+  static const String notificationsReadAll = "notifications/read-all";
+  static String notificationRead(String id) => "notifications/$id/read";
   // ================================
   // NEW CODE END
   // ================================
