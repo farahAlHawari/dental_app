@@ -7,9 +7,11 @@ import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await pdfrxFlutterInitialize(dismissPdfiumWasmWarnings: true);
   await EasyLocalization.ensureInitialized();
 
   final savedLang = await SharedPrefs.getLanguage();
@@ -50,9 +52,10 @@ class MyApp extends StatelessWidget {
 
               return Theme(
                 data: Theme.of(context).copyWith(
-                  textTheme: Theme.of(
-                    context,
-                  ).textTheme.apply(fontFamily: isArabic ? 'cr' : 'ir'),
+                  textTheme: Theme.of(context).textTheme.apply(
+                    // fontFamily: isArabic ? 'cr' : 'ir'
+                    fontFamily: 'cr',
+                  ),
                 ),
                 child: child!,
               );

@@ -19,22 +19,34 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// تبويب "مواعيدي" — نفس نمط فرح: Bloc + Shimmer + EmptyListState.
 class MyAppointmentsPage extends StatelessWidget {
   final int refreshToken;
+  final int upcomingTabToken;
 
-  const MyAppointmentsPage({super.key, this.refreshToken = 0});
+  const MyAppointmentsPage({
+    super.key,
+    this.refreshToken = 0,
+    this.upcomingTabToken = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => AppointmentsBloc(),
-      child: _MyAppointmentsView(refreshToken: refreshToken),
+      child: _MyAppointmentsView(
+        refreshToken: refreshToken,
+        upcomingTabToken: upcomingTabToken,
+      ),
     );
   }
 }
 
 class _MyAppointmentsView extends StatefulWidget {
   final int refreshToken;
+  final int upcomingTabToken;
 
-  const _MyAppointmentsView({required this.refreshToken});
+  const _MyAppointmentsView({
+    required this.refreshToken,
+    required this.upcomingTabToken,
+  });
 
   @override
   State<_MyAppointmentsView> createState() => _MyAppointmentsViewState();
@@ -57,6 +69,9 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
   @override
   void didUpdateWidget(covariant _MyAppointmentsView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.upcomingTabToken != widget.upcomingTabToken) {
+      setState(() => _tabIndex = 0);
+    }
     if (oldWidget.refreshToken != widget.refreshToken) {
       _load();
     }
@@ -199,6 +214,7 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: MainNavigationPage.homeTabBackButton(context),
         title: Text(
           'My Appointments'.tr(),
           textAlign: TextAlign.center,

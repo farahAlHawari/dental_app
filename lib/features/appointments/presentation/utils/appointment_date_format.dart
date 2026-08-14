@@ -43,6 +43,18 @@ String formatAppointmentTime(DateTime date) {
   return '$hour12:$minute $period';
 }
 
+/// تسمية قصيرة لليوم (اليوم / غداً / أمس) — للمواعيد القريبة فقط.
+String? formatAppointmentRelativeDay(DateTime date) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final only = DateTime(date.year, date.month, date.day);
+  final days = only.difference(today).inDays;
+  if (days == 0) return 'Today'.tr();
+  if (days == 1) return 'Tomorrow'.tr();
+  if (days == -1) return 'Yesterday'.tr();
+  return null;
+}
+
 /// بيعرض وقت API بصيغة HH:mm (مثل "09:15") كـ 12-hour مع AM/PM مترجم.
 String formatApiTimeLabel(String startTime) {
   final parts = startTime.trim().split(':');

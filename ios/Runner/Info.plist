@@ -60,5 +60,9 @@
 	<string>نحتاج الوصول للكاميرا لمسح رمز QR بالعيادة لتأكيد وصولك تلقائياً.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>نحتاج موقعك لتأكيد وصولك للعيادة ضمن نطاق GPS المحدد.</string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 </dict>
 </plist>

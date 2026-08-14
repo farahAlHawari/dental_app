@@ -34,7 +34,8 @@ class ChatbotBloc extends Bloc<ChatbotEvent, ChatbotState> {
         apiMode: event.apiMode,
         messages: [
           ChatUiMessage(
-            text: 'Hello! How can I help you today?',
+            text: "Hello, I'm your smart medical assistant. How can I help you?"
+                .tr(),
             isBot: true,
           ),
         ],

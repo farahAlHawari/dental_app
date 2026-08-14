@@ -8,6 +8,7 @@ class TreatmentPlan {
   final int sessionCount;
   final int progressPercent;
   final String? estimatedCost;
+  final String? actualCost;
   final DateTime? createdAt;
   final List<PlanSession>? _sessions;
 
@@ -18,6 +19,7 @@ class TreatmentPlan {
     required this.sessionCount,
     required this.progressPercent,
     this.estimatedCost,
+    this.actualCost,
     this.createdAt,
     List<PlanSession>? sessions,
   }) : _sessions = sessions;
@@ -43,6 +45,7 @@ class TreatmentPlan {
           ? json['progressPercent'] as int
           : int.tryParse('${json['progressPercent']}') ?? 0,
       estimatedCost: json['estimatedCost']?.toString(),
+      actualCost: json['actualCost']?.toString(),
       createdAt: DateTime.tryParse(createdRaw ?? '')?.toLocal(),
       sessions: parsedSessions,
     );
@@ -62,6 +65,26 @@ class TreatmentPlan {
   }
 
   double get progress => (progressPercent.clamp(0, 100)) / 100.0;
+
+  /// Completed plans show billed actual cost only when the API sends it.
+  bool get usesActualCost {
+    if (status != TreatmentPlanStatus.completed) return false;
+    final actual = actualCost?.trim();
+    return actual != null && actual.isNotEmpty;
+  }
+
+  String? get displayCost {
+    if (usesActualCost) {
+      final actual = actualCost?.trim();
+      if (actual != null && actual.isNotEmpty) return actual;
+    }
+    final estimated = estimatedCost?.trim();
+    if (estimated != null && estimated.isNotEmpty) return estimated;
+    return null;
+  }
+
+  String get displayCostLabelKey =>
+      usesActualCost ? 'Actual cost' : 'Estimated cost';
 
   int get completedSessionCount {
     if (sessionCount <= 0) return 0;

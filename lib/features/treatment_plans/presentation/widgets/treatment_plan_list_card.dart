@@ -5,7 +5,7 @@ import 'package:dental_app/features/treatment_plans/data/models/treatment_plan_s
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// كارد خطة بالقائمة — اسم + حالة + بادج جلسة + شريط تقدم + تكلفة تقديرية.
+/// كارد خطة بالقائمة — اسم + حالة + بادج جلسة + شريط تقدم + تكلفة.
 class TreatmentPlanListCard extends StatelessWidget {
   final TreatmentPlan plan;
   final VoidCallback? onViewDetails;
@@ -25,7 +25,7 @@ class TreatmentPlanListCard extends StatelessWidget {
       AppColors.accent,
     );
     final name = plan.name.isEmpty ? 'Treatment plan'.tr() : plan.name;
-    final cost = plan.estimatedCost?.trim();
+    final cost = plan.displayCost;
 
     return Material(
       color: Colors.transparent,
@@ -157,7 +157,7 @@ class TreatmentPlanListCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Estimated cost'.tr(),
+                      plan.displayCostLabelKey.tr(),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

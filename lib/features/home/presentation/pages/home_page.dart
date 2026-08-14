@@ -1,4 +1,5 @@
 import 'package:dental_app/core/api/dio_consumer.dart';
+import 'package:dental_app/core/services/whatsapp_service.dart';
 import 'package:dental_app/core/utils/clinic_contact.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
@@ -432,7 +433,7 @@ class _HomePageViewState extends State<_HomePageView> {
                       ),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 72),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           BlocBuilder<AppointmentsBloc, AppointmentsState>(
@@ -569,7 +570,7 @@ class _HomePageViewState extends State<_HomePageView> {
                               crossAxisCount: 2,
                               mainAxisSpacing: 14,
                               crossAxisSpacing: 14,
-                              childAspectRatio: 1.05,
+                              childAspectRatio: 0.92,
                               children: [
                                 QuickActionCard(
                                   icon: Icons.description_outlined,
@@ -605,9 +606,15 @@ class _HomePageViewState extends State<_HomePageView> {
                                   subtitle: 'Get urgent care now'.tr(),
                                   isDanger: true,
                                   onTap: () async {
-                                    final opened =
-                                        await ClinicContact.openWhatsApp();
-                                    if (!opened && context.mounted) {
+                                    try {
+                                      await WhatsAppService.openWhatsApp(
+                                        phone: ClinicContact.whatsAppNumber,
+                                        message:
+                                            'Hello, I need an emergency dental appointment. Please contact me as soon as possible.'
+                                                .tr(),
+                                      );
+                                    } catch (_) {
+                                      if (!context.mounted) return;
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(

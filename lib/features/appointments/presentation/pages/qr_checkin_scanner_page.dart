@@ -124,41 +124,16 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
   Future<void> _enterCodeManually() async {
     if (_handled || _checkingIn) return;
 
-    final controller = TextEditingController();
     final colors = Theme.of(context).colorScheme;
 
-    final code = await showDialog<String>(
+    final code = await showModalBottomSheet<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text('Enter code manually'.tr()),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textAlign: TextAlign.center,
-          decoration: InputDecoration(
-            hintText: 'Reception code'.tr(),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Cancel'.tr()),
-          ),
-          ElevatedButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            style: ElevatedButton.styleFrom(backgroundColor: colors.primary),
-            child: Text('Confirm'.tr()),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
+      builder: (sheetContext) => const _ManualCodeSheet(),
     );
 
     if (code != null && code.length >= 8) {
@@ -206,6 +181,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
       },
       child: Scaffold(
         backgroundColor: Colors.black,
+        resizeToAvoidBottomInset: false,
         body: Stack(
         fit: StackFit.expand,
         children: [
@@ -371,6 +347,102 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
         ],
       ),
     ),
+    );
+  }
+}
+
+class _ManualCodeSheet extends StatefulWidget {
+  const _ManualCodeSheet();
+
+  @override
+  State<_ManualCodeSheet> createState() => _ManualCodeSheetState();
+}
+
+class _ManualCodeSheetState extends State<_ManualCodeSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Enter code manually'.tr(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: colors.primary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              hintText: 'Reception code'.tr(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'.tr()),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(
+                    context,
+                    _controller.text.trim(),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Confirm'.tr(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

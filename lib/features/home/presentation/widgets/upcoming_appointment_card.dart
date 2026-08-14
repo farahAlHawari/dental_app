@@ -103,26 +103,26 @@ class UpcomingAppointmentCard extends StatelessWidget {
             // لمسة زخرفية بسيطة بس (دائرتين شفافتين بزاوية الكارد) حتى
             // ما يضل الكارد فارغ/مسطّح، بحركة بطيئة وناعمة حتى ما تحس
             // الكارد "ثابت وميت" بلا ما يصير فيه ازدحام بصري.
-            const Positioned(
-              top: -34,
-              right: -28,
-              child: _FloatingBlob(
-                size: 130,
-                opacity: 0.06,
-                duration: Duration(seconds: 7),
-                range: Offset(10, 12),
-              ),
-            ),
-            const Positioned(
-              bottom: -46,
-              left: -24,
-              child: _FloatingBlob(
-                size: 110,
-                opacity: 0.05,
-                duration: Duration(seconds: 9),
-                range: Offset(12, 8),
-              ),
-            ),
+            // const Positioned(
+            //   top: -34,
+            //   right: -28,
+            //   child: _FloatingBlob(
+            //     size: 130,
+            //     opacity: 0.06,
+            //     duration: Duration(seconds: 7),
+            //     range: Offset(10, 12),
+            //   ),
+            // ),
+            // const Positioned(
+            //   bottom: -46,
+            //   left: -24,
+            //   child: _FloatingBlob(
+            //     size: 110,
+            //     opacity: 0.05,
+            //     duration: Duration(seconds: 9),
+            //     range: Offset(12, 8),
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -321,6 +321,8 @@ class _QrCheckInIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedOpacity(
@@ -331,11 +333,11 @@ class _QrCheckInIcon extends StatelessWidget {
           height: 64,
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.94),
+            color: Color.lerp(Colors.white, colors.primary, 0.22),
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withOpacity(0.12),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -347,7 +349,7 @@ class _QrCheckInIcon extends StatelessWidget {
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => Icon(
               Icons.qr_code_scanner_rounded,
-              color: Theme.of(context).colorScheme.primary,
+              color: colors.primary,
               size: 28,
             ),
           ),

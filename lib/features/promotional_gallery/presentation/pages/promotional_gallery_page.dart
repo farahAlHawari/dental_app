@@ -1,6 +1,7 @@
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
+import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
 import 'package:dental_app/features/promotional_gallery/data/models/app_content.dart';
 import 'package:dental_app/features/promotional_gallery/presentation/bloc/promotional_gallery_bloc.dart';
 import 'package:dental_app/features/promotional_gallery/presentation/widgets/gallery_post_card.dart';
@@ -49,6 +50,7 @@ class _PromotionalGalleryViewState extends State<_PromotionalGalleryView> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: MainNavigationPage.homeTabBackButton(context),
         title: Text(
           'Promotional Gallery'.tr(),
           textAlign: TextAlign.center,

@@ -13,6 +13,8 @@ class Appointment {
   final AppointmentStatus status;
   final AppointmentBookingType? bookingType;
   final String? reasonForVisit;
+  final String? sessionTitleAr;
+  final String? sessionTitleEn;
   final int? durationMinutes;
   final bool isWaiting;
 
@@ -29,6 +31,8 @@ class Appointment {
     required this.status,
     this.bookingType,
     this.reasonForVisit,
+    this.sessionTitleAr,
+    this.sessionTitleEn,
     this.durationMinutes,
     this.isWaiting = false,
     this.treatmentSessionId,
@@ -41,7 +45,7 @@ class Appointment {
     final scheduledRaw = json['scheduledAt']?.toString();
     return Appointment(
       id: '${json['id']}',
-      visitTypeLabel: _visitLabel(bookingType, reason),
+      visitTypeLabel: _visitLabel(bookingType),
       scheduledAt: scheduledRaw != null
           ? DateTime.parse(scheduledRaw).toLocal()
           : DateTime.now(),
@@ -50,6 +54,8 @@ class Appointment {
       ),
       bookingType: bookingType,
       reasonForVisit: reason,
+      sessionTitleAr: _nestedSessionTitle(json, 'titleAr'),
+      sessionTitleEn: _nestedSessionTitle(json, 'titleEn'),
       durationMinutes: json['durationMinutes'] is int
           ? json['durationMinutes'] as int
           : int.tryParse('${json['durationMinutes']}'),
@@ -58,15 +64,37 @@ class Appointment {
     );
   }
 
-  static String _visitLabel(
-    AppointmentBookingType? type,
-    String? reason,
-  ) {
-    if (reason != null && reason.trim().isNotEmpty) return reason.trim();
+  static String _visitLabel(AppointmentBookingType? type) {
     if (type == AppointmentBookingType.followUp) {
-      return 'Follow-up Session'.tr();
+      return 'Follow-up appointment in my treatment plan'.tr();
     }
-    return 'Consultation'.tr();
+    return 'Initial Consultation / First Visit'.tr();
+  }
+
+  static String? _nestedSessionTitle(Map<String, dynamic> json, String key) {
+    final nested = json['treatmentSession'];
+    if (nested is Map && nested[key] != null) {
+      final value = nested[key].toString().trim();
+      if (value.isNotEmpty) return value;
+    }
+    if (key == 'titleAr' || key == 'titleEn') {
+      final fallback = json['sessionTitle']?.toString().trim();
+      if (fallback != null && fallback.isNotEmpty) return fallback;
+    }
+    return null;
+  }
+
+  String? localizedSessionTitle(String languageCode) {
+    final ar = sessionTitleAr?.trim();
+    final en = sessionTitleEn?.trim();
+    if (languageCode == 'ar') {
+      if (ar != null && ar.isNotEmpty) return ar;
+      if (en != null && en.isNotEmpty) return en;
+      return null;
+    }
+    if (en != null && en.isNotEmpty) return en;
+    if (ar != null && ar.isNotEmpty) return ar;
+    return null;
   }
 
   Appointment copyWith({
@@ -79,6 +107,8 @@ class Appointment {
     AppointmentStatus? status,
     AppointmentBookingType? bookingType,
     String? reasonForVisit,
+    String? sessionTitleAr,
+    String? sessionTitleEn,
     int? durationMinutes,
     bool? isWaiting,
     String? treatmentSessionId,
@@ -93,6 +123,8 @@ class Appointment {
       status: status ?? this.status,
       bookingType: bookingType ?? this.bookingType,
       reasonForVisit: reasonForVisit ?? this.reasonForVisit,
+      sessionTitleAr: sessionTitleAr ?? this.sessionTitleAr,
+      sessionTitleEn: sessionTitleEn ?? this.sessionTitleEn,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       isWaiting: isWaiting ?? this.isWaiting,
       treatmentSessionId: treatmentSessionId ?? this.treatmentSessionId,

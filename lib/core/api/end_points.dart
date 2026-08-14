@@ -1,17 +1,19 @@
 class EndPoints {
-  static const String baserUrl = "http://localhost:3000/api/v1/";
+  static const String baserUrl = "http://192.168.1.104:3000/api/v1/";
+  // static const String baserUrl = "http://10.141.94.11:3000/api/v1/";
+  // static const String baserUrl = "http://localhost:3000/api/v1/";
   static const String register = "auth/register";
   static const String verifyOtp = "auth/register/verify";
-   static const String forgotPassword = "auth/forgot-password";
+  static const String forgotPassword = "auth/forgot-password";
   static const String verifyResetOtp = "auth/verify-reset-otp";
   static const String resetPassword = "auth/reset-password";
 
- static const String logout = "auth/logout";
-   static const String login = "auth/login";
-   static const String refreshToken = "auth/refresh"; 
-   static const String changePassword = "auth/change-password";
+  static const String logout = "auth/logout";
+  static const String login = "auth/login";
+  static const String refreshToken = "auth/refresh";
+  static const String changePassword = "auth/change-password";
   static const String completeActivation = "auth/complete-activation";
-static const String language = "auth/language";
+  static const String language = "auth/language";
   // ================================
   // NEW CODE START
   // ================================
@@ -19,7 +21,6 @@ static const String language = "auth/language";
   // ================================
   // NEW CODE END
   // ================================
-
 
   static const String patientsFormSchema = "patients/form/schema";
   static const String patients = "patients";
@@ -114,7 +115,10 @@ static const String language = "auth/language";
   static bool isPublicAuthPath(String path) {
     final normalized = path.startsWith('/') ? path.substring(1) : path;
     return publicAuthPaths.any(
-      (p) => normalized == p || normalized.endsWith('/$p') || normalized.endsWith(p),
+      (p) =>
+          normalized == p ||
+          normalized.endsWith('/$p') ||
+          normalized.endsWith(p),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/appointment_model.dart';
@@ -31,6 +32,11 @@ class AppointmentCard extends StatelessWidget {
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final status = appointment.status;
+    final isFollowUp =
+        appointment.bookingType == AppointmentBookingType.followUp;
+    final sessionTitle = isFollowUp
+        ? appointment.localizedSessionTitle(context.locale.languageCode)
+        : null;
 
     return Container(
       width: double.infinity,
@@ -53,13 +59,31 @@ class AppointmentCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  appointment.visitTypeLabel,
-                  style: TextStyle(
-                    color: colors.onSurface,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      appointment.visitTypeLabel,
+                      style: TextStyle(
+                        color: colors.onSurface,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (sessionTitle != null && sessionTitle.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        sessionTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.onSurface.withOpacity(0.65),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               const SizedBox(width: 8),

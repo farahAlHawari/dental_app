@@ -276,6 +276,7 @@ import 'package:dental_app/features/account_settings/presentation/pages/account_
 import 'package:dental_app/features/archived_visits/presentation/pages/archived_visits_page.dart';
 import 'package:dental_app/features/family_account/presentation/pages/family_account.dart';
 import 'package:dental_app/features/financial_and_billing/presentation/pages/financial_page.dart';
+import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
 import 'package:dental_app/features/login/presentation/pages/login_page.dart';
 import 'package:dental_app/features/logout/presentation/bloc/logout_bloc.dart';
 import 'package:dental_app/features/medical_archive/presentation/pages/medical_archive_page.dart';
@@ -444,6 +445,7 @@ class _ProfilePageState extends State<ProfilePage> {
             },
             child: Scaffold(
               appBar: AppBar(
+                leading: MainNavigationPage.homeTabBackButton(context),
                 title: Text(
                   'Profile'.tr(),
                   textAlign: TextAlign.center,

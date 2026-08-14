@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// كارد اختصار وحدة بشبكة 2x2 بالرئيسية. [isDanger] بتلوّنه بلون
-/// تحذيري (لموعد الطوارئ) بدل الألوان العادية. تنسيق الكتابة (عنوان
-/// غامق + سطر وصف خفيف تحته، محاذاة يسار) مستوحى من تصميم مرجعي، بس
-/// بنفس ألوان الكارد الأساسية (خلفية بيضا/سطح + تلوين الأيقونة بس).
+/// تحذيري (لموعد الطوارئ) بدل الألوان العادية. العناصر بالنص أفقياً
+/// وعمودياً، بنفس ألوان الكارد الأساسية (خلفية بيضا/سطح + تلوين الأيقونة).
 class QuickActionCard extends StatefulWidget {
   final IconData icon;
   final String label;
@@ -51,7 +50,7 @@ class _QuickActionCardState extends State<QuickActionCard> {
         curve: Curves.easeOut,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(22),
@@ -64,48 +63,40 @@ class _QuickActionCardState extends State<QuickActionCard> {
             ],
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: tint.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(widget.icon, color: tint, size: 19),
-                  ),
-                  // Icon(
-                  //   Icons.arrow_outward_rounded,
-                  //   size: 15,
-                  //   color: tint.withOpacity(0.4),
-                  // ),
-                ],
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: tint.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(widget.icon, color: tint, size: 26),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
               Text(
                 widget.label,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  height: 1.2,
+                  height: 1.25,
                   color: widget.isDanger ? colors.error : colors.onSurface,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 widget.subtitle,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12.5,
+                  height: 1.3,
                   color: colors.onSurface.withOpacity(0.55),
                 ),
               ),

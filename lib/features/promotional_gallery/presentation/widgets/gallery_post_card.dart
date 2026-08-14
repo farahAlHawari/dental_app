@@ -59,7 +59,7 @@ class GalleryPostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Our Clinic'.tr(),
+                        'Senni Clinic'.tr(),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,

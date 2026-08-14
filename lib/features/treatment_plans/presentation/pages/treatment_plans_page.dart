@@ -2,6 +2,7 @@ import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
+import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
 import 'package:dental_app/features/medical_archive/presentation/widgets/tab_botton.dart';
 import 'package:dental_app/features/treatment_plans/data/models/treatment_plan.dart';
 import 'package:dental_app/features/treatment_plans/presentation/bloc/treatment_plans_bloc.dart';
@@ -69,6 +70,7 @@ class _TreatmentPlansViewState extends State<_TreatmentPlansView> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: MainNavigationPage.homeTabBackButton(context),
         title: Text(
           'My Treatment Plans'.tr(),
           textAlign: TextAlign.center,

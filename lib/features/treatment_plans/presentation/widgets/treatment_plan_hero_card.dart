@@ -1,5 +1,7 @@
+import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/features/treatment_plans/data/models/plan_invoice.dart';
 import 'package:dental_app/features/treatment_plans/data/models/treatment_plan.dart';
+import 'package:dental_app/features/treatment_plans/data/models/treatment_plan_status.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +15,7 @@ class TreatmentPlanHeroCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = plan.name.isEmpty ? 'Treatment plan'.tr() : plan.name;
-    final cost = plan.estimatedCost?.trim();
+    final cost = plan.displayCost;
 
     return Container(
       width: double.infinity,
@@ -32,19 +34,23 @@ class TreatmentPlanHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _StatusBadge(label: plan.status.labelKey.tr()),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colors.primary,
-              height: 1.35,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colors.primary,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _StatusBadge(status: plan.status),
+            ],
           ),
           const SizedBox(height: 16),
           Row(
@@ -122,7 +128,7 @@ class TreatmentPlanHeroCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Estimated cost'.tr(),
+                    plan.displayCostLabelKey.tr(),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -149,26 +155,40 @@ class TreatmentPlanHeroCard extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final String label;
+  final TreatmentPlanStatus status;
 
-  const _StatusBadge({required this.label});
+  const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final Color bg;
+    final Color fg;
+
+    switch (status) {
+      case TreatmentPlanStatus.completed:
+        bg = AppColors.success.withOpacity(0.12);
+        fg = AppColors.success;
+      case TreatmentPlanStatus.cancelled:
+        bg = colors.onSurface.withOpacity(0.06);
+        fg = colors.onSurface.withOpacity(0.5);
+      case TreatmentPlanStatus.active:
+        bg = colors.primary.withOpacity(0.12);
+        fg = colors.primary;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: colors.onSurface.withOpacity(0.06),
+        color: bg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        status.labelKey.tr(),
         style: TextStyle(
           fontSize: 11.5,
           fontWeight: FontWeight.w700,
-          color: colors.onSurface.withOpacity(0.65),
+          color: fg,
         ),
       ),
     );
