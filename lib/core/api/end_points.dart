@@ -59,6 +59,15 @@ static const String language = "auth/language";
   // NEW CODE END
   // ================================
 
+  // ================================
+  // NEW CODE START — financial / invoices
+  // ================================
+  static const String financialSummary = "financial-summary";
+  static String invoiceById(String id) => "invoices/$id";
+  // ================================
+  // NEW CODE END
+  // ================================
+
   /// Public auth endpoints — no Authorization header.
   static const Set<String> publicAuthPaths = {
     login,

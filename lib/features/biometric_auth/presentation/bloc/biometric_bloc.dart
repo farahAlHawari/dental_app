@@ -27,7 +27,11 @@ class BiometricBloc extends Bloc<BiometricEvent, BiometricState> {
     Emitter<BiometricState> emit,
   ) async {
     emit(BiometricToggleLoading());
-    final result = await _repository.setBiometricEnabled(event.enabled);
+    final result = await _repository.setBiometricEnabled(
+      event.enabled,
+      phone: event.phone,
+      password: event.password,
+    );
     result.fold(
       (failure) => emit(BiometricToggleFailure(errMessage: failure.errMessage)),
       (success) => emit(BiometricToggleSuccess(enabled: event.enabled)),
@@ -42,23 +46,22 @@ class BiometricBloc extends Bloc<BiometricEvent, BiometricState> {
     emit(BiometricAvailabilityChecked(available: available));
   }
 
- Future<void> _onAuthenticateRequested(
-  BiometricAuthenticateRequested event,
-  Emitter<BiometricState> emit,
-) async {
-  emit(BiometricAuthenticating());
-  final biometricSuccess = await _repository.authenticate();
-  if (!biometricSuccess) {
-    emit(BiometricAuthenticateFailure());
-    return;
+  Future<void> _onAuthenticateRequested(
+    BiometricAuthenticateRequested event,
+    Emitter<BiometricState> emit,
+  ) async {
+    emit(BiometricAuthenticating());
+    final result = await _repository.loginWithBiometrics();
+    await result.fold(
+      (failure) async {
+        emit(BiometricAuthenticateFailure(errMessage: failure.errMessage));
+        // Restore button visibility after failure.
+        final available = await _repository.canUseBiometrics();
+        emit(BiometricAvailabilityChecked(available: available));
+      },
+      (_) async {
+        emit(BiometricAuthenticateSuccess());
+      },
+    );
   }
-
-  // جديد: تأكد الجلسة لسا صالحة فعلياً قبل ما نعتبرها نجاح كامل
-  final sessionValid = await _repository.validateSession();
-  if (sessionValid) {
-    emit(BiometricAuthenticateSuccess());
-  } else {
-    emit(BiometricAuthenticateFailure());
-  }
-}
 }

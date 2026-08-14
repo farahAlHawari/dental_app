@@ -7,6 +7,8 @@ enum StatusDialogType {
   passwordReset,
   phoneChanged,
   accountActivated,
+  biometricFailed,
+  biometricEnabled,
 }
 
 class CustomStatusDialog extends StatelessWidget {
@@ -14,6 +16,9 @@ class CustomStatusDialog extends StatelessWidget {
   final VoidCallback onConfirm;
   final String? cancelButtonText;
   final VoidCallback? onCancel;
+  /// Optional override for biometric / dynamic failure copy.
+  final String? customTitle;
+  final String? customDescription;
 
   const CustomStatusDialog({
     super.key,
@@ -21,6 +26,8 @@ class CustomStatusDialog extends StatelessWidget {
     required this.onConfirm,
     this.cancelButtonText,
     this.onCancel,
+    this.customTitle,
+    this.customDescription,
   });
 
   static void show(
@@ -29,6 +36,8 @@ class CustomStatusDialog extends StatelessWidget {
     required VoidCallback onConfirm,
     String? cancelButtonText,
     VoidCallback? onCancel,
+    String? customTitle,
+    String? customDescription,
   }) {
     showDialog(
       context: context,
@@ -38,59 +47,82 @@ class CustomStatusDialog extends StatelessWidget {
         onConfirm: onConfirm,
         cancelButtonText: cancelButtonText,
         onCancel: onCancel,
+        customTitle: customTitle,
+        customDescription: customDescription,
       ),
     );
   }
 
-String get title {
-  switch (type) {
-    case StatusDialogType.passwordChanged:
-      return "Password Changed Successfully".tr();
+  String get title {
+    if (customTitle != null && customTitle!.isNotEmpty) return customTitle!;
+    switch (type) {
+      case StatusDialogType.passwordChanged:
+        return "Password Changed Successfully".tr();
 
-    case StatusDialogType.passwordReset:
-      return "Password Reset Successfully".tr();
+      case StatusDialogType.passwordReset:
+        return "Password Reset Successfully".tr();
 
-    case StatusDialogType.phoneChanged:
-      return "Phone Number Updated".tr();
+      case StatusDialogType.phoneChanged:
+        return "Phone Number Updated".tr();
 
-    case StatusDialogType.accountActivated:
-      return "Account Activated Successfully".tr();
+      case StatusDialogType.accountActivated:
+        return "Account Activated Successfully".tr();
+
+      case StatusDialogType.biometricFailed:
+        return "Authentication Failed".tr();
+
+      case StatusDialogType.biometricEnabled:
+        return "Biometric Login Enabled".tr();
+    }
   }
-}
 
-String get description {
-  switch (type) {
-    case StatusDialogType.passwordChanged:
-      return "Your password has been changed successfully.".tr();
+  String get description {
+    if (customDescription != null && customDescription!.isNotEmpty) {
+      return customDescription!;
+    }
+    switch (type) {
+      case StatusDialogType.passwordChanged:
+        return "Your password has been changed successfully.".tr();
 
-    case StatusDialogType.passwordReset:
-      return "Your password has been reset successfully. Please log in using your new password."
-          .tr();
+      case StatusDialogType.passwordReset:
+        return "Your password has been reset successfully. Please log in using your new password."
+            .tr();
 
-    case StatusDialogType.phoneChanged:
-      return "Your phone number has been updated successfully.".tr();
+      case StatusDialogType.phoneChanged:
+        return "Your phone number has been updated successfully.".tr();
 
-    case StatusDialogType.accountActivated:
-      return "Your account has been activated successfully. You can now log in with your new password."
-          .tr();
+      case StatusDialogType.accountActivated:
+        return "Your account has been activated successfully. You can now log in with your new password."
+            .tr();
+
+      case StatusDialogType.biometricFailed:
+        return "Authentication failed, please try again or use your password"
+            .tr();
+
+      case StatusDialogType.biometricEnabled:
+        return "Biometric login has been enabled successfully.".tr();
+    }
   }
-}
 
-String get confirmButtonText {
-  switch (type) {
-    case StatusDialogType.passwordChanged:
-      return "OK".tr();
+  String get confirmButtonText {
+    switch (type) {
+      case StatusDialogType.passwordChanged:
+        return "OK".tr();
 
-    case StatusDialogType.phoneChanged:
-      return "OK".tr();
+      case StatusDialogType.phoneChanged:
+        return "OK".tr();
 
-    case StatusDialogType.passwordReset:
-      return "Log In".tr();
+      case StatusDialogType.passwordReset:
+        return "Log In".tr();
 
-    case StatusDialogType.accountActivated:
-      return "Log In".tr();
+      case StatusDialogType.accountActivated:
+        return "Log In".tr();
+
+      case StatusDialogType.biometricFailed:
+      case StatusDialogType.biometricEnabled:
+        return "OK".tr();
+    }
   }
-}
 
   String get animationPath {
     switch (type) {
@@ -98,7 +130,10 @@ String get confirmButtonText {
       case StatusDialogType.passwordReset:
       case StatusDialogType.phoneChanged:
       case StatusDialogType.accountActivated:
+      case StatusDialogType.biometricEnabled:
         return "assets/animations/ss.json";
+      case StatusDialogType.biometricFailed:
+        return "assets/animations/Failed.json";
     }
   }
 

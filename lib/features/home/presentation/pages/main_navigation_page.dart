@@ -28,7 +28,8 @@ class MainNavigationPage extends StatefulWidget {
   State<MainNavigationPage> createState() => _MainNavigationPageState();
 }
 
-class _MainNavigationPageState extends State<MainNavigationPage> {
+class _MainNavigationPageState extends State<MainNavigationPage>
+    with WidgetsBindingObserver {
   static _MainNavigationPageState? _instance;
 
   // بتبلش الشاشة عالرئيسية (نفس index العنصر المبرز بالناف بار).
@@ -38,6 +39,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   // العلاجية بالرئيسية حتى يعيد أنيميشن شريط التقدم من الصفر كل مرة
   // (بدل ما يشتغل مرة وحدة بس أول ما تفتح التطبيق).
   int _homeVisitCount = 0;
+
+  /// يزيد عند أول دخول للتطبيق وعند resume — يفعّل فحص pending rating فقط.
+  int _ratingCheckTick = 1;
 
   // نفس ترتيب أيقونات AppBottomNavBar بالظبط.
   static const List<String> _tabTitleKeys = [
@@ -52,12 +56,22 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   void initState() {
     super.initState();
     _instance = this;
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_instance == this) _instance = null;
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (!mounted) return;
+      setState(() => _ratingCheckTick++);
+    }
   }
 
   void _goToTab(int index) {
@@ -87,7 +101,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           const ProfilePage(), // ملفي الشخصي - جاهزة
           const MyAppointmentsPage(), // مواعيدي - جاهزة
 
-          HomePage(homeVisitCount: _homeVisitCount), // الرئيسية
+          HomePage(
+            homeVisitCount: _homeVisitCount,
+            ratingCheckTick: _ratingCheckTick,
+          ), // الرئيسية
           _PlaceholderTab(titleKey: _tabTitleKeys[3]), // خططي العلاجية
           const PromotionalGalleryPage(), // المعرض التسويقي
         ],

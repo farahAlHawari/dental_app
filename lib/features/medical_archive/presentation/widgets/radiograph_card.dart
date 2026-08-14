@@ -42,7 +42,7 @@ class RadiographCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: scheme.shadow,
+              color: scheme.shadow.withOpacity(0.12),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),

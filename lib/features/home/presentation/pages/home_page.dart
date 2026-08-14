@@ -29,21 +29,35 @@ class HomePage extends StatelessWidget {
   /// التقدم من الصفر كل مرة نرجع عالرئيسية، مش مرة وحدة بس.
   final int homeVisitCount;
 
-  const HomePage({super.key, required this.homeVisitCount});
+  /// يزيد من MainNavigationPage عند أول دخول وعند app resume — لفحص التقييم فقط.
+  final int ratingCheckTick;
+
+  const HomePage({
+    super.key,
+    required this.homeVisitCount,
+    required this.ratingCheckTick,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ArchivedVisitsBloc(),
-      child: _HomePageView(homeVisitCount: homeVisitCount),
+      child: _HomePageView(
+        homeVisitCount: homeVisitCount,
+        ratingCheckTick: ratingCheckTick,
+      ),
     );
   }
 }
 
 class _HomePageView extends StatefulWidget {
   final int homeVisitCount;
+  final int ratingCheckTick;
 
-  const _HomePageView({required this.homeVisitCount});
+  const _HomePageView({
+    required this.homeVisitCount,
+    required this.ratingCheckTick,
+  });
 
   @override
   State<_HomePageView> createState() => _HomePageViewState();
@@ -68,18 +82,18 @@ class _HomePageViewState extends State<_HomePageView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _requestHome());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPendingRating());
   }
 
   @override
   void didUpdateWidget(covariant _HomePageView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.homeVisitCount != widget.homeVisitCount) {
-      _requestHome();
+    if (oldWidget.ratingCheckTick != widget.ratingCheckTick) {
+      _checkPendingRating();
     }
   }
 
-  Future<void> _requestHome() async {
+  Future<void> _checkPendingRating() async {
     final patientId = await SharedPrefs.getSelectedPatientId();
     if (!mounted) return;
     if (patientId == null || patientId.isEmpty) return;

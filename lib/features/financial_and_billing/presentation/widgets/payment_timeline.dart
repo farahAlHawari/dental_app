@@ -65,11 +65,13 @@ import 'payment_card.dart';
 class PaymentTimelineTile extends StatelessWidget {
   final Map<String, dynamic> payment;
   final bool isLast;
+  final int paymentIndex;
 
   const PaymentTimelineTile({
     super.key,
     required this.payment,
     required this.isLast,
+    required this.paymentIndex,
   });
 
   @override
@@ -83,14 +85,6 @@ class PaymentTimelineTile extends StatelessWidget {
             child: Column(
               children: [
                 Lottie.asset("assets/animations/saa.json", width: 30, height: 30),
-                // Container(
-                //   width: 10,
-                //   height: 10,
-                //   decoration: const BoxDecoration(
-                //     color: AppColors.primary,
-                //     shape: BoxShape.circle,
-                //   ),
-                // ),
                 Expanded(
                   child: Container(
                     width: 2,
@@ -102,7 +96,12 @@ class PaymentTimelineTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(child: PaymentCard(payment: payment)),
+          Expanded(
+            child: PaymentCard(
+              payment: payment,
+              paymentIndex: paymentIndex,
+            ),
+          ),
         ],
       ),
     );

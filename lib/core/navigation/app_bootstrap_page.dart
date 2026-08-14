@@ -43,7 +43,6 @@ class _AppBootstrapPageState extends State<AppBootstrapPage> {
 
   /// Single startup decision point. Do not duplicate this chain elsewhere.
   Future<void> _runBootstrap() async {
-    await Future.delayed(const Duration(seconds: 3));
     if (_navigated || !mounted) return;
 
     // --- Language check (Feature 2) ---
@@ -225,9 +224,6 @@ class _AppBootstrapPageState extends State<AppBootstrapPage> {
                 ),
               ),
       ),
-      // ================================
-      // MODIFIED END
-      // ================================
     );
   }
 }

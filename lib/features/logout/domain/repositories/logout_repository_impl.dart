@@ -13,12 +13,16 @@ class LogoutRepositoryImpl extends LogoutRepository {
 
   @override
   Future<Either<Failure, void>> logout() async {
+    // Feature 7: end local session even if the server call fails
+    // (expired token, offline, 5xx). Tokens only — keep patient/prefs.
     try {
       await remoteDataSource.logout();
-      await SharedPrefs.clearTokens(); 
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(Failure(errMessage: e.errorModel.errorMessage));
+    } on ServerException {
+      // Ignore — local logout still required.
+    } catch (_) {
+      // Ignore network / unexpected — local logout still required.
     }
+    await SharedPrefs.clearTokens();
+    return const Right(null);
   }
 }
