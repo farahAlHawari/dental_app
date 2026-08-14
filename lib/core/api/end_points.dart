@@ -1,5 +1,5 @@
 class EndPoints {
-  static const String baserUrl = "http://localhost:3000/api/v1/";
+  static const String baserUrl = "http://10.33.174.243:3000/api/v1/";
   static const String register = "auth/register";
   static const String verifyOtp = "auth/register/verify";
    static const String forgotPassword = "auth/forgot-password";

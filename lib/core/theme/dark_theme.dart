@@ -27,8 +27,8 @@ class DarkTheme {
 
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.containertDark,
-        // fillColor: AppColors.CardSelectedDark,
+        // fillColor: AppColors.containertDark,
+        fillColor: AppColors.CardSelectedDark,
       ),
 
       cardColor: AppColors.containertDark,

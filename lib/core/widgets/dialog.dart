@@ -30,7 +30,7 @@ class CustomStatusDialog extends StatelessWidget {
     this.customDescription,
   });
 
-  static void show(
+  static Future<void> show(
     BuildContext context, {
     required StatusDialogType type,
     required VoidCallback onConfirm,
@@ -39,14 +39,21 @@ class CustomStatusDialog extends StatelessWidget {
     String? customTitle,
     String? customDescription,
   }) {
-    showDialog(
+    return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CustomStatusDialog(
+      builder: (dialogContext) => CustomStatusDialog(
         type: type,
-        onConfirm: onConfirm,
+        // Always close THIS dialog first (own context), then run caller logic.
+        onConfirm: () {
+          Navigator.of(dialogContext).pop();
+          onConfirm();
+        },
         cancelButtonText: cancelButtonText,
-        onCancel: onCancel,
+        onCancel: () {
+          Navigator.of(dialogContext).pop();
+          onCancel?.call();
+        },
         customTitle: customTitle,
         customDescription: customDescription,
       ),
@@ -154,6 +161,13 @@ class CustomStatusDialog extends StatelessWidget {
               width: 120,
               height: 120,
               repeat: true,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                type == StatusDialogType.biometricFailed
+                    ? Icons.error_outline
+                    : Icons.check_circle_outline,
+                size: 72,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
 
             Text(

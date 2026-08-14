@@ -909,8 +909,7 @@ class _LoginPageState extends State<LoginPage>
                                                 StatusDialogType.biometricFailed,
                                             customDescription:
                                                 state.errMessage.tr(),
-                                            onConfirm: () =>
-                                                Navigator.pop(context),
+                                            onConfirm: () {},
                                           );
                                         }
                                       },

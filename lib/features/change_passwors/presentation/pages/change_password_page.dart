@@ -326,7 +326,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
   type: StatusDialogType.passwordChanged,
   onConfirm: () {
     Navigator.pop(context);
-    Navigator.pop(context); 
   },
 );
             } else if (state is ChangePasswordFailure) {

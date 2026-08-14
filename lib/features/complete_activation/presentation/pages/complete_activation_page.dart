@@ -60,7 +60,6 @@ class _CompleteActivationPageState extends State<CompleteActivationPage>
   context,
   type: StatusDialogType.accountActivated,
   onConfirm: () {
-    Navigator.pop(context);
     _goToHome();
   },
 );

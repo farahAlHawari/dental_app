@@ -973,136 +973,12 @@ class _AccountSettingsState extends State<AccountSettings> {
   }
 
   /// Same visual language as [CustomStatusDialog], with a password field.
-  Future<String?> _askPasswordToEnableBiometric() async {
-    final passwordController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final password = await showDialog<String>(
+  Future<String?> _askPasswordToEnableBiometric() {
+    return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Theme.of(dialogContext).colorScheme.surface,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.fingerprint,
-                    size: 56,
-                    color: Theme.of(dialogContext).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Enable Biometric Login'.tr(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(dialogContext).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Enter your password to enable biometric login'.tr(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(dialogContext)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.7),
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  AppTextField(
-                    controller: passwordController,
-                    hint: 'Password'.tr(),
-                    isPassword: true,
-                    prefixIcon: Icons.lock_outline,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Password is required'.tr();
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(
-                              color:
-                                  Theme.of(dialogContext).colorScheme.primary,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'Cancel'.tr(),
-                            style: TextStyle(
-                              color:
-                                  Theme.of(dialogContext).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (!(formKey.currentState?.validate() ?? false)) {
-                              return;
-                            }
-                            Navigator.pop(
-                              dialogContext,
-                              passwordController.text,
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(dialogContext).colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'Enable'.tr(),
-                            style: TextStyle(
-                              color: Theme.of(dialogContext)
-                                  .scaffoldBackgroundColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      builder: (dialogContext) => const _BiometricPasswordDialog(),
     );
-
-    passwordController.dispose();
-    return password;
   }
 
   Future<void> _onBiometricSwitchChanged(
@@ -1120,12 +996,12 @@ class _AccountSettingsState extends State<AccountSettings> {
     if (!context.mounted) return;
 
     if (phone == null || phone.isEmpty) {
-      CustomStatusDialog.show(
+      await CustomStatusDialog.show(
         context,
         type: StatusDialogType.biometricFailed,
         customDescription:
             'Sign in with your password once to finish biometric setup'.tr(),
-        onConfirm: () => Navigator.pop(context),
+        onConfirm: () {},
       );
       return;
     }
@@ -1151,19 +1027,25 @@ class _AccountSettingsState extends State<AccountSettings> {
           if (state is BiometricToggleSuccess) {
             setState(() => _biometricsEnabled = state.enabled);
             if (state.enabled) {
-              CustomStatusDialog.show(
-                context,
-                type: StatusDialogType.biometricEnabled,
-                onConfirm: () => Navigator.pop(context),
-              );
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!context.mounted) return;
+                CustomStatusDialog.show(
+                  context,
+                  type: StatusDialogType.biometricEnabled,
+                  onConfirm: () {},
+                );
+              });
             }
           } else if (state is BiometricToggleFailure) {
-            CustomStatusDialog.show(
-              context,
-              type: StatusDialogType.biometricFailed,
-              customDescription: state.errMessage.tr(),
-              onConfirm: () => Navigator.pop(context),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!context.mounted) return;
+              CustomStatusDialog.show(
+                context,
+                type: StatusDialogType.biometricFailed,
+                customDescription: state.errMessage.tr(),
+                onConfirm: () {},
+              );
+            });
           }
         },
         builder: (context, state) {
@@ -1392,6 +1274,143 @@ class _SectionTitle extends StatelessWidget {
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).colorScheme.onSurface,
+      ),
+    );
+  }
+}
+
+/// Owns its [TextEditingController] so it is disposed with the route,
+/// not while the dialog exit animation is still running.
+class _BiometricPasswordDialog extends StatefulWidget {
+  const _BiometricPasswordDialog();
+
+  @override
+  State<_BiometricPasswordDialog> createState() =>
+      _BiometricPasswordDialogState();
+}
+
+class _BiometricPasswordDialogState extends State<_BiometricPasswordDialog> {
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.fingerprint,
+                size: 56,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Enable Biometric Login'.tr(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Enter your password to enable biometric login'.tr(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.7),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                controller: _passwordController,
+                hint: 'Password'.tr(),
+                isPassword: true,
+                prefixIcon: Icons.lock_outline,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Password is required'.tr();
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel'.tr(),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (!(_formKey.currentState?.validate() ?? false)) {
+                          return;
+                        }
+                        Navigator.pop(context, _passwordController.text);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Enable'.tr(),
+                        style: TextStyle(
+                          color:
+                              Theme.of(context).scaffoldBackgroundColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
