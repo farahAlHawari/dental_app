@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTextField extends StatefulWidget {
   const AppTextField({
@@ -16,6 +17,9 @@ class AppTextField extends StatefulWidget {
     this.onChanged,
     this.readOnly = false,
     this.onTap,
+    this.autofillHints,
+    this.inputFormatters,
+    this.enableSuggestions = true,
   });
 
   final TextEditingController controller;
@@ -25,19 +29,15 @@ class AppTextField extends StatefulWidget {
   final VoidCallback? onTap;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
-
   final TextInputType? keyboardType;
-
   final bool isPassword;
-
   final int maxLines;
-
   final String? Function(String?)? validator;
-
-  /// External API / form error shown under the field (e.g. wrong current password).
   final String? errorText;
-
   final ValueChanged<String>? onChanged;
+  final Iterable<String>? autofillHints;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool enableSuggestions;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -61,6 +61,9 @@ class _AppTextFieldState extends State<AppTextField> {
       keyboardType: widget.keyboardType,
       obscureText: obscure,
       maxLines: widget.isPassword ? 1 : widget.maxLines,
+      autofillHints: widget.autofillHints,
+      enableSuggestions: widget.enableSuggestions,
+      inputFormatters: widget.inputFormatters,
       validator: (value) {
         if (widget.errorText != null && widget.errorText!.isNotEmpty) {
           return widget.errorText;
@@ -77,28 +80,21 @@ class _AppTextFieldState extends State<AppTextField> {
         color: colors.onSurface,
         fontSize: 15,
       ),
-
       cursorColor: colors.primary,
-
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
-
         hintStyle: TextStyle(
           color: colors.onSurface.withOpacity(.45),
         ),
-
         filled: true,
-
         fillColor: Theme.of(context).inputDecorationTheme.fillColor,
-
         prefixIcon: widget.prefixIcon == null
             ? null
             : Icon(
                 widget.prefixIcon,
                 color: colors.primary,
               ),
-
         suffixIcon: widget.isPassword
             ? IconButton(
                 onPressed: () {
@@ -114,28 +110,29 @@ class _AppTextFieldState extends State<AppTextField> {
                 ),
               )
             : widget.suffixIcon,
-
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 16,
         ),
-
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
-
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
-
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: colors.primary,
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.primary, width: 1.2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.error, width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.error, width: 1.2),
         ),
       ),
     );

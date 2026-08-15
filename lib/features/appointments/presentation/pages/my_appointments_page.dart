@@ -173,6 +173,7 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
           child: SelectDateTimePage(
             isReschedule: true,
             rescheduleAppointmentId: appointment.id,
+            initialScheduledAt: appointment.scheduledAt,
             visitTypeLabel: appointment.visitTypeLabel,
             bookingType:
                 appointment.bookingType ?? AppointmentBookingType.consultation,
@@ -281,7 +282,10 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
                 listener: (context, state) {
                   if (state is AppointmentsListSuccess) {
                     setState(() {
-                      _upcoming = List.from(state.upcoming);
+                      _upcoming = List.from(state.upcoming)
+                        ..sort(
+                          (a, b) => a.scheduledAt.compareTo(b.scheduledAt),
+                        );
                       _previous = List.from(state.previous);
                       _actionsBusy = false;
                     });

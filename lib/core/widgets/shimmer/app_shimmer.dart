@@ -890,23 +890,47 @@ class CalendarDaysShimmer extends StatelessWidget {
   }
 }
 
-/// Time slots row placeholder on SelectDateTimePage.
+/// Time slots card placeholder on SelectDateTimePage.
 class TimeSlotsShimmer extends StatelessWidget {
   const TimeSlotsShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AppShimmer(
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: List.generate(
-          6,
-          (_) => const ShimmerBox(
-            width: 88,
-            height: 40,
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-          ),
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 16),
+      decoration: BoxDecoration(
+        color: scheme.primary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: AppShimmer(
+        child: Column(
+          children: [
+            const ShimmerBox(
+              width: 110,
+              height: 18,
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 9,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 2.35,
+              ),
+              itemBuilder: (_, __) => const ShimmerBox(
+                width: double.infinity,
+                height: double.infinity,
+                borderRadius: BorderRadius.all(Radius.circular(999)),
+              ),
+            ),
+          ],
         ),
       ),
     );

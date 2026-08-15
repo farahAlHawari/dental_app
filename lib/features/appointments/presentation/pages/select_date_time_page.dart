@@ -42,6 +42,9 @@ class SelectDateTimePage extends StatefulWidget {
   /// عند reschedule — يُرسل لـ availability كـ excludeAppointmentId.
   final String? rescheduleAppointmentId;
 
+  /// الموعد الحالي عند إعادة الجدولة — لتحديد اليوم والوقت مسبقاً.
+  final DateTime? initialScheduledAt;
+
   const SelectDateTimePage({
     super.key,
     this.isReschedule = false,
@@ -52,6 +55,7 @@ class SelectDateTimePage extends StatefulWidget {
     this.reasonForVisit,
     this.chatbotSummary,
     this.rescheduleAppointmentId,
+    this.initialScheduledAt,
   });
 
   @override
@@ -61,15 +65,18 @@ class SelectDateTimePage extends StatefulWidget {
 class _SelectDateTimePageState extends State<SelectDateTimePage> {
   static const _weekdayKeys = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   static const _weekendIndexes = {4, 5};
+  static const _slotsPerPage = 9;
 
   late final DateTime _todayDate;
   late DateTime _displayedMonth;
   DateTime? _selectedDate;
   String? _selectedTime; // HH:mm من الـ API
+  String? _preferredTime; // HH:mm من الموعد الحالي (reschedule)
 
   String? _patientId;
   final Map<String, AvailableDay> _daysByDate = {};
   List<AvailableSlot> _slots = [];
+  int _slotsPageIndex = 0;
 
   bool _loadingDays = false;
   bool _loadingSlots = false;
@@ -79,12 +86,35 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
 
   bool get _usesApi => widget.bookingType != null;
 
+  DateTime? get _initialDateOnly {
+    final raw = widget.initialScheduledAt;
+    if (raw == null) return null;
+    final local = raw.toLocal();
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  String? _hhMmFromDateTime(DateTime? raw) {
+    if (raw == null) return null;
+    final local = raw.toLocal();
+    final h = local.hour.toString().padLeft(2, '0');
+    final m = local.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
     _todayDate = DateTime(now.year, now.month, now.day);
-    _displayedMonth = DateTime(_todayDate.year, _todayDate.month);
+    final initialDay = _initialDateOnly;
+    _displayedMonth = initialDay != null
+        ? DateTime(initialDay.year, initialDay.month)
+        : DateTime(_todayDate.year, _todayDate.month);
+    if (initialDay != null) {
+      _selectedDate = initialDay;
+      _preferredTime = _hhMmFromDateTime(widget.initialScheduledAt);
+      _selectedTime = _preferredTime;
+    }
     if (_usesApi) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
     }
@@ -213,7 +243,12 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
       _slotsError = null;
       _slotsEmptyHint = null;
       _slots = [];
-      _selectedTime = null;
+      _slotsPageIndex = 0;
+      final keepPreferred = _preferredTime != null &&
+          _selectedDate != null &&
+          _initialDateOnly != null &&
+          _isSameDay(_selectedDate!, _initialDateOnly!);
+      _selectedTime = keepPreferred ? _preferredTime : null;
     });
 
     context.read<AppointmentsBloc>().add(
@@ -239,7 +274,14 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
       ..addEntries(state.days.map((d) => MapEntry(_dateKey(d.date), d)));
 
     DateTime? nextSelected;
-    if (_selectedDate != null && _isBookable(_selectedDate!)) {
+    final initialDay = _initialDateOnly;
+    if (initialDay != null &&
+        initialDay.year == _displayedMonth.year &&
+        initialDay.month == _displayedMonth.month &&
+        (_isBookable(initialDay) ||
+            _daysByDate.containsKey(_dateKey(initialDay)))) {
+      nextSelected = initialDay;
+    } else if (_selectedDate != null && _isBookable(_selectedDate!)) {
       nextSelected = _selectedDate;
     } else {
       final bookable = state.days.where((d) => d.isBookable).toList()
@@ -259,7 +301,8 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
     }
   }
 
-  void _loadSlots(DateTime day) {    if (!_usesApi) return;
+  void _loadSlots(DateTime day) {
+    if (!_usesApi) return;
     final patientId = _patientId;
     final type = widget.bookingType;
     if (patientId == null || type == null) return;
@@ -269,7 +312,12 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
       _slotsError = null;
       _slotsEmptyHint = null;
       _slots = [];
-      _selectedTime = null;
+      _slotsPageIndex = 0;
+      // Keep preferred current appointment time until slots arrive (reschedule).
+      final keepPreferred = _preferredTime != null &&
+          _initialDateOnly != null &&
+          _isSameDay(day, _initialDateOnly!);
+      _selectedTime = keepPreferred ? _preferredTime : null;
     });
 
     context.read<AppointmentsBloc>().add(
@@ -288,12 +336,53 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
       return;
     }
 
+    String? nextTime;
+    var slots = List<AvailableSlot>.from(state.slots);
+    final preferred = _preferredTime;
+    final onInitialDay = _initialDateOnly != null &&
+        _isSameDay(_selectedDate!, _initialDateOnly!);
+    if (preferred != null &&
+        onInitialDay &&
+        !slots.any((s) => s.startTime == preferred)) {
+      slots = [AvailableSlot(startTime: preferred), ...slots];
+    }
+    if (preferred != null &&
+        onInitialDay &&
+        slots.any((s) => s.startTime == preferred)) {
+      nextTime = preferred;
+    } else if (_selectedTime != null &&
+        slots.any((s) => s.startTime == _selectedTime)) {
+      nextTime = _selectedTime;
+    }
+
     setState(() {
       _loadingSlots = false;
-      _slots = state.slots;
-      if (state.slots.isEmpty) {
+      _slots = slots;
+      _selectedTime = nextTime;
+      _slotsPageIndex = _pageIndexForTime(nextTime);
+      if (slots.isEmpty) {
         _slotsEmptyHint = 'No available times'.tr();
       }
+    });
+  }
+
+  int get _slotsPageCount {
+    if (_slots.isEmpty) return 0;
+    return (_slots.length / _slotsPerPage).ceil();
+  }
+
+  int _pageIndexForTime(String? time) {
+    if (time == null || _slots.isEmpty) return 0;
+    final index = _slots.indexWhere((s) => s.startTime == time);
+    if (index < 0) return 0;
+    return (index / _slotsPerPage).floor().clamp(0, _slotsPageCount - 1);
+  }
+
+  List<AvailableSlot?> _slotsForCurrentPage() {
+    final start = _slotsPageIndex * _slotsPerPage;
+    return List<AvailableSlot?>.generate(_slotsPerPage, (i) {
+      final index = start + i;
+      return index < _slots.length ? _slots[index] : null;
     });
   }
 
@@ -322,7 +411,10 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
     if (!_isBookable(day)) return;
     setState(() {
       _selectedDate = day;
-      _selectedTime = null;
+      final keepPreferred = _preferredTime != null &&
+          _initialDateOnly != null &&
+          _isSameDay(day, _initialDateOnly!);
+      _selectedTime = keepPreferred ? _preferredTime : null;
     });
     if (_usesApi) {
       _loadSlots(day);
@@ -422,7 +514,13 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                       _slotsError = null;
                       _slotsEmptyHint = null;
                       _slots = [];
-                      _selectedTime = null;
+                      _slotsPageIndex = 0;
+                      final keepPreferred = _preferredTime != null &&
+                          _selectedDate != null &&
+                          _initialDateOnly != null &&
+                          _isSameDay(_selectedDate!, _initialDateOnly!);
+                      _selectedTime =
+                          keepPreferred ? _preferredTime : null;
                     });
                   } else if (state is AvailableSlotsSuccess) {
                     _applyAvailableSlots(state);
@@ -762,20 +860,8 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                           ],
 
                           const SizedBox(height: 24),
-
                           FadeSlideIn(
                             delay: const Duration(milliseconds: 220),
-                            child: Text(
-                              'Select Time'.tr(),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colors.onSurface.withOpacity(0.7),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          FadeSlideIn(
-                            delay: const Duration(milliseconds: 260),
                             child: _buildSlotsSection(colors),
                           ),
                         ],
@@ -846,10 +932,7 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
     }
 
     if (_loadingSlots) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 12),
-        child: TimeSlotsShimmer(),
-      );
+      return const TimeSlotsShimmer();
     }
 
     if (_slotsError != null) {
@@ -878,53 +961,129 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
       );
     }
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: _slots.map((slot) {
-        final isSelected = _selectedTime == slot.startTime;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedTime = slot.startTime),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? colors.primary.withOpacity(0.12)
-                  : colors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected
-                    ? colors.primary
-                    : colors.outline.withOpacity(0.25),
-              ),
-            ),
+    final pageCount = _slotsPageCount;
+    final canGoPrev = _slotsPageIndex > 0;
+    final canGoNext = _slotsPageIndex < pageCount - 1;
+    final pageSlots = _slotsForCurrentPage();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 16),
+      decoration: BoxDecoration(
+        color: colors.primary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 40,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  size: 15,
-                  color: isSelected
-                      ? colors.primary
-                      : colors.onSurface.withOpacity(0.5),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  onPressed: canGoPrev
+                      ? () => setState(() => _slotsPageIndex--)
+                      : null,
+                  icon: Icon(
+                    Icons.chevron_left_rounded,
+                    color: canGoPrev
+                        ? colors.onSurface.withOpacity(0.7)
+                        : colors.onSurface.withOpacity(0.25),
+                  ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  date_fmt.formatApiTimeLabel(slot.startTime),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected
-                        ? colors.primary
-                        : colors.onSurface.withOpacity(0.75),
+                Expanded(
+                  child: Text(
+                    'Select Time'.tr(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  onPressed: canGoNext
+                      ? () => setState(() => _slotsPageIndex++)
+                      : null,
+                  icon: Icon(
+                    Icons.chevron_right_rounded,
+                    color: canGoNext
+                        ? colors.onSurface.withOpacity(0.7)
+                        : colors.onSurface.withOpacity(0.25),
                   ),
                 ),
               ],
             ),
           ),
-        );
-      }).toList(),
+          const SizedBox(height: 10),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _slotsPerPage,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 2.35,
+            ),
+            itemBuilder: (context, index) {
+              final slot = pageSlots[index];
+              if (slot == null) {
+                return const SizedBox.shrink();
+              }
+
+              final isSelected = _selectedTime == slot.startTime;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedTime = slot.startTime),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: isSelected
+                          ? colors.primary
+                          : Colors.transparent,
+                      width: 1.4,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.shadow.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    date_fmt.formatApiTimeLabel(slot.startTime),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? colors.primary
+                          : colors.onSurface.withOpacity(0.85),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -11,6 +11,7 @@ import 'package:dental_app/features/change_phone_number/presentation/bloc/change
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChangePhonenumberPage extends StatefulWidget {
@@ -237,7 +238,12 @@ class _ChangePhonenumberPageState extends State<ChangePhonenumberPage>
                                           controller: _phonenumber,
                                           hint: "09xxxxxxxx",
                                           prefixIcon: Icons.phone_outlined,
-                                          keyboardType: TextInputType.phone,
+                                          keyboardType: TextInputType.number,
+                                          autofillHints: const [],
+                                          enableSuggestions: false,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.digitsOnly,
+                                          ],
                                           validator: (value) {
                                             if (value == null ||
                                                 value.trim().isEmpty) {

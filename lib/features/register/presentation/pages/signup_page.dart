@@ -13,6 +13,7 @@ import 'package:dental_app/features/register/presentation/bloc/register_bloc.dar
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignupPage extends StatefulWidget {
@@ -202,6 +203,12 @@ class _SignupPageState extends State<SignupPage>
                                     controller: _phoneController,
                                     hint: "09xxxxxxxx",
                                     prefixIcon: Icons.phone_outlined,
+                                    keyboardType: TextInputType.number,
+                                    autofillHints: const [],
+                                    enableSuggestions: false,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
                                      validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
                                     return "Phone number is required".tr();

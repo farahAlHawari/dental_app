@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// كارد "نصيحة يومية" ثابتة بالرئيسية — نص أطول وخط أوضح، بدون تبديل.
+/// كارد "نصيحة يومية" ثابتة بالرئيسية — نص مختصر (٢–٣ أسطر).
 class DailyTipCard extends StatefulWidget {
   const DailyTipCard({super.key});
 
@@ -12,7 +12,7 @@ class DailyTipCard extends StatefulWidget {
 class _DailyTipCardState extends State<DailyTipCard>
     with SingleTickerProviderStateMixin {
   static const String _tipKey =
-      'Brush twice a day for two minutes, floss daily, and limit sugar to protect your enamel. A checkup every six months helps catch problems early.';
+      'Brush gently in circular motions twice a day, and floss before bed for a healthier smile.';
 
   late final AnimationController _glowController;
 
@@ -86,16 +86,18 @@ class _DailyTipCardState extends State<DailyTipCard>
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: colors.onSurface,
+                        color: colors.primary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       _tipKey.tr(),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15,
-                        height: 1.5,
-                        color: colors.onSurface.withOpacity(0.78),
+                        fontSize: 14,
+                        height: 1.4,
+                        color: colors.onSurface.withOpacity(0.72),
                       ),
                     ),
                   ],

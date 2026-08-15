@@ -461,7 +461,6 @@ import 'package:dental_app/core/navigation/post_auth_navigation.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
-import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/core/widgets/dialog.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
@@ -480,6 +479,7 @@ import 'package:dental_app/features/reset_password/presentation/insert_phonenumb
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -506,13 +506,6 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true); // بتتحرك رايح جاي بشكل مستمر
-    _prefillPhone();
-  }
-
-  Future<void> _prefillPhone() async {
-    final phone = await SharedPrefs.getPhone();
-    if (!mounted || phone == null || phone.isEmpty) return;
-    _phoneController.text = phone;
   }
 
   @override
@@ -672,6 +665,12 @@ class _LoginPageState extends State<LoginPage>
                                     controller: _phoneController,
                                     hint: "09xxxxxxxx",
                                     prefixIcon: Icons.phone_outlined,
+                                    keyboardType: TextInputType.number,
+                                    autofillHints: const [],
+                                    enableSuggestions: false,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
                                     validator: (value) {
                                       if (value == null ||
                                           value.trim().isEmpty) {

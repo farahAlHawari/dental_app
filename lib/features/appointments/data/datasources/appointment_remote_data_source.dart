@@ -9,16 +9,40 @@ class AppointmentRemoteDataSource {
 
   AppointmentRemoteDataSource({required this.api});
 
-  /// GET appointments/upcoming?patientId=
-  /// يرجع null إذا ما في موعد قادم.
+  /// Picks the soonest upcoming appointment by [Appointment.scheduledAt]
+  /// from the UPCOMING list (does not rely on GET /appointments/upcoming).
   Future<Appointment?> getUpcoming({required String patientId}) async {
     final response = await api.get(
-      EndPoints.appointmentsUpcoming,
-      queryParameters: {'patientId': patientId},
+      EndPoints.appointments,
+      queryParameters: {
+        'patientId': patientId,
+        'scope': AppointmentListScope.upcoming.apiValue,
+        'page': 1,
+        'pageSize': 50,
+      },
     );
     final data = _extractData(response);
     if (data == null) return null;
-    return Appointment.fromJson(data);
+
+    final itemsRaw = data['items'];
+    final items = itemsRaw is List
+        ? itemsRaw
+            .whereType<Map>()
+            .map((e) => Appointment.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <Appointment>[];
+    if (items.isEmpty) return null;
+
+    final now = DateTime.now();
+    final sorted = List<Appointment>.from(items)
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    for (final appointment in sorted) {
+      if (!appointment.scheduledAt.isBefore(now)) {
+        return appointment;
+      }
+    }
+    return sorted.first;
   }
 
   /// GET appointments?patientId=&scope=UPCOMING|PAST
