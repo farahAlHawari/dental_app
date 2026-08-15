@@ -6,7 +6,7 @@ import 'package:dental_app/core/utils/api_date_utils.dart';
 import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
-import 'package:dental_app/features/home/presentation/pages/main_navigation_page.dart';
+import 'package:dental_app/core/navigation/post_auth_navigation.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
 import 'package:dental_app/core/api/end_points.dart';
 import 'package:dental_app/features/profile/data/datasources/patient_remote_data_source.dart';
@@ -391,13 +391,8 @@ class _MedicalInfoState extends State<MedicalInfo>
           }
           if (!mounted) return;
           setState(() => _submitting = false);
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              settings: const RouteSettings(name: MainNavigationPage.routeName),
-              builder: (_) => const MainNavigationPage(),
-            ),
-            (route) => false,
-          );
+          // Feature 6: sole post-auth router (not direct MainNavigationPage).
+          await PostAuthNavigation.go(context);
         },
       );
       return;

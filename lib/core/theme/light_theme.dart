@@ -27,8 +27,8 @@ class LightTheme {
 
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
-        // fillColor: AppColors.containerLight,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.containerLight,
+        // fillColor: AppColors.surface,
       ),
 
       cardColor: AppColors.containerLight,

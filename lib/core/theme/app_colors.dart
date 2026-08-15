@@ -33,4 +33,22 @@ class AppColors {
   static const accent = Color(0xFFF4B400);
   static const success = Color(0xFF22C55E);
   static const error = Color(0xFFE53935);
+
+  // Invoice status — light / dark pairs
+  static const invoicePaidLight = Color(0xFF16A34A);
+  static const invoicePaidDark = Color(0xFF4ADE80);
+  static const invoicePartialLight = Color(0xFFD97706);
+  static const invoicePartialDark = Color(0xFFFBBF24);
+  static const invoiceUnpaidLight = Color(0xFFDC2626);
+  static const invoiceUnpaidDark = Color(0xFFF87171);
+
+  // Financial summary card
+  static const summaryCardLightStart = Color(0xFF1E6B88);
+  static const summaryCardLightEnd = Color(0xFF2A8FAD);
+  static const summaryCardDarkStart = Color(0xFF152A35);
+  static const summaryCardDarkEnd = Color(0xFF1F3D4A);
+  static const summaryOnCardLight = Color(0xFFFFFFFF);
+  static const summaryOnCardDark = Color(0xFFE8F4F8);
+  static const summaryMutedLight = Color(0xD9FFFFFF);
+  static const summaryMutedDark = Color(0xFF9BB8C4);
 }

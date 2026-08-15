@@ -290,6 +290,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  String? _currentPasswordApiError;
+
   late AnimationController _toothController;
 
   @override
@@ -324,13 +326,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
   type: StatusDialogType.passwordChanged,
   onConfirm: () {
     Navigator.pop(context);
-    Navigator.pop(context); 
   },
 );
             } else if (state is ChangePasswordFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.errMessage)),
-              );
+              if (state.isInvalidCredentials) {
+                setState(() => _currentPasswordApiError = state.errMessage);
+              } else {
+                setState(() => _currentPasswordApiError = null);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.errMessage)),
+                );
+              }
             }
           },
           builder: (context, state) {
@@ -476,6 +482,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
                                           hint: "••••••••",
                                           isPassword: true,
                                           prefixIcon: Icons.lock_open,
+                                          errorText: _currentPasswordApiError,
+                                          onChanged: (_) {
+                                            if (_currentPasswordApiError !=
+                                                null) {
+                                              setState(() =>
+                                                  _currentPasswordApiError =
+                                                      null);
+                                            }
+                                          },
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
@@ -559,6 +574,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
                                                             .validate()) {
                                                           return;
                                                         }
+                                                        setState(() =>
+                                                            _currentPasswordApiError =
+                                                                null);
                                                         context
                                                             .read<
                                                                 ChangePasswordBloc>()

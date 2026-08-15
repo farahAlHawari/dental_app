@@ -1,243 +1,61 @@
-// import 'package:flutter/material.dart';
-
-// class InvoiceCard extends StatelessWidget {
-//   final String invoiceNumber;
-//   final String treatmentName;
-//   final String sessionInfo;
-//   final String date;
-//   final double total;
-//   final double paid;
-//   final double remaining;
-//   final String status; 
-//   final VoidCallback? onPayPressed;
-// final VoidCallback? onTap;
-//   const InvoiceCard({
-//     super.key,
-//     required this.invoiceNumber,
-//     required this.treatmentName,
-//     required this.sessionInfo,
-//     required this.date,
-//     required this.total,
-//     required this.paid,
-//     required this.remaining,
-//     required this.status,
-//     this.onPayPressed,
-//      this.onTap,
-//   });
-
-//   Color get _statusColor {
-//     switch (status) {
-//       case 'fullyPaid':
-//         return const Color(0xFF2ECC71);
-//       case 'partiallyPaid':
-//         return const Color(0xFFF5A623);
-//       default:
-//         return const Color(0xFFE74C3C);
-//     }
-//   }
-
-//   String get _statusLabel {
-//     switch (status) {
-//       case 'fullyPaid':
-//         return 'Fully Paid';
-//       case 'partiallyPaid':
-//         return 'Partially Paid';
-//       default:
-//         return 'Unpaid';
-//     }
-//   }
-
-//   Widget _amountBox(String label, String value, {Color? bg, Color? valueColor}) {
-//     return Expanded(
-//       child: Container(
-//         padding: const EdgeInsets.symmetric(vertical: 8),
-//         margin: const EdgeInsets.symmetric(horizontal: 4),
-//         decoration: BoxDecoration(
-//           color: bg ?? Colors.grey.shade100,
-//           borderRadius: BorderRadius.circular(12),
-//         ),
-//         child: Column(
-//           children: [
-//             Text(
-//               label,
-//               style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
-//             ),
-//             const SizedBox(height: 4),
-//             Text(
-//               '$value S.P',
-//               style: TextStyle(
-//                 fontSize: 13,
-//                 fontWeight: FontWeight.bold,
-//                 color: valueColor ?? const Color(0xFF1B2B4B),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final bool showPayButton = status != 'fullyPaid';
-
-//     return InkWell(
-//       onTap: onTap,
-//       child: Container(
-//         margin: const EdgeInsets.only(bottom: 16),
-//         padding: const EdgeInsets.all(16),
-//         decoration: BoxDecoration(
-//           color: Colors.white,
-//           borderRadius: BorderRadius.circular(18),
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.black.withOpacity(0.05),
-//               blurRadius: 12,
-//               offset: const Offset(0, 4),
-//             ),
-//           ],
-//         ),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 Text(
-//                   'Invoice #$invoiceNumber',
-//                   style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
-//                 ),
-//                 Container(
-//                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-//                   decoration: BoxDecoration(
-//                     color: _statusColor.withOpacity(0.12),
-//                     borderRadius: BorderRadius.circular(20),
-//                   ),
-//                   child: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       Container(
-//                         width: 6,
-//                         height: 6,
-//                         decoration: BoxDecoration(color: _statusColor, shape: BoxShape.circle),
-//                       ),
-//                       const SizedBox(width: 6),
-//                       Text(
-//                         _statusLabel,
-//                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ],
-//             ),
-//             const SizedBox(height: 8),
-//             Text(
-//               treatmentName,
-//               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1B2B4B)),
-//             ),
-//             const SizedBox(height: 2),
-//             Text(sessionInfo, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
-//             const SizedBox(height: 10),
-//             Row(
-//               children: [
-//                 Icon(Icons.calendar_today_outlined, size: 13, color: Colors.grey.shade400),
-//                 const SizedBox(width: 6),
-//                 Text(date, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-//               ],
-//             ),
-//             const Divider(height: 24),
-//             Row(
-//               children: [
-//                 _amountBox('TOTAL', total.toStringAsFixed(0)),
-//                 _amountBox(
-//                   'PAID',
-//                   paid.toStringAsFixed(0),
-//                   bg: const Color(0xFF2ECC71).withOpacity(0.12),
-//                   valueColor: const Color(0xFF2ECC71),
-//                 ),
-//                 if (remaining > 0)
-//                   _amountBox(
-//                     'REMAINING',
-//                     remaining.toStringAsFixed(0),
-//                     bg: const Color(0xFFE74C3C).withOpacity(0.10),
-//                     valueColor: const Color(0xFFE74C3C),
-//                   )
-//                 else
-//                   _amountBox('DUE', '0'),
-//               ],
-//             ),
-            
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+import 'package:dental_app/core/widgets/patient_avatar.dart';
+import 'package:dental_app/features/financial_and_billing/domain/financial_helper.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class InvoiceCard extends StatelessWidget {
   final String invoiceNumber;
   final String treatmentName;
-  final String sessionInfo;
   final String date;
   final double total;
   final double paid;
   final double remaining;
   final String status;
-  final VoidCallback? onPayPressed;
+  final String? sessionInfo;
+  final String? patientName;
+  final String? patientImageUrl;
   final VoidCallback? onTap;
 
   const InvoiceCard({
     super.key,
     required this.invoiceNumber,
     required this.treatmentName,
-    required this.sessionInfo,
     required this.date,
     required this.total,
     required this.paid,
     required this.remaining,
     required this.status,
-    this.onPayPressed,
+    this.sessionInfo,
+    this.patientName,
+    this.patientImageUrl,
     this.onTap,
   });
 
-  Color get _statusColor {
-    switch (status) {
-      case 'fullyPaid':
-        return const Color(0xFF2ECC71);
-      case 'partiallyPaid':
-        return const Color(0xFFF5A623);
-      default:
-        return const Color(0xFFE74C3C);
-    }
-  }
-
-  String get _statusLabel {
-    switch (status) {
-      case 'fullyPaid':
-        return 'Fully Paid';
-      case 'partiallyPaid':
-        return 'Partially Paid';
-      default:
-        return 'Unpaid';
-    }
-  }
-
-  Widget _amountBox(String label, String value, {Color? bg, Color? valueColor}) {
+  Widget _amountBox(
+    BuildContext context, {
+    required String label,
+    required String value,
+    Color? bg,
+    Color? valueColor,
+  }) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: bg ?? Colors.grey.shade100,
+          color: bg ?? onSurface.withOpacity(0.06),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 10,
+                color: onSurface.withOpacity(0.55),
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -245,7 +63,7 @@ class InvoiceCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: valueColor ?? const Color(0xFF1B2B4B),
+                color: valueColor ?? onSurface,
               ),
             ),
           ],
@@ -256,7 +74,12 @@ class InvoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool showPayButton = status != 'fullyPaid' && onPayPressed != null;
+    final colors = Theme.of(context).colorScheme;
+    final statusColor = FinancialHelper.statusColor(context, status);
+    final paidColor =
+        FinancialHelper.statusColor(context, FinancialHelper.statusPaid);
+    final unpaidColor =
+        FinancialHelper.statusColor(context, FinancialHelper.statusUnpaid);
 
     return InkWell(
       onTap: onTap,
@@ -265,11 +88,11 @@ class InvoiceCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color:Theme.of(context).colorScheme.surface,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color:  Theme.of(context).colorScheme.shadow,
+              color: colors.shadow,
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -281,14 +104,21 @@ class InvoiceCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Invoice #$invoiceNumber',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                Expanded(
+                  child: Text(
+                    '${'Invoice'.tr()} #$invoiceNumber',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.onSurface.withOpacity(0.55),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _statusColor.withOpacity(0.12),
+                    color: FinancialHelper.statusSoftBg(context, status),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -297,64 +127,117 @@ class InvoiceCard extends StatelessWidget {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: BoxDecoration(color: _statusColor, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        _statusLabel,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor),
+                        FinancialHelper.statusLabel(status),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+            if (patientName != null && patientName!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  PatientAvatar(
+                    imageUrl: patientImageUrl,
+                    radius: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      patientName!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               treatmentName,
-              style:  TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
             ),
-            const SizedBox(height: 2),
-            Text(sessionInfo, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+            if (sessionInfo != null && sessionInfo!.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                sessionInfo!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.onSurface.withOpacity(0.55),
+                ),
+              ),
+            ],
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.calendar_today_outlined, size: 13, color: Colors.grey.shade400),
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: 13,
+                  color: colors.onSurface.withOpacity(0.45),
+                ),
                 const SizedBox(width: 6),
-                Text(date, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                Text(
+                  date,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurface.withOpacity(0.55),
+                  ),
+                ),
               ],
             ),
             const Divider(height: 24),
             Row(
               children: [
-                _amountBox('TOTAL', total.toStringAsFixed(0)),
                 _amountBox(
-                  'PAID',
-                  paid.toStringAsFixed(0),
-                  bg: const Color(0xFF2ECC71).withOpacity(0.12),
-                  valueColor: const Color(0xFF2ECC71),
+                  context,
+                  label: 'TOTAL'.tr(),
+                  value: FinancialHelper.formatAmount(total),
+                ),
+                _amountBox(
+                  context,
+                  label: 'PAID'.tr(),
+                  value: FinancialHelper.formatAmount(paid),
+                  bg: paidColor.withOpacity(0.12),
+                  valueColor: paidColor,
                 ),
                 if (remaining > 0)
                   _amountBox(
-                    'REMAINING',
-                    remaining.toStringAsFixed(0),
-                    bg: const Color(0xFFE74C3C).withOpacity(0.10),
-                    valueColor: const Color(0xFFE74C3C),
+                    context,
+                    label: 'REMAINING'.tr(),
+                    value: FinancialHelper.formatAmount(remaining),
+                    bg: unpaidColor.withOpacity(0.10),
+                    valueColor: unpaidColor,
                   )
                 else
-                  _amountBox('DUE', '0'),
+                  _amountBox(
+                    context,
+                    label: 'DUE'.tr(),
+                    value: '0',
+                  ),
               ],
             ),
-            if (showPayButton) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: onPayPressed,
-                  child: const Text('Pay Now'),
-                ),
-              ),
-            ],
           ],
         ),
       ),

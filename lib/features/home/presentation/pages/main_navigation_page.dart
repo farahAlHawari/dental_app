@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:dental_app/core/notifications/device_token_sync.dart';
 import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
 import 'package:dental_app/features/appointments/presentation/pages/my_appointments_page.dart';
 import 'package:dental_app/features/home/presentation/pages/home_page.dart';
@@ -51,7 +52,8 @@ class MainNavigationPage extends StatefulWidget {
   State<MainNavigationPage> createState() => _MainNavigationPageState();
 }
 
-class _MainNavigationPageState extends State<MainNavigationPage> {
+class _MainNavigationPageState extends State<MainNavigationPage>
+    with WidgetsBindingObserver {
   static _MainNavigationPageState? _instance;
 
   int _currentIndex = AppBottomNavBar.emphasizedIndex;
@@ -59,16 +61,32 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   int _appointmentsRefreshToken = 0;
   int _appointmentsUpcomingToken = 0;
 
+  /// بيزيد أول ما تفتح الشاشة وكل ما التطبيق يرجع resume — بيفعّل
+  /// فحص الـ pending rating بكارد الرئيسية.
+  int _ratingCheckTick = 1;
+
   @override
   void initState() {
     super.initState();
     _instance = this;
+    WidgetsBinding.instance.addObserver(this);
+    // Register FCM with backend for this authenticated session.
+    DeviceTokenSync.registerCurrentToken();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_instance == this) _instance = null;
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (!mounted) return;
+      setState(() => _ratingCheckTick++);
+    }
   }
 
   void _bumpRefreshTokens() {
@@ -143,7 +161,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               refreshToken: _appointmentsRefreshToken,
               upcomingTabToken: _appointmentsUpcomingToken,
             ),
-            HomePage(homeVisitCount: _homeVisitCount),
+            HomePage(
+              homeVisitCount: _homeVisitCount,
+              ratingCheckTick: _ratingCheckTick,
+            ),
             const TreatmentPlansPage(),
             const PromotionalGalleryPage(),
           ],

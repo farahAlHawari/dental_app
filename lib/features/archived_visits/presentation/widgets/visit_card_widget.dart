@@ -160,8 +160,16 @@ class VisitCard extends StatelessWidget {
                 child: Row(
                   children: [
                     LottieBuilder.asset(
-                      'assets/animations/star.json',
+                      'assets/animations/Star.json',
                       width: 40,
+                      height: 40,
+                      repeat: true,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.star_rounded,
+                        size: 36,
+                        color: Colors.amber.shade600,
+                      ),
                     ),
                     const SizedBox(width: 5),
                     Text(

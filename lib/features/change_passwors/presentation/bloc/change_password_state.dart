@@ -8,5 +8,10 @@ final class ChangePasswordLoading extends ChangePasswordState {}
 final class ChangePasswordSuccess extends ChangePasswordState {}
 final class ChangePasswordFailure extends ChangePasswordState {
   final String errMessage;
-  ChangePasswordFailure({required this.errMessage});
+  final bool isInvalidCredentials;
+
+  ChangePasswordFailure({
+    required this.errMessage,
+    this.isInvalidCredentials = false,
+  });
 }

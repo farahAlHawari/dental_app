@@ -1,4 +1,5 @@
 class EndPoints {
+  // static const String baserUrl = "http://10.17.222.243:3000/api/v1/";
   static const String baserUrl = "http://192.168.1.104:3000/api/v1/";
   // static const String baserUrl = "http://10.141.94.11:3000/api/v1/";
   // static const String baserUrl = "http://localhost:3000/api/v1/";
@@ -65,6 +66,27 @@ class EndPoints {
 
   static String medicalArchive(String patientId) =>
       "treatment/patients/$patientId/medical-archive";
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  // ================================
+  // NEW CODE START — financial / invoices
+  // ================================
+  static const String financialSummary = "financial-summary";
+  // static String invoiceById(String id) => "invoices/$id";
+  // ================================
+  // NEW CODE END
+  // ================================
+
+  // ================================
+  // NEW CODE START — notifications / FCM device tokens
+  // ================================
+  static const String deviceTokens = "device-tokens";
+  static const String notifications = "notifications";
+  static const String notificationsUnreadCount = "notifications/unread-count";
+  static const String notificationsReadAll = "notifications/read-all";
+  static String notificationRead(String id) => "notifications/$id/read";
   // ================================
   // NEW CODE END
   // ================================

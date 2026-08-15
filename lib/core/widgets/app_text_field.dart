@@ -11,17 +11,18 @@ class AppTextField extends StatefulWidget {
     this.keyboardType,
     this.isPassword = false,
     this.validator,
+    this.errorText,
     this.maxLines = 1,
     this.onChanged,
     this.readOnly = false,
-this.onTap,
+    this.onTap,
   });
 
   final TextEditingController controller;
   final String hint;
   final String? label;
-final bool readOnly;
-final VoidCallback? onTap;
+  final bool readOnly;
+  final VoidCallback? onTap;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
 
@@ -32,6 +33,9 @@ final VoidCallback? onTap;
   final int maxLines;
 
   final String? Function(String?)? validator;
+
+  /// External API / form error shown under the field (e.g. wrong current password).
+  final String? errorText;
 
   final ValueChanged<String>? onChanged;
 
@@ -57,11 +61,18 @@ class _AppTextFieldState extends State<AppTextField> {
       keyboardType: widget.keyboardType,
       obscureText: obscure,
       maxLines: widget.isPassword ? 1 : widget.maxLines,
-      validator: widget.validator,
+      validator: (value) {
+        if (widget.errorText != null && widget.errorText!.isNotEmpty) {
+          return widget.errorText;
+        }
+        return widget.validator?.call(value);
+      },
       onChanged: widget.onChanged,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-readOnly: widget.readOnly,
-onTap: widget.onTap,
+      autovalidateMode: widget.errorText != null
+          ? AutovalidateMode.always
+          : AutovalidateMode.onUserInteraction,
+      readOnly: widget.readOnly,
+      onTap: widget.onTap,
       style: TextStyle(
         color: colors.onSurface,
         fontSize: 15,

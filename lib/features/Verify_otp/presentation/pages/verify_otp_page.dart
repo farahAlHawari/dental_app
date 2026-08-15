@@ -6,7 +6,6 @@ import 'package:dental_app/core/widgets/dialog.dart';
 import 'package:dental_app/core/widgets/masked_phone_chip.dart';
 import 'package:dental_app/features/Verify_otp/presentation/bloc/verify_otp_bloc.dart';
 import 'package:dental_app/features/Verify_otp/presentation/pages/otp_flow.dart';
-import 'package:dental_app/features/account_settings/presentation/pages/account_settings.dart';
 import 'package:dental_app/features/reset_password/presentation/reset_password_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -126,20 +125,15 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                   // Already verified / no resetToken: stay on page, no crash.
                   break;
                 case OtpFlow.changePhone:
-                CustomStatusDialog.show(
-  context,
-  type: StatusDialogType.phoneChanged,
-  onConfirm: () {
-    Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(
-      builder: (_) => AccountSettings()
-    ),
-    (route) => false,
-  );
-  },
-);
-               
+                  // Return true to ChangePhonePage — it pops back to AccountSettings
+                  // without wiping the stack (so Back still works to Profile/Home).
+                  CustomStatusDialog.show(
+                    context,
+                    type: StatusDialogType.phoneChanged,
+                    onConfirm: () {
+                      Navigator.pop(context, true);
+                    },
+                  );
                   break;
               }
             } else if (state is VerifyOtpFailure) {
@@ -284,42 +278,68 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                                     // ================================
                                     const SizedBox(height: 30),
                                     Center(
-                                      child: Pinput(
-                                        controller: _otpController,
-                                        length: 6,
-                                        defaultPinTheme: PinTheme(
-                                          width: 50,
-                                          height: 56,
-                                          textStyle: TextStyle(
+                                      child: Builder(
+                                        builder: (context) {
+                                          final colors =
+                                              Theme.of(context).colorScheme;
+                                          final fillColor = Theme.of(context)
+                                                  .inputDecorationTheme
+                                                  .fillColor ??
+                                              colors.surfaceContainerHighest;
+                                          final pinTextStyle = TextStyle(
                                             fontSize: 22,
                                             fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromARGB(255, 225, 236, 240),
-                                            borderRadius: BorderRadius.circular(16),
-                                            border: Border.all(
-                                              color: Theme.of(context).colorScheme.onSurface,
+                                            color: colors.onSurface,
+                                          );
+                                          final baseTheme = PinTheme(
+                                            width: 50,
+                                            height: 56,
+                                            textStyle: pinTextStyle,
+                                            decoration: BoxDecoration(
+                                              color: fillColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.transparent,
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                        focusedPinTheme: PinTheme(
-                                          width: 50,
-                                          height: 56,
-                                          textStyle: TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromARGB(255, 225, 236, 240),
-                                            borderRadius: BorderRadius.circular(16),
-                                            border: Border.all(
-                                              color: Theme.of(context).colorScheme.primary,
+                                          );
+
+                                          return Pinput(
+                                            controller: _otpController,
+                                            length: 6,
+                                            cursor: Container(
                                               width: 2,
+                                              height: 22,
+                                              color: colors.primary,
                                             ),
-                                          ),
-                                        ),
+                                            defaultPinTheme: baseTheme,
+                                            focusedPinTheme: baseTheme.copyWith(
+                                              decoration: BoxDecoration(
+                                                color: fillColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color: colors.primary,
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                            ),
+                                            submittedPinTheme:
+                                                baseTheme.copyWith(
+                                              decoration: BoxDecoration(
+                                                color: fillColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color: colors.primary
+                                                      .withOpacity(0.45),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ),
                                     const SizedBox(height: 25),

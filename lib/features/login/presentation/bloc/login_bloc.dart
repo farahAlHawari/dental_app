@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
+import 'package:dental_app/features/biometric_auth/data/datasources/biometric_local_data_source.dart';
 import 'package:dental_app/features/login/domain/repositories/login_repository_impl.dart';
 import 'package:dio/dio.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:meta/meta.dart';
 import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
@@ -63,6 +65,17 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             await SharedPrefs.saveAccountStatus(accountStatus);
           }
           await SharedPrefs.savePhone(event.phone);
+
+          // Feature 8: keep secure credentials in sync when biometric is on.
+          final biometricLocal = BiometricLocalDataSource(
+            localAuth: LocalAuthentication(),
+          );
+          if (await biometricLocal.isBiometricEnabled()) {
+            await biometricLocal.saveCredentials(
+              phone: event.phone,
+              password: event.password,
+            );
+          }
 
           emit(LoginSuccess());
         },

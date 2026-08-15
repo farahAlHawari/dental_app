@@ -9,7 +9,10 @@ import 'package:dental_app/features/register/presentation/pages/patient_type.dar
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-/// Single post-auth entry point.
+/// Single post-auth entry point (Feature 6 — sole router after session is ready).
+///
+/// Call sites after auth must use [go] only (Login, OTP, Activation, Bootstrap,
+/// patient create). Do not push MainNavigationPage / Profile as app home directly.
 ///
 /// - No patients → PatientType (never restore a stale onboarding step)
 /// - Has patients → MainNavigationPage (restore selected patient when still valid)

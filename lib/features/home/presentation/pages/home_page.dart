@@ -22,6 +22,9 @@ import 'package:dental_app/features/home/presentation/widgets/daily_tip_card.dar
 import 'package:dental_app/features/home/presentation/widgets/quick_action_card.dart';
 import 'package:dental_app/features/home/presentation/widgets/upcoming_appointment_card.dart';
 import 'package:dental_app/features/medical_archive/presentation/pages/medical_archive_page.dart';
+import 'package:dental_app/features/notifications/data/datasources/notifications_remote_data_source.dart';
+import 'package:dental_app/features/notifications/domain/repositories/notifications_repository.dart';
+import 'package:dental_app/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:dental_app/features/profile/data/datasources/patient_remote_data_source.dart';
 import 'package:dental_app/features/profile/domain/repositories/patient_repository_impl.dart';
 import 'package:dental_app/features/treatment_plans/data/models/treatment_plan.dart';
@@ -32,16 +35,23 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// تبويب "الرئيسية".
+/// ØªØ¨ÙÙØ¨ "Ø§ÙØ±Ø¦ÙØ³ÙØ©".
 /// Uses ArchivedVisitsBloc for GET /home + pending rating.
 /// Patient name/photo from GET patients/:id.
 class HomePage extends StatelessWidget {
-  /// بيزيد وحدة كل مرة يصير فيها دخول للتاب هاد (من MainNavigationPage) -
-  /// منستخدمها كـ key لكارد الخطة العلاجية حتى يعيد تشغيل أنيميشن شريط
-  /// التقدم من الصفر كل مرة نرجع عالرئيسية، مش مرة وحدة بس.
+  /// Ø¨ÙØ²ÙØ¯ ÙØ­Ø¯Ø© ÙÙ ÙØ±Ø© ÙØµÙØ± ÙÙÙØ§ Ø¯Ø®ÙÙ ÙÙØªØ§Ø¨ ÙØ§Ø¯ (ÙÙ MainNavigationPage) -
+  /// ÙÙØ³ØªØ®Ø¯ÙÙØ§ ÙÙ key ÙÙØ§Ø±Ø¯ Ø§ÙØ®Ø·Ø© Ø§ÙØ¹ÙØ§Ø¬ÙØ© Ø­ØªÙ ÙØ¹ÙØ¯ ØªØ´ØºÙÙ Ø£ÙÙÙÙØ´Ù Ø´Ø±ÙØ·
+  /// Ø§ÙØªÙØ¯Ù ÙÙ Ø§ÙØµÙØ± ÙÙ ÙØ±Ø© ÙØ±Ø¬Ø¹ Ø¹Ø§ÙØ±Ø¦ÙØ³ÙØ©Ø ÙØ´ ÙØ±Ø© ÙØ­Ø¯Ø© Ø¨Ø³.
   final int homeVisitCount;
 
-  const HomePage({super.key, required this.homeVisitCount});
+  /// Bumps from MainNavigationPage on tab enter / app resume.
+  final int ratingCheckTick;
+
+  const HomePage({
+    super.key,
+    required this.homeVisitCount,
+    required this.ratingCheckTick,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,15 +61,22 @@ class HomePage extends StatelessWidget {
         BlocProvider(create: (_) => AppointmentsBloc()),
         BlocProvider(create: (_) => TreatmentPlansBloc()),
       ],
-      child: _HomePageView(homeVisitCount: homeVisitCount),
+      child: _HomePageView(
+        homeVisitCount: homeVisitCount,
+        ratingCheckTick: ratingCheckTick,
+      ),
     );
   }
 }
 
 class _HomePageView extends StatefulWidget {
   final int homeVisitCount;
+  final int ratingCheckTick;
 
-  const _HomePageView({required this.homeVisitCount});
+  const _HomePageView({
+    required this.homeVisitCount,
+    required this.ratingCheckTick,
+  });
 
   @override
   State<_HomePageView> createState() => _HomePageViewState();
@@ -70,6 +87,12 @@ class _HomePageViewState extends State<_HomePageView> {
     remoteDataSource: PatientRemoteDataSource(api: DioConsumer(dio: Dio())),
   );
 
+  final _notificationsRepository = NotificationsRepository(
+    remoteDataSource: NotificationsRemoteDataSource(
+      api: DioConsumer(dio: Dio()),
+    ),
+  );
+
   bool _dialogOpen = false;
   String? _patientId;
   Map<String, dynamic>? _patient;
@@ -78,10 +101,11 @@ class _HomePageViewState extends State<_HomePageView> {
   bool _upcomingLoaded = false;
   TreatmentPlan? _activePlan;
   bool _activePlanLoaded = false;
+  int _unreadNotifications = 0;
 
   String get _patientDisplayName {
     final name = (_patient?['fullName'] ?? _patient?['name'] ?? '').toString();
-    return name.trim().isEmpty ? '—' : name.trim();
+    return name.trim().isEmpty ? 'â' : name.trim();
   }
 
   @override
@@ -92,6 +116,7 @@ class _HomePageViewState extends State<_HomePageView> {
       _loadPatientProfile();
       _loadUpcoming();
       _loadActivePlan();
+      _loadUnreadCount();
     });
   }
 
@@ -104,6 +129,28 @@ class _HomePageViewState extends State<_HomePageView> {
       _loadUpcoming();
       _loadActivePlan();
     }
+    if (oldWidget.ratingCheckTick != widget.ratingCheckTick) {
+      _requestHome();
+      _loadUnreadCount();
+    }
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final result = await _notificationsRepository.getUnreadCount();
+    if (!mounted) return;
+    result.fold(
+      (_) {},
+      (count) => setState(() => _unreadNotifications = count),
+    );
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+    );
+    if (!mounted) return;
+    await _loadUnreadCount();
   }
 
   Future<void> _loadPatientProfile() async {
@@ -416,15 +463,8 @@ class _HomePageViewState extends State<_HomePageView> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: AnimatedNotificationIcon(
-                                  onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Notifications coming soon'.tr(),
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                  unreadCount: _unreadNotifications,
+                                  onTap: _openNotifications,
                                 ),
                               ),
                             ],

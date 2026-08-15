@@ -461,7 +461,9 @@ import 'package:dental_app/core/navigation/post_auth_navigation.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_bloc.dart';
 import 'package:dental_app/core/theme/bloc/theme_bloc_event.dart';
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
+import 'package:dental_app/core/widgets/dialog.dart';
 import 'package:dental_app/features/appointments/presentation/pages/select_visit_type_page.dart';
 import 'package:dental_app/features/biometric_auth/presentation/bloc/biometric_bloc.dart';
 import 'package:dental_app/core/api/dio_consumer.dart';
@@ -504,6 +506,13 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true); // بتتحرك رايح جاي بشكل مستمر
+    _prefillPhone();
+  }
+
+  Future<void> _prefillPhone() async {
+    final phone = await SharedPrefs.getPhone();
+    if (!mounted || phone == null || phone.isEmpty) return;
+    _phoneController.text = phone;
   }
 
   @override
@@ -879,7 +888,7 @@ class _LoginPageState extends State<LoginPage>
                                   ),
 
                                   // ================================
-                                  // NEW CODE START — Biometric Login
+                                  // Feature 8 — Biometric Login
                                   // ================================
                                   BlocProvider(
                                     create: (context) => BiometricBloc()
@@ -893,15 +902,14 @@ class _LoginPageState extends State<LoginPage>
                                           await PostAuthNavigation.go(context);
                                         } else if (state
                                             is BiometricAuthenticateFailure) {
-                                          ScaffoldMessenger.of(
+                                          if (!context.mounted) return;
+                                          CustomStatusDialog.show(
                                             context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                "Authentication failed, please try again or use your password"
-                                                    .tr(),
-                                              ),
-                                            ),
+                                            type:
+                                                StatusDialogType.biometricFailed,
+                                            customDescription:
+                                                state.errMessage.tr(),
+                                            onConfirm: () {},
                                           );
                                         }
                                       },
@@ -912,67 +920,104 @@ class _LoginPageState extends State<LoginPage>
                                         final isAuthenticating =
                                             state is BiometricAuthenticating;
 
-                                        if (!showBiometricButton) {
+                                        if (!showBiometricButton &&
+                                            !isAuthenticating) {
                                           return const SizedBox.shrink();
                                         }
 
                                         return Padding(
                                           padding:
-                                              const EdgeInsets.only(top: 16),
-                                          child: Center(
-                                            child: Column(
-                                              children: [
-                                                Text(
-                                                  "Or login with biometrics"
-                                                      .tr(),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface
-                                                        .withOpacity(0.6),
+                                              const EdgeInsets.only(top: 20),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Divider(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .outlineVariant,
+                                                    ),
                                                   ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                IconButton(
-                                                  iconSize: 40,
-                                                  icon: isAuthenticating
-                                                      ? SizedBox(
-                                                          width: 28,
-                                                          height: 28,
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                            strokeWidth: 2,
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                      horizontal: 12,
+                                                    ),
+                                                    child: Text(
+                                                      "Or login with biometrics"
+                                                          .tr(),
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withOpacity(0.6),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Expanded(
+                                                    child: Divider(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .outlineVariant,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Material(
+                                                color: Colors.transparent,
+                                                child: InkWell(
+                                                  onTap: isAuthenticating
+                                                      ? null
+                                                      : () {
+                                                          context
+                                                              .read<
+                                                                  BiometricBloc>()
+                                                              .add(
+                                                                BiometricAuthenticateRequested(),
+                                                              );
+                                                        },
+                                                  borderRadius:
+                                                      BorderRadius.circular(40),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            12),
+                                                    child: isAuthenticating
+                                                        ? SizedBox(
+                                                            width: 40,
+                                                            height: 40,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                            ),
+                                                          )
+                                                        : Icon(
+                                                            Icons.fingerprint,
+                                                            size: 48,
                                                             color: Theme.of(
                                                                     context)
                                                                 .colorScheme
                                                                 .primary,
                                                           ),
-                                                        )
-                                                      : Icon(
-                                                          Icons.fingerprint,
-                                                          color: Theme.of(
-                                                                  context)
-                                                              .colorScheme
-                                                              .primary,
-                                                        ),
-                                                  onPressed: isAuthenticating
-                                                      ? null
-                                                      : () {
-                                                          context.read<BiometricBloc>().add(BiometricAuthenticateRequested());
-                                                             
-                                                             
-                                                        },
+                                                  ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
                                         );
                                       },
                                     ),
                                   ),
                                   // ================================
-                                  // NEW CODE END
+                                  // Feature 8 END
                                   // ================================
 
                                   const SizedBox(height: 20),

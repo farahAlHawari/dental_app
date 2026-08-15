@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 /// ثانية، بدل التمايل الخفيف يلي كان صعب ملاحظته.
 class AnimatedNotificationIcon extends StatefulWidget {
   final VoidCallback onTap;
-  final bool hasUnread;
+  /// Unread count for the badge. `0` hides the badge.
+  final int unreadCount;
 
   const AnimatedNotificationIcon({
     super.key,
     required this.onTap,
-    this.hasUnread = false,
+    this.unreadCount = 0,
   });
 
   @override
@@ -73,19 +74,29 @@ class _AnimatedNotificationIconState extends State<AnimatedNotificationIcon>
             ),
             child: Icon(Icons.notifications_outlined, color: colors.onSurface),
           ),
-          if (widget.hasUnread)
+          if (widget.unreadCount > 0)
             Positioned(
-              top: -1,
-              right: -1,
+              top: -4,
+              right: -6,
               child: Container(
-                width: 8,
-                height: 8,
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
                   color: colors.error,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: colors.surfaceContainerHighest,
                     width: 1.5,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  widget.unreadCount > 99 ? '99+' : '${widget.unreadCount}',
+                  style: TextStyle(
+                    color: colors.onError,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
                   ),
                 ),
               ),

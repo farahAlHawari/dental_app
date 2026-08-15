@@ -755,7 +755,6 @@ class ProfileHomeCardShimmer extends StatelessWidget {
     );
   }
 }
-
 /// Skeleton matching a promotional gallery post card.
 class GalleryPostCardShimmer extends StatelessWidget {
   const GalleryPostCardShimmer({super.key});
@@ -1152,7 +1151,7 @@ class PlanInvoicesShimmer extends StatelessWidget {
           3,
           (_) => const Padding(
             padding: EdgeInsets.only(bottom: 16),
-            child: _InvoiceCardShimmer(),
+            child: _PlanInvoiceCardShimmer(),
           ),
         ),
       ],
@@ -1169,18 +1168,19 @@ class PlanInvoiceDetailsShimmer extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       physics: const NeverScrollableScrollPhysics(),
       children: const [
-        _InvoiceCardShimmer(),
+        _PlanInvoiceCardShimmer(),
         SizedBox(height: 16),
-        _InvoiceCardShimmer(),
+        _PlanInvoiceCardShimmer(),
         SizedBox(height: 10),
-        _InvoiceCardShimmer(),
+        _PlanInvoiceCardShimmer(),
       ],
     );
   }
 }
 
-class _InvoiceCardShimmer extends StatelessWidget {
-  const _InvoiceCardShimmer();
+/// Compact invoice card skeleton for treatment-plan invoices.
+class _PlanInvoiceCardShimmer extends StatelessWidget {
+  const _PlanInvoiceCardShimmer();
 
   @override
   Widget build(BuildContext context) {
@@ -1246,6 +1246,255 @@ class _InvoiceCardShimmer extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Single invoice card skeleton (financial & billing / family financial).
+class InvoiceCardShimmer extends StatelessWidget {
+  final bool showPatient;
+
+  const InvoiceCardShimmer({super.key, this.showPatient = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: AppShimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ShimmerBox(
+                  width: w * 0.35,
+                  height: 12,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                ShimmerBox(
+                  width: 88,
+                  height: 22,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ],
+            ),
+            if (showPatient) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const ShimmerBox(
+                    width: 36,
+                    height: 36,
+                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                  ),
+                  const SizedBox(width: 10),
+                  ShimmerBox(
+                    width: w * 0.4,
+                    height: 14,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            ShimmerBox(
+              width: w * 0.5,
+              height: 16,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            const SizedBox(height: 10),
+            ShimmerBox(
+              width: w * 0.28,
+              height: 12,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ShimmerBox(
+                    width: double.infinity,
+                    height: 48,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ShimmerBox(
+                    width: double.infinity,
+                    height: 48,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ShimmerBox(
+                    width: double.infinity,
+                    height: 48,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Full financial summary page skeleton (summary + filter + invoice cards).
+class FinancialPageShimmer extends StatelessWidget {
+  final bool showPatientOnCards;
+
+  const FinancialPageShimmer({
+    super.key,
+    this.showPatientOnCards = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: AppShimmer(
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        AppShimmer(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ShimmerBox(
+                width: 100,
+                height: 22,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              ShimmerBox(
+                width: 90,
+                height: 20,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        for (var i = 0; i < 4; i++)
+          InvoiceCardShimmer(showPatient: showPatientOnCards),
+      ],
+    );
+  }
+}
+
+/// Invoice details page skeleton (invoice card + payment rows).
+class InvoiceDetailsShimmer extends StatelessWidget {
+  final bool showPatient;
+
+  const InvoiceDetailsShimmer({super.key, this.showPatient = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+
+    return ListView(
+      padding: const EdgeInsets.all(8),
+      children: [
+        InvoiceCardShimmer(showPatient: showPatient),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: AppShimmer(
+            child: ShimmerBox(
+              width: w * 0.55,
+              height: 18,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        for (var i = 0; i < 3; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10, right: 10, top: 6),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.shadow.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: AppShimmer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ShimmerBox(
+                          width: w * 0.32,
+                          height: 16,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        ShimmerBox(
+                          width: 72,
+                          height: 26,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ShimmerBox(
+                      width: w * 0.28,
+                      height: 12,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: ShimmerBox(
+                        width: 64,
+                        height: 14,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

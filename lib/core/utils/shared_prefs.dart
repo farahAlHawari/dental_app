@@ -1,8 +1,10 @@
 // lib/core/config/shared_prefs.dart
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefs {
   static const String _langKey = 'app_language';
+  static const String _themeModeKey = 'app_theme_mode';
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _biometricEnabledKey = 'biometric_enabled';
@@ -13,6 +15,10 @@ class SharedPrefs {
   static const String _patientOnboardingStepKey = 'patient_onboarding_step';
   /// Marketing slides only (not patient Type/Medical form).
   static const String _hasSeenOnboardingKey = 'has_seen_onboarding';
+  /// Brand splash (logo + phrase) — first launch only, like language/onboarding.
+  static const String _hasSeenSplashKey = 'has_seen_splash';
+  /// Last FCM token registered with the backend (for DELETE on logout).
+  static const String _fcmTokenKey = 'fcm_device_token';
 
   /// Onboarding steps after register OTP (patient flow — separate).
   static const String onboardingPatientType = 'patient_type';
@@ -27,6 +33,22 @@ class SharedPrefs {
   static Future<String?> getLanguage() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_langKey);
+  }
+
+  /// Device theme preference — not cleared on logout.
+  static Future<void> saveThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _themeModeKey,
+      mode == ThemeMode.dark ? 'dark' : 'light',
+    );
+  }
+
+  static Future<ThemeMode> getThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(_themeModeKey);
+    if (value == 'dark') return ThemeMode.dark;
+    return ThemeMode.light;
   }
 
   static Future<void> saveToken(String token) async {
@@ -50,18 +72,19 @@ class SharedPrefs {
   }
 
   // ================================
-  // MODIFIED — session cleanup: access + refresh only (Feature 5)
+  // Feature 7 — logout clears session tokens only
   // ================================
-  /// Clears authentication tokens only.
-  /// Keeps selected patient, onboarding step, language, marketing flag,
-  /// biometric, phone, and other local preferences.
+  /// Clears access + refresh tokens only.
+  /// Keeps: selected_patient_id/status, app_language, app_theme_mode,
+  /// has_seen_onboarding, has_seen_splash, biometric_enabled, user_phone,
+  /// account_status, patient_onboarding_step.
   static Future<void> clearTokens() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_refreshTokenKey);
   }
   // ================================
-  // MODIFIED END
+  // Feature 7 END
   // ================================
 
   static Future<void> saveBiometricEnabled(bool enabled) async {
@@ -133,6 +156,32 @@ class SharedPrefs {
   static Future<bool> hasSeenOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_hasSeenOnboardingKey) ?? false;
+  }
+
+  /// Brand splash — not cleared on logout.
+  static Future<void> setHasSeenSplash(bool seen) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasSeenSplashKey, seen);
+  }
+
+  static Future<bool> hasSeenSplash() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_hasSeenSplashKey) ?? false;
+  }
+
+  static Future<void> saveFcmToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_fcmTokenKey, token);
+  }
+
+  static Future<String?> getFcmToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_fcmTokenKey);
+  }
+
+  static Future<void> clearFcmToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_fcmTokenKey);
   }
 
   /// Masks phone for display, e.g. 0912345678 -> 0912••••78

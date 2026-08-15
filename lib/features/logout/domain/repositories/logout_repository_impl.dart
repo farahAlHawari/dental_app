@@ -2,6 +2,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dental_app/core/errors/expentions.dart';
 import 'package:dental_app/core/errors/failure.dart';
+import 'package:dental_app/core/notifications/device_token_sync.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/features/logout/data/datasources/logout_data_source.dart';
 
@@ -13,12 +14,18 @@ class LogoutRepositoryImpl extends LogoutRepository {
 
   @override
   Future<Either<Failure, void>> logout() async {
+    // Feature 7: end local session even if the server call fails
+    // (expired token, offline, 5xx). Tokens only — keep patient/prefs.
     try {
       await remoteDataSource.logout();
-      await SharedPrefs.clearTokens(); 
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(Failure(errMessage: e.errorModel.errorMessage));
+    } on ServerException {
+      // Ignore — local logout still required.
+    } catch (_) {
+      // Ignore network / unexpected — local logout still required.
     }
+    // Unregister FCM before clearing auth so DELETE still has Authorization.
+    await DeviceTokenSync.unregisterCurrentToken();
+    await SharedPrefs.clearTokens();
+    return const Right(null);
   }
 }

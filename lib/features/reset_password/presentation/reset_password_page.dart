@@ -61,7 +61,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
   context,
   type: StatusDialogType.passwordReset,
   onConfirm: () {
-    Navigator.pop(context);
     _goToLogin();
   },
 );
