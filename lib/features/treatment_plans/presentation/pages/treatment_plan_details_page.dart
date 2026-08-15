@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
@@ -75,6 +76,11 @@ class _TreatmentPlanDetailsPageState extends State<TreatmentPlanDetailsPage> {
   }
 
   Future<void> _bookSession(PlanSession session) async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -141,6 +147,11 @@ class _TreatmentPlanDetailsPageState extends State<TreatmentPlanDetailsPage> {
   }
 
   Future<void> _rateSession(PlanSession session) async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final patientId = _patientId;
     if (patientId == null || patientId.isEmpty) return;
 

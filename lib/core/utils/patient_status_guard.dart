@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -5,7 +6,7 @@ import 'package:flutter/material.dart';
 ///
 /// Use before any edit/action that must not run on archived patients:
 /// ```dart
-/// if (!PatientStatusGuard.ensureEditable(context, patient['status'])) return;
+/// if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) return;
 /// ```
 class PatientStatusGuard {
   static const String active = 'ACTIVE';
@@ -39,5 +40,15 @@ class PatientStatusGuard {
       ),
     );
     return false;
+  }
+
+  /// Reads [SharedPrefs.getSelectedPatientStatus] then [ensureEditable].
+  static Future<bool> ensureSelectedPatientEditable(
+    BuildContext context, {
+    String? message,
+  }) async {
+    final status = await SharedPrefs.getSelectedPatientStatus();
+    if (!context.mounted) return false;
+    return ensureEditable(context, status, message: message);
   }
 }

@@ -334,6 +334,10 @@ class _MedicalInfoState extends State<MedicalInfo>
   // ================================
 
   Future<void> _pickImage() async {
+    if (!_isCreateMode &&
+        !PatientStatusGuard.ensureEditable(context, _patientStatus)) {
+      return;
+    }
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() => _image = File(picked.path));
@@ -353,6 +357,10 @@ class _MedicalInfoState extends State<MedicalInfo>
   // ================================
   Future<void> _handleSave() async {
     if (_submitting) return;
+    if (!_isCreateMode &&
+        !PatientStatusGuard.ensureEditable(context, _patientStatus)) {
+      return;
+    }
     if (!_validateForm()) return;
 
     setState(() => _submitting = true);

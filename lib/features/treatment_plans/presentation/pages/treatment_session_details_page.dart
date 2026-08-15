@@ -1,4 +1,5 @@
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
@@ -61,6 +62,11 @@ class _TreatmentSessionDetailsPageState
   }
 
   Future<void> _rateSession() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final patientId = await SharedPrefs.getSelectedPatientId();
     if (!mounted || patientId == null || patientId.isEmpty) return;
 
@@ -82,6 +88,11 @@ class _TreatmentSessionDetailsPageState
   }
 
   Future<void> _bookSession() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     await Navigator.push(
       context,
       MaterialPageRoute(

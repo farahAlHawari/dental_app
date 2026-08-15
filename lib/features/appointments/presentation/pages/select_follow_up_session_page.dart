@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
@@ -47,8 +48,12 @@ class _SelectFollowUpSessionPageState extends State<SelectFollowUpSessionPage> {
         );
   }
 
-  void _onBookSession(BuildContext context, BookableSession session) {
+  Future<void> _onBookSession(BuildContext context, BookableSession session) async {
     if (!session.canBook) return;
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!context.mounted) return;
 
     final appointmentsBloc = context.read<AppointmentsBloc>();
     Navigator.push(

@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
@@ -135,10 +136,15 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
     return displayedIsCurrentMonth && _isSameDay(_selectedDate!, _todayDate);
   }
 
-  void _dispatchCreateAppointment({
+  Future<void> _dispatchCreateAppointment({
     required DateTime date,
     required String time,
-  }) {
+  }) async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final patientId = _patientId;
     final type = widget.bookingType;
     if (patientId == null || patientId.isEmpty || type == null) {
@@ -158,6 +164,41 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
             chatbotSummary: widget.chatbotSummary,
           ),
         );
+  }
+
+  Future<void> _onConfirmPressed() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
+    final date = _selectedDate!;
+    final time = _selectedTime!;
+    if (widget.isReschedule) {
+      Navigator.of(context).pop(
+        date_fmt.buildScheduledAtUtcIso(date, time),
+      );
+      return;
+    }
+
+    final appointmentsBloc = context.read<AppointmentsBloc>();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: appointmentsBloc,
+          child: BookingConfirmationPage(
+            visitTypeLabel: widget.visitTypeLabel ?? 'Consultation'.tr(),
+            date: date,
+            time: time,
+            onConfirm: () => _dispatchCreateAppointment(
+              date: date,
+              time: time,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _loadDays() {
@@ -748,38 +789,7 @@ class _SelectDateTimePageState extends State<SelectDateTimePage> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: canConfirm
-                            ? () {
-                                final date = _selectedDate!;
-                                final time = _selectedTime!;
-                                if (widget.isReschedule) {
-                                  Navigator.of(context).pop(
-                                    date_fmt.buildScheduledAtUtcIso(date, time),
-                                  );
-                                  return;
-                                }
-                                final appointmentsBloc =
-                                    context.read<AppointmentsBloc>();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => BlocProvider.value(
-                                      value: appointmentsBloc,
-                                      child: BookingConfirmationPage(
-                                      visitTypeLabel:
-                                            widget.visitTypeLabel ??
-                                            'Consultation'.tr(),
-                                        date: date,
-                                        time: time,
-                                        onConfirm: () =>
-                                            _dispatchCreateAppointment(
-                                          date: date,
-                                          time: time,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
+                            ? () => _onConfirmPressed()
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colors.primary,

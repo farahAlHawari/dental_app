@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
@@ -63,6 +64,11 @@ class _ArchivedVisitsViewState extends State<_ArchivedVisitsView> {
   }
 
   Future<void> _rateSession(int index) async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final session = _sessions[index];
     final sessionId = (session['id'] ?? '').toString();
     final title = (session['title'] ?? '').toString();

@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/widgets/app_text_field.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/features/appointments/data/models/appointment_booking_type.dart';
@@ -33,6 +34,11 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
   }
 
   Future<void> _startChat() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     // شات الحجز: كل فتح = جلسة جديدة (ما في تخزين). الملخص بيرجع
     // بس لما المريض يكبس "إنهاء المحادثة واستخراج التشخيص".
     final summary = await Navigator.push<String>(
@@ -51,6 +57,29 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
         );
       });
     }
+  }
+
+  Future<void> _continueToDateTime() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
+    final appointmentsBloc = context.read<AppointmentsBloc>();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: appointmentsBloc,
+          child: SelectDateTimePage(
+            visitTypeLabel: widget.visitTypeLabel,
+            bookingType: AppointmentBookingType.consultation,
+            reasonForVisit: _reasonController.text.trim(),
+            chatbotSummary: _chatSummary,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -220,31 +249,7 @@ class _ConsultationReasonPageState extends State<ConsultationReasonPage> {
                           return SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              onPressed: canContinue
-                                  ? () {
-                                      final appointmentsBloc =
-                                          context.read<AppointmentsBloc>();
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => BlocProvider.value(
-                                            value: appointmentsBloc,
-                                            child: SelectDateTimePage(
-                                              visitTypeLabel:
-                                                  widget.visitTypeLabel,
-                                              bookingType:
-                                                  AppointmentBookingType
-                                                      .consultation,
-                                              reasonForVisit:
-                                                  _reasonController.text
-                                                      .trim(),
-                                              chatbotSummary: _chatSummary,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  : null,
+                              onPressed: canContinue ? _continueToDateTime : null,
                               // icon: const Icon(
                               //   Icons.arrow_forward,
                               //   size: 18,

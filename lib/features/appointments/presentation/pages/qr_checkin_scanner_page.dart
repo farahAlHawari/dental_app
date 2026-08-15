@@ -1,5 +1,6 @@
 import 'package:dental_app/core/services/whatsapp_service.dart';
 import 'package:dental_app/core/utils/clinic_contact.dart';
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
 import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -79,6 +80,11 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
 
   Future<void> _performCheckIn(String clinicCheckInCode) async {
     if (_handled || _checkingIn) return;
+
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
 
     setState(() => _checkingIn = true);
     _controller.stop();

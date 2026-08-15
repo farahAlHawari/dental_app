@@ -1,7 +1,8 @@
 class EndPoints {
-  // static const String baserUrl = "http://10.17.222.243:3000/api/v1/";
-  static const String baserUrl = "http://192.168.1.104:3000/api/v1/";
-  // static const String baserUrl = "http://10.141.94.11:3000/api/v1/";
+  // static const String baserUrl =
+  //     "https://7978-89-105-214-109.ngrok-free.app/api/v1/";
+  // static const String baserUrl = "http://192.168.1.104:3000/api/v1/";
+  static const String baserUrl = "http://10.121.61.11:3000/api/v1/";
   // static const String baserUrl = "http://localhost:3000/api/v1/";
   static const String register = "auth/register";
   static const String verifyOtp = "auth/register/verify";

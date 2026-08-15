@@ -15,15 +15,14 @@ import 'package:pdfrx/pdfrx.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await pdfrxFlutterInitialize(dismissPdfiumWasmWarnings: true);
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await PushNotificationService.init();
   await EasyLocalization.ensureInitialized();
 
   final savedLang = await SharedPrefs.getLanguage();
-  final startLocale =
-      savedLang == 'en' ? const Locale('en') : const Locale('ar');
+  final startLocale = savedLang == 'en'
+      ? const Locale('en')
+      : const Locale('ar');
   final savedTheme = await SharedPrefs.getThemeMode();
   final hasSeenSplash = await SharedPrefs.hasSeenSplash();
 
@@ -33,10 +32,7 @@ void main() async {
       startLocale: startLocale,
       path: 'assets/translations',
       fallbackLocale: const Locale('ar'),
-      child: MyApp(
-        initialTheme: savedTheme,
-        hasSeenSplash: hasSeenSplash,
-      ),
+      child: MyApp(initialTheme: savedTheme, hasSeenSplash: hasSeenSplash),
     ),
   );
 }
@@ -68,16 +64,14 @@ class MyApp extends StatelessWidget {
             builder: (context, child) {
               return Theme(
                 data: Theme.of(context).copyWith(
-                  textTheme: Theme.of(context).textTheme.apply(
-                        fontFamily: 'cr',
-                      ),
+                  textTheme: Theme.of(
+                    context,
+                  ).textTheme.apply(fontFamily: 'cr'),
                 ),
                 child: child!,
               );
             },
-            home: hasSeenSplash
-                ? const AppBootstrapPage()
-                : const SplashPage(),
+            home: hasSeenSplash ? const AppBootstrapPage() : const SplashPage(),
           );
         },
       ),

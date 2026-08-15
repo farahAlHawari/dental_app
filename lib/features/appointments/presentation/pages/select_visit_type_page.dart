@@ -1,4 +1,5 @@
 import 'package:dental_app/core/theme/app_colors.dart';
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
@@ -58,7 +59,12 @@ class _SelectVisitTypeViewState extends State<_SelectVisitTypeView> {
         );
   }
 
-  void _openConsultation() {
+  Future<void> _openConsultation() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     if (_gateLoading || !_gateReady) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Checking...'.tr())),
@@ -99,7 +105,12 @@ class _SelectVisitTypeViewState extends State<_SelectVisitTypeView> {
     );
   }
 
-  void _openFollowUp() {
+  Future<void> _openFollowUp() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final appointmentsBloc = context.read<AppointmentsBloc>();
     Navigator.push(
       context,

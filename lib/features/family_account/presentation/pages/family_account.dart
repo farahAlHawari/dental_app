@@ -1,6 +1,7 @@
 import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/theme/app_colors.dart';
 import 'package:dental_app/core/utils/patient_profile_image.dart';
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/widgets/shimmer/app_shimmer.dart';
 import 'package:dental_app/features/family_account/presentation/widgets/Add_member_card.dart';
 import 'package:dental_app/features/family_account/presentation/widgets/family_financial_card.dart';
@@ -65,6 +66,11 @@ class _FamilyAccountState extends State<FamilyAccount> {
   }
 
   Future<void> _addMember() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     await Navigator.push(
       context,
       MaterialPageRoute(

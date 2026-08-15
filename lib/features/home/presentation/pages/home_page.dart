@@ -1,6 +1,7 @@
 import 'package:dental_app/core/api/dio_consumer.dart';
 import 'package:dental_app/core/services/whatsapp_service.dart';
 import 'package:dental_app/core/utils/clinic_contact.dart';
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
 import 'package:dental_app/core/widgets/patient_avatar.dart';
@@ -199,8 +200,8 @@ class _HomePageViewState extends State<_HomePageView> {
     await ShimmerPreview.wait();
     if (!mounted) return;
     context.read<AppointmentsBloc>().add(
-          LoadUpcomingAppointmentRequested(patientId: patientId),
-        );
+      LoadUpcomingAppointmentRequested(patientId: patientId),
+    );
   }
 
   Future<void> _loadActivePlan() async {
@@ -218,8 +219,8 @@ class _HomePageViewState extends State<_HomePageView> {
     await ShimmerPreview.wait();
     if (!mounted) return;
     context.read<TreatmentPlansBloc>().add(
-          LoadActiveTreatmentPlansRequested(patientId: patientId),
-        );
+      LoadActiveTreatmentPlansRequested(patientId: patientId),
+    );
   }
 
   Future<void> _openActivePlanDetails() async {
@@ -245,8 +246,8 @@ class _HomePageViewState extends State<_HomePageView> {
 
     _patientId = patientId;
     context.read<ArchivedVisitsBloc>().add(
-          LoadPatientHomeRequested(patientId: patientId),
-        );
+      LoadPatientHomeRequested(patientId: patientId),
+    );
   }
 
   Future<void> _handlePatientHome(PatientHomeSuccess state) async {
@@ -257,9 +258,15 @@ class _HomePageViewState extends State<_HomePageView> {
     final pendingMap = Map<String, dynamic>.from(pending);
     if (!SessionRatingHelper.homePendingCanRate(pendingMap)) return;
 
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final session = pendingMap['session'];
-    final sessionMap =
-        session is Map ? Map<String, dynamic>.from(session) : null;
+    final sessionMap = session is Map
+        ? Map<String, dynamic>.from(session)
+        : null;
     final title = (sessionMap?['title'] ?? 'Session'.tr()).toString();
     final sessionId =
         (pendingMap['treatmentSessionId'] ?? sessionMap?['id'] ?? '')
@@ -279,15 +286,20 @@ class _HomePageViewState extends State<_HomePageView> {
     if (patientId == null) return;
 
     context.read<ArchivedVisitsBloc>().add(
-          RateSessionRequested(
-            patientId: patientId,
-            sessionId: sessionId,
-            rating: selected,
-          ),
-        );
+      RateSessionRequested(
+        patientId: patientId,
+        sessionId: sessionId,
+        rating: selected,
+      ),
+    );
   }
 
   Future<void> _openQrCheckIn() async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final patientId = _patientId ?? await SharedPrefs.getSelectedPatientId();
     final upcoming = _upcomingAppointment;
     if (!mounted) return;
@@ -323,17 +335,17 @@ class _HomePageViewState extends State<_HomePageView> {
             if (state is PatientHomeSuccess) {
               _handlePatientHome(state);
             } else if (state is PatientHomeFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.errMessage)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.errMessage)));
             } else if (state is RateSessionSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Thank you for your rating'.tr())),
               );
             } else if (state is RateSessionFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.errMessage)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.errMessage)));
             }
           },
         ),
@@ -349,9 +361,9 @@ class _HomePageViewState extends State<_HomePageView> {
                 _upcomingAppointment = null;
                 _upcomingLoaded = true;
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.errMessage)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.errMessage)));
             }
           },
         ),
@@ -390,305 +402,319 @@ class _HomePageViewState extends State<_HomePageView> {
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                    SliverAppBar(
-                      pinned: true,
-                      backgroundColor: colors.surface,
-                      elevation: 0,
-                      scrolledUnderElevation: 4,
-                      shadowColor: colors.shadow,
-                      automaticallyImplyLeading: false,
-                      toolbarHeight: 68,
-                      titleSpacing: 0,
-                      title: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: FadeSlideIn(
-                          child: Row(
-                            children: [
-                              _patientProfileLoading
-                                  ? AppShimmer(
-                                      child: ShimmerBox(
-                                        width: 44,
-                                        height: 44,
-                                        borderRadius: BorderRadius.circular(22),
-                                      ),
-                                    )
-                                  : PatientAvatar.fromPatient(
-                                      _patient,
-                                      radius: 22,
-                                      backgroundColor:
-                                          colors.primary.withOpacity(0.12),
-                                      iconColor: colors.primary,
-                                    ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Welcome'.tr(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: colors.onSurface
-                                            .withOpacity(0.55),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    _patientProfileLoading
-                                        ? AppShimmer(
-                                            child: ShimmerBox(
-                                              width: 120,
-                                              height: 16,
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                          )
-                                        : Text(
-                                            _patientDisplayName,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: colors.onSurface,
-                                            ),
-                                          ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: colors.onSurface.withOpacity(0.06),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: AnimatedNotificationIcon(
-                                  unreadCount: _unreadNotifications,
-                                  onTap: _openNotifications,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 72),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          BlocBuilder<AppointmentsBloc, AppointmentsState>(
-                            buildWhen: (previous, current) =>
-                                current is UpcomingAppointmentLoading ||
-                                current is UpcomingAppointmentSuccess ||
-                                current is UpcomingAppointmentFailure ||
-                                current is AppointmentsInitial,
-                            builder: (context, upcomingState) {
-                              final loadingUpcoming =
-                                  ! _upcomingLoaded ||
-                                  upcomingState is UpcomingAppointmentLoading;
-
-                              if (loadingUpcoming) {
-                                return Column(
-                                  key: const ValueKey('upcoming_loading'),
-                                  children: [
-                                    FadeSlideIn(
-                                      delay:
-                                          const Duration(milliseconds: 60),
-                                      child:
-                                          const UpcomingAppointmentCardShimmer(),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    FadeSlideIn(
-                                      delay:
-                                          const Duration(milliseconds: 100),
-                                      child: const DailyTipCard(),
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                );
-                              }
-
-                              if (_upcomingAppointment != null) {
-                                final upcoming = _upcomingAppointment!;
-                                return Column(
-                                  key: const ValueKey('upcoming_card'),
-                                  children: [
-                                    FadeSlideIn(
-                                      delay:
-                                          const Duration(milliseconds: 60),
-                                      child: UpcomingAppointmentCard(
-                                        treatmentName: upcoming.visitTypeLabel,
-                                        appointmentDate: upcoming.scheduledAt,
-                                        timeLabel: formatAppointmentTime(
-                                          upcoming.scheduledAt,
-                                        ),
-                                        status: upcoming.status,
-                                        onScanQr: _openQrCheckIn,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    FadeSlideIn(
-                                      delay:
-                                          const Duration(milliseconds: 100),
-                                      child: const DailyTipCard(),
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-                                );
-                              }
-
-                              return Column(
-                                key: const ValueKey('no_upcoming'),
-                                children: [
-                                  FadeSlideIn(
-                                    delay: const Duration(milliseconds: 60),
-                                    child: const DailyTipCard(),
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                              );
-                            },
-                          ),
-                          FadeSlideIn(
-                            delay: const Duration(milliseconds: 140),
-                            child: AssistantHeroCard(
-                              onStartChat: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ChatbotPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          if (!_activePlanLoaded)
-                            FadeSlideIn(
-                              delay: const Duration(milliseconds: 180),
-                              child: const TreatmentPlanCardShimmer(),
-                            )
-                          else if (_activePlan != null)
-                            FadeSlideIn(
-                              delay: const Duration(milliseconds: 180),
-                              child: ActiveTreatmentPlanCard(
-                                key: ValueKey(
-                                  'treatment_plan_${_activePlan!.id}_${widget.homeVisitCount}',
-                                ),
-                                planName: _activePlan!.name.isEmpty
-                                    ? 'Treatment plan'.tr()
-                                    : _activePlan!.name,
-                                currentSession: _activePlan!.currentSession,
-                                totalSessions: _activePlan!.sessionCount,
-                                progress: _activePlan!.progress,
-                                onViewDetails: _openActivePlanDetails,
-                              ),
-                            ),
-                          if (!_activePlanLoaded || _activePlan != null)
-                            const SizedBox(height: 16),
-                          const SizedBox(height: 4),
-                          FadeSlideIn(
-                            delay: const Duration(milliseconds: 240),
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 4, bottom: 12),
-                              child: Text(
-                                'Quick Actions'.tr(),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.onSurface,
-                                ),
-                              ),
-                            ),
-                          ),
-                          FadeSlideIn(
-                            delay: const Duration(milliseconds: 280),
-                            child: GridView.count(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 14,
-                              crossAxisSpacing: 14,
-                              childAspectRatio: 0.92,
+                      SliverAppBar(
+                        pinned: true,
+                        backgroundColor: colors.surface,
+                        elevation: 0,
+                        scrolledUnderElevation: 4,
+                        shadowColor: colors.shadow,
+                        automaticallyImplyLeading: false,
+                        toolbarHeight: 68,
+                        titleSpacing: 0,
+                        title: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: FadeSlideIn(
+                            child: Row(
                               children: [
-                                QuickActionCard(
-                                  icon: Icons.description_outlined,
-                                  label: 'My Medical Record'.tr(),
-                                  subtitle: 'View files & history'.tr(),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            MedicalArchivePage(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                QuickActionCard(
-                                  icon: Icons.calendar_month_outlined,
-                                  label: 'Book Appointment'.tr(),
-                                  subtitle: 'Pick a date & time'.tr(),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SelectVisitTypePage(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                QuickActionCard(
-                                  icon: Icons.warning_amber_rounded,
-                                  label: 'Emergency Appointment'.tr(),
-                                  subtitle: 'Get urgent care now'.tr(),
-                                  isDanger: true,
-                                  onTap: () async {
-                                    try {
-                                      await WhatsAppService.openWhatsApp(
-                                        phone: ClinicContact.whatsAppNumber,
-                                        message:
-                                            'Hello, I need an emergency dental appointment. Please contact me as soon as possible.'
-                                                .tr(),
-                                      );
-                                    } catch (_) {
-                                      if (!context.mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Please contact the clinic immediately for urgent care.'
-                                                .tr(),
+                                _patientProfileLoading
+                                    ? AppShimmer(
+                                        child: ShimmerBox(
+                                          width: 44,
+                                          height: 44,
+                                          borderRadius: BorderRadius.circular(
+                                            22,
                                           ),
                                         ),
-                                      );
-                                    }
-                                  },
-                                ),
-                                QuickActionCard(
-                                  icon: Icons.receipt_long_outlined,
-                                  label: 'Invoices'.tr(),
-                                  subtitle: 'Check your bills'.tr(),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => FinancialPage(),
+                                      )
+                                    : PatientAvatar.fromPatient(
+                                        _patient,
+                                        radius: 22,
+                                        backgroundColor: colors.primary
+                                            .withOpacity(0.12),
+                                        iconColor: colors.primary,
                                       ),
-                                    );
-                                  },
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Welcome'.tr(),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: colors.onSurface.withOpacity(
+                                            0.55,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      _patientProfileLoading
+                                          ? AppShimmer(
+                                              child: ShimmerBox(
+                                                width: 120,
+                                                height: 16,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                            )
+                                          : Text(
+                                              _patientDisplayName,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: colors.onSurface,
+                                              ),
+                                            ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: colors.onSurface.withOpacity(0.06),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: AnimatedNotificationIcon(
+                                    unreadCount: _unreadNotifications,
+                                    onTap: _openNotifications,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ]),
+                        ),
                       ),
-                    ),
-                  ],
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 72),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            BlocBuilder<AppointmentsBloc, AppointmentsState>(
+                              buildWhen: (previous, current) =>
+                                  current is UpcomingAppointmentLoading ||
+                                  current is UpcomingAppointmentSuccess ||
+                                  current is UpcomingAppointmentFailure ||
+                                  current is AppointmentsInitial,
+                              builder: (context, upcomingState) {
+                                final loadingUpcoming =
+                                    !_upcomingLoaded ||
+                                    upcomingState is UpcomingAppointmentLoading;
+
+                                if (loadingUpcoming) {
+                                  return Column(
+                                    key: const ValueKey('upcoming_loading'),
+                                    children: [
+                                      FadeSlideIn(
+                                        delay: const Duration(milliseconds: 60),
+                                        child:
+                                            const UpcomingAppointmentCardShimmer(),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      FadeSlideIn(
+                                        delay: const Duration(
+                                          milliseconds: 100,
+                                        ),
+                                        child: const DailyTipCard(),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  );
+                                }
+
+                                if (_upcomingAppointment != null) {
+                                  final upcoming = _upcomingAppointment!;
+                                  return Column(
+                                    key: const ValueKey('upcoming_card'),
+                                    children: [
+                                      FadeSlideIn(
+                                        delay: const Duration(milliseconds: 60),
+                                        child: UpcomingAppointmentCard(
+                                          treatmentName:
+                                              upcoming.visitTypeLabel,
+                                          appointmentDate: upcoming.scheduledAt,
+                                          timeLabel: formatAppointmentTime(
+                                            upcoming.scheduledAt,
+                                          ),
+                                          status: upcoming.status,
+                                          onScanQr: _openQrCheckIn,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      FadeSlideIn(
+                                        delay: const Duration(
+                                          milliseconds: 100,
+                                        ),
+                                        child: const DailyTipCard(),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  );
+                                }
+
+                                return Column(
+                                  key: const ValueKey('no_upcoming'),
+                                  children: [
+                                    FadeSlideIn(
+                                      delay: const Duration(milliseconds: 60),
+                                      child: const DailyTipCard(),
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                );
+                              },
+                            ),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 140),
+                              child: AssistantHeroCard(
+                                onStartChat: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ChatbotPage(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            if (!_activePlanLoaded)
+                              FadeSlideIn(
+                                delay: const Duration(milliseconds: 180),
+                                child: const TreatmentPlanCardShimmer(),
+                              )
+                            else if (_activePlan != null)
+                              FadeSlideIn(
+                                delay: const Duration(milliseconds: 180),
+                                child: ActiveTreatmentPlanCard(
+                                  key: ValueKey(
+                                    'treatment_plan_${_activePlan!.id}_${widget.homeVisitCount}',
+                                  ),
+                                  planName: _activePlan!.name.isEmpty
+                                      ? 'Treatment plan'.tr()
+                                      : _activePlan!.name,
+                                  currentSession: _activePlan!.currentSession,
+                                  totalSessions: _activePlan!.sessionCount,
+                                  progress: _activePlan!.progress,
+                                  onViewDetails: _openActivePlanDetails,
+                                ),
+                              ),
+                            if (!_activePlanLoaded || _activePlan != null)
+                              const SizedBox(height: 16),
+                            const SizedBox(height: 4),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 240),
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                  bottom: 12,
+                                ),
+                                child: Text(
+                                  'Quick Actions'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 280),
+                              child: GridView.count(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 14,
+                                crossAxisSpacing: 14,
+                                childAspectRatio: 0.92,
+                                children: [
+                                  QuickActionCard(
+                                    icon: Icons.description_outlined,
+                                    label: 'My Medical Record'.tr(),
+                                    subtitle: 'View files & history'.tr(),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              MedicalArchivePage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  QuickActionCard(
+                                    icon: Icons.calendar_month_outlined,
+                                    label: 'Book Appointment'.tr(),
+                                    subtitle: 'Pick a date & time'.tr(),
+                                    onTap: () async {
+                                      if (!await PatientStatusGuard
+                                          .ensureSelectedPatientEditable(
+                                              context)) {
+                                        return;
+                                      }
+                                      if (!context.mounted) return;
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              SelectVisitTypePage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  QuickActionCard(
+                                    icon: Icons.warning_amber_rounded,
+                                    label: 'Emergency Appointment'.tr(),
+                                    subtitle: 'Get urgent care now'.tr(),
+                                    isDanger: true,
+                                    onTap: () async {
+                                      try {
+                                        await WhatsAppService.openWhatsApp(
+                                          phone: ClinicContact.whatsAppNumber,
+                                          message:
+                                              'Hello, I need an emergency dental appointment. Please contact me as soon as possible.'
+                                                  .tr(),
+                                        );
+                                      } catch (_) {
+                                        if (!context.mounted) return;
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Please contact the clinic immediately for urgent care.'
+                                                  .tr(),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  QuickActionCard(
+                                    icon: Icons.receipt_long_outlined,
+                                    label: 'Invoices'.tr(),
+                                    subtitle: 'Check your bills'.tr(),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => FinancialPage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:dental_app/core/utils/patient_status_guard.dart';
 import 'package:dental_app/core/utils/shared_prefs.dart';
 import 'package:dental_app/core/widgets/empty_list_state.dart';
 import 'package:dental_app/core/widgets/fade_slide_in.dart';
@@ -102,6 +103,11 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
 
   Future<void> _confirmCancel(Appointment appointment) async {
     if (_actionsBusy) return;
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final reason = await CancelAppointmentDialog.show(context);
     if (reason == null || !mounted) return;
 
@@ -113,8 +119,13 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
         );
   }
 
-  void _openReschedule(Appointment appointment) {
+  Future<void> _openReschedule(Appointment appointment) async {
     if (_actionsBusy) return;
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     context.read<AppointmentsBloc>().add(
           PrepareRescheduleAppointmentRequested(appointment: appointment),
         );
@@ -148,6 +159,11 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
   }
 
   Future<void> _pushRescheduleDatePicker(Appointment appointment) async {
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final appointmentsBloc = context.read<AppointmentsBloc>();
     final scheduledAt = await Navigator.push<String>(
       context,
@@ -177,6 +193,11 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
 
   Future<void> _openQrCheckIn(Appointment appointment) async {
     if (_actionsBusy) return;
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     final patientId = _patientId;
     if (patientId == null) return;
 
@@ -199,8 +220,13 @@ class _MyAppointmentsViewState extends State<_MyAppointmentsView> {
     }
   }
 
-  void _openBooking() {
+  Future<void> _openBooking() async {
     if (_actionsBusy) return;
+    if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      return;
+    }
+    if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SelectVisitTypePage()),

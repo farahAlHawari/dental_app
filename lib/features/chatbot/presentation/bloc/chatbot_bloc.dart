@@ -29,13 +29,17 @@ class ChatbotBloc extends Bloc<ChatbotEvent, ChatbotState> {
     ChatbotSessionStarted event,
     Emitter<ChatbotState> emit,
   ) {
+    final welcome = event.apiMode == ChatbotApiMode.triage
+        ? "Please describe what you're experiencing so I can help diagnose it."
+            .tr()
+        : "Hello, I'm your smart medical assistant. How can I help you?".tr();
+
     emit(
       ChatbotSessionActive(
         apiMode: event.apiMode,
         messages: [
           ChatUiMessage(
-            text: "Hello, I'm your smart medical assistant. How can I help you?"
-                .tr(),
+            text: welcome,
             isBot: true,
           ),
         ],
