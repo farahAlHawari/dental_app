@@ -64,6 +64,7 @@
 "Start treatment journey": "Start treatment journey",
   "Follow-up within an existing treatment plan": "Follow-up within an existing treatment plan",
   "Follow-up appointment in my treatment plan": "Follow-up appointment in my treatment plan",
+  "Follow-up within plan": "Follow-up within plan",
 "For registered patients to complete treatment sessions or scheduled periodic check-ups.": "For registered patients to complete treatment sessions or scheduled periodic check-ups.",
 "Continue current plan": "Continue current plan",
 
@@ -449,6 +450,7 @@
   "Appointment cancelled": "Appointment cancelled",
   "Appointment rescheduled": "Appointment rescheduled",
   "Location permission is required for check-in.": "Location permission is required for check-in.",
+  "Could not determine your location. Please try again.": "Could not determine your location. Please try again.",
   "Confirming your arrival...": "Confirming your arrival...",
   "Consultation": "Consultation",
   "Consultation Appointment": "Consultation Appointment",

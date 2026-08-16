@@ -25,6 +25,7 @@ class DioConsumer {
 
   DioConsumer({required this.dio}) {
     dio.options.baseUrl = EndPoints.baserUrl;
+    dio.options.headers['ngrok-skip-browser-warning'] = 'true';
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -123,7 +124,9 @@ class DioConsumer {
 
     try {
       // Separate Dio — no interceptors (avoids recursion on auth/refresh).
-      final refreshDio = Dio()..options.baseUrl = EndPoints.baserUrl;
+      final refreshDio = Dio()
+        ..options.baseUrl = EndPoints.baserUrl
+        ..options.headers['ngrok-skip-browser-warning'] = 'true';
       final response = await refreshDio.post(
         EndPoints.refreshToken,
         data: {'refreshToken': refreshToken},
@@ -179,7 +182,10 @@ class DioConsumer {
   // ================================
   // NEW CODE START
   // ================================
-  Future<dynamic> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<dynamic> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
       final response = await dio.get(path, queryParameters: queryParameters);
       return response.data;
@@ -196,6 +202,7 @@ class DioConsumer {
       _handleDioException(e);
     }
   }
+
   // ================================
   // NEW CODE END
   // ================================
@@ -206,9 +213,7 @@ class DioConsumer {
     if (e.response != null) {
       final data = e.response!.data;
       if (data is Map<String, dynamic>) {
-        throw ServerException(
-          errorModel: ErrorModel.fromJson(data),
-        );
+        throw ServerException(errorModel: ErrorModel.fromJson(data));
       }
       if (data is Map) {
         throw ServerException(

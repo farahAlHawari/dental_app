@@ -1,8 +1,8 @@
 class EndPoints {
 //   static const String baserUrl =
 //       "https://naming-generous-ember.ngrok-free.dev/api/v1/";
-  // static const String baserUrl = "http://192.168.1.104:3000/api/v1/";
-  static const String baserUrl = "http://10.255.238.11:3000/api/v1/";
+  static const String baserUrl = "http://192.168.1.101:3000/api/v1/";
+//   static const String baserUrl = "http://10.255.238.11:3000/api/v1/";
   // static const String baserUrl = "http://localhost:3000/api/v1/";
   static const String register = "auth/register";
   static const String verifyOtp = "auth/register/verify";

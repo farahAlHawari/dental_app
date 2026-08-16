@@ -15,6 +15,10 @@ class Appointment {
   final String? reasonForVisit;
   final String? sessionTitleAr;
   final String? sessionTitleEn;
+  /// اسم الجلسة المترجم من الـ list API (`treatmentSessionName`).
+  final String? treatmentSessionName;
+  /// اسم الخطة المترجم من الـ list API (`treatmentPlanName`).
+  final String? treatmentPlanName;
   final int? durationMinutes;
   final bool isWaiting;
 
@@ -33,6 +37,8 @@ class Appointment {
     this.reasonForVisit,
     this.sessionTitleAr,
     this.sessionTitleEn,
+    this.treatmentSessionName,
+    this.treatmentPlanName,
     this.durationMinutes,
     this.isWaiting = false,
     this.treatmentSessionId,
@@ -56,6 +62,8 @@ class Appointment {
       reasonForVisit: reason,
       sessionTitleAr: _nestedSessionTitle(json, 'titleAr'),
       sessionTitleEn: _nestedSessionTitle(json, 'titleEn'),
+      treatmentSessionName: _trimOrNull(json['treatmentSessionName']),
+      treatmentPlanName: _trimOrNull(json['treatmentPlanName']),
       durationMinutes: json['durationMinutes'] is int
           ? json['durationMinutes'] as int
           : int.tryParse('${json['durationMinutes']}'),
@@ -69,6 +77,12 @@ class Appointment {
       return 'Follow-up appointment in my treatment plan'.tr();
     }
     return 'Initial Consultation / First Visit'.tr();
+  }
+
+  static String? _trimOrNull(dynamic value) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty) return null;
+    return text;
   }
 
   static String? _nestedSessionTitle(Map<String, dynamic> json, String key) {
@@ -85,6 +99,9 @@ class Appointment {
   }
 
   String? localizedSessionTitle(String languageCode) {
+    final flat = treatmentSessionName?.trim();
+    if (flat != null && flat.isNotEmpty) return flat;
+
     final ar = sessionTitleAr?.trim();
     final en = sessionTitleEn?.trim();
     if (languageCode == 'ar') {
@@ -109,6 +126,8 @@ class Appointment {
     String? reasonForVisit,
     String? sessionTitleAr,
     String? sessionTitleEn,
+    String? treatmentSessionName,
+    String? treatmentPlanName,
     int? durationMinutes,
     bool? isWaiting,
     String? treatmentSessionId,
@@ -125,6 +144,9 @@ class Appointment {
       reasonForVisit: reasonForVisit ?? this.reasonForVisit,
       sessionTitleAr: sessionTitleAr ?? this.sessionTitleAr,
       sessionTitleEn: sessionTitleEn ?? this.sessionTitleEn,
+      treatmentSessionName:
+          treatmentSessionName ?? this.treatmentSessionName,
+      treatmentPlanName: treatmentPlanName ?? this.treatmentPlanName,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       isWaiting: isWaiting ?? this.isWaiting,
       treatmentSessionId: treatmentSessionId ?? this.treatmentSessionId,

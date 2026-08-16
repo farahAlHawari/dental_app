@@ -37,6 +37,11 @@ class AppointmentCard extends StatelessWidget {
     final sessionTitle = isFollowUp
         ? appointment.localizedSessionTitle(context.locale.languageCode)
         : null;
+    final planName = isFollowUp
+        ? appointment.treatmentPlanName?.trim()
+        : null;
+    final hasPlan = planName != null && planName.isNotEmpty;
+    final hasSession = sessionTitle != null && sessionTitle.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -63,24 +68,38 @@ class AppointmentCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      appointment.visitTypeLabel,
+                      hasSession
+                          ? sessionTitle!
+                          : appointment.visitTypeLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: colors.onSurface,
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    if (sessionTitle != null && sessionTitle.isNotEmpty) ...[
+                    if (isFollowUp) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        sessionTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.onSurface.withOpacity(0.65),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                      Text.rich(
+                        TextSpan(
+                          style: TextStyle(
+                            color: colors.onSurface.withOpacity(0.65),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Follow-up within plan'.tr(),
+                            ),
+                            if (hasPlan) ...[
+                              const TextSpan(text: ' '),
+                              TextSpan(text: planName),
+                            ],
+                          ],
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ],

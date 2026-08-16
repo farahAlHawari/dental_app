@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dental_app/core/services/whatsapp_service.dart';
 import 'package:dental_app/core/utils/clinic_contact.dart';
 import 'package:dental_app/core/utils/patient_status_guard.dart';
@@ -5,6 +7,7 @@ import 'package:dental_app/core/widgets/custom_confirmation_dialog.dart';
 import 'package:dental_app/features/appointments/presentation/bloc/appointments_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -26,10 +29,20 @@ class QrCheckinScannerPage extends StatefulWidget {
 
 class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
     with SingleTickerProviderStateMixin {
+  /// يطابق شكل كود العيادة في الباك: `clinic-checkin.` + 32 hex.
+  static final RegExp _clinicCodePattern = RegExp(
+    r'^clinic-checkin\.[a-fA-F0-9]{32}$',
+  );
+
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
+    formats: const [BarcodeFormat.qrCode],
+    autoStart: true,
   );
+
   late final AnimationController _scanLineController;
+  Future<Position?>? _warmLocationFuture;
+
   bool _handled = false;
   bool _checkingIn = false;
 
@@ -42,6 +55,8 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+    // تجهيز الموقع أثناء ما المريض يوجّه الكاميرا.
+    _warmLocationFuture = _resolvePosition();
   }
 
   @override
@@ -51,52 +66,120 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
     super.dispose();
   }
 
+  bool _isValidClinicCode(String raw) => _clinicCodePattern.hasMatch(raw);
+
   void _onDetect(BarcodeCapture capture) {
     if (_handled || _checkingIn || capture.barcodes.isEmpty) return;
-    final raw = capture.barcodes.first.rawValue?.trim();
-    if (raw == null || raw.length < 8) return;
-    _performCheckIn(raw);
+
+    final raw = capture.barcodes
+        .map((b) => b.rawValue?.trim())
+        .whereType<String>()
+        .firstWhere(
+          (value) => value.isNotEmpty,
+          orElse: () => '',
+        );
+    if (raw.isEmpty) return;
+
+    // قفل فوري قبل أي await حتى ما يتكرر الكشف.
+    _lockScanner();
+
+    if (!_isValidClinicCode(raw)) {
+      _unlockScanner();
+      _showMessage(
+        'Invalid check-in code. Please scan the clinic QR again.'.tr(),
+      );
+      return;
+    }
+
+    HapticFeedback.mediumImpact();
+    unawaited(_performCheckIn(raw));
   }
 
-  Future<Position?> _getCurrentPosition() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return null;
+  void _lockScanner() {
+    _checkingIn = true;
+    unawaited(_controller.stop());
+    if (mounted) setState(() {});
+  }
 
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+  void _unlockScanner() {
+    if (_handled) return;
+    _checkingIn = false;
+    if (mounted) {
+      setState(() {});
+      unawaited(_controller.start());
     }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      return null;
-    }
+  }
 
-    return Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
+  Future<Position?> _resolvePosition() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return null;
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return null;
+      }
+
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+    } on TimeoutException {
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Position?> _ensurePosition() async {
+    final warmed = await (_warmLocationFuture ?? _resolvePosition());
+    if (warmed != null) return warmed;
+
+    // محاولة ثانية لو التجهيز المسبق فشل أو انتهت صلاحيته.
+    _warmLocationFuture = _resolvePosition();
+    return _warmLocationFuture;
+  }
+
   Future<void> _performCheckIn(String clinicCheckInCode) async {
-    if (_handled || _checkingIn) return;
+    if (_handled) return;
 
     if (!await PatientStatusGuard.ensureSelectedPatientEditable(context)) {
+      _unlockScanner();
       return;
     }
     if (!mounted) return;
 
-    setState(() => _checkingIn = true);
-    _controller.stop();
+    if (!_checkingIn) {
+      _lockScanner();
+    }
 
-    final result = await _getCurrentPosition();
+    final position = await _ensurePosition();
     if (!mounted) return;
 
-    if (result == null) {
-      setState(() => _checkingIn = false);
-      _controller.start();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location permission is required for check-in.'.tr())),
+    if (position == null) {
+      _unlockScanner();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      var permission = await Geolocator.checkPermission();
+      final needsPermission = permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever ||
+          !serviceEnabled;
+      _showMessage(
+        needsPermission
+            ? 'Location permission is required for check-in.'.tr()
+            : 'Could not determine your location. Please try again.'.tr(),
       );
       return;
     }
@@ -105,8 +188,8 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
           CheckInAppointmentRequested(
             patientId: widget.patientId,
             clinicCheckInCode: clinicCheckInCode,
-            latitude: result.latitude,
-            longitude: result.longitude,
+            latitude: position.latitude,
+            longitude: position.longitude,
             appointmentId: widget.appointmentId,
           ),
         );
@@ -114,6 +197,7 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
 
   void _showSuccessDialog() {
     _handled = true;
+    _checkingIn = true;
     CustomConfirmationDialog.show(
       context,
       title: 'Attendance Confirmed'.tr(),
@@ -142,9 +226,17 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
       builder: (sheetContext) => const _ManualCodeSheet(),
     );
 
-    if (code != null && code.length >= 8) {
-      await _performCheckIn(code);
+    if (code == null || code.isEmpty) return;
+
+    if (!_isValidClinicCode(code)) {
+      _showMessage(
+        'Invalid check-in code. Please scan the clinic QR again.'.tr(),
+      );
+      return;
     }
+
+    _lockScanner();
+    await _performCheckIn(code);
   }
 
   void _contactHelp() {
@@ -154,16 +246,20 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final size = mediaQuery.size;
+  Rect _frameRectFor(Size size) {
     final frameSize = size.width * 0.68;
-    final frameRect = Rect.fromCenter(
+    return Rect.fromCenter(
       center: Offset(size.width / 2, size.height * 0.38),
       width: frameSize,
       height: frameSize,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final size = mediaQuery.size;
+    final frameRect = _frameRectFor(size);
     const topRowHeight = 52.0;
     final spacerHeight =
         (frameRect.bottom - mediaQuery.padding.top - topRowHeight).clamp(
@@ -174,185 +270,192 @@ class _QrCheckinScannerPageState extends State<QrCheckinScannerPage>
     return BlocListener<AppointmentsBloc, AppointmentsState>(
       listener: (context, state) {
         if (state is CheckInAppointmentLoading) {
-          setState(() => _checkingIn = true);
+          if (!_checkingIn) {
+            setState(() => _checkingIn = true);
+          }
         } else if (state is CheckInAppointmentSuccess) {
           _showSuccessDialog();
         } else if (state is CheckInAppointmentFailure) {
-          setState(() => _checkingIn = false);
-          _controller.start();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errMessage)),
-          );
+          _unlockScanner();
+          // إعادة تجهيز الموقع لمحاولة لاحقة.
+          _warmLocationFuture = _resolvePosition();
+          _showMessage(state.errMessage);
         }
       },
       child: Scaffold(
         backgroundColor: Colors.black,
         resizeToAvoidBottomInset: false,
         body: Stack(
-        fit: StackFit.expand,
-        children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-            errorBuilder: (context, error) => Container(
-              color: Colors.black,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Could not access the camera. Please check camera permission.'
-                    .tr(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70),
+          fit: StackFit.expand,
+          children: [
+            MobileScanner(
+              controller: _controller,
+              onDetect: _onDetect,
+              scanWindow: frameRect,
+              errorBuilder: (context, error) => Container(
+                color: Colors.black,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Could not access the camera. Please check camera permission.'
+                      .tr(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70),
+                ),
               ),
             ),
-          ),
-          if (_checkingIn)
-            Container(
-              color: Colors.black54,
-              alignment: Alignment.center,
+            if (_checkingIn)
+              Container(
+                color: Colors.black54,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(color: _frameColor),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Confirming your arrival...'.tr(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            CustomPaint(
+              painter: _ScannerOverlayPainter(
+                frameRect: frameRect,
+                borderColor: _frameColor,
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _scanLineController,
+              builder: (context, child) {
+                final top =
+                    frameRect.top +
+                    8 +
+                    (frameRect.height - 16) * _scanLineController.value;
+                return Positioned(
+                  left: frameRect.left + 12,
+                  right: size.width - frameRect.right + 12,
+                  top: top,
+                  child: Container(
+                    height: 2.4,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      gradient: LinearGradient(
+                        colors: [
+                          _frameColor.withOpacity(0),
+                          _frameColor.withOpacity(0.9),
+                          _frameColor.withOpacity(0),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _frameColor.withOpacity(0.7),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            SafeArea(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(color: _frameColor),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Confirming your arrival...'.tr(),
-                    style: const TextStyle(color: Colors.white),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ValueListenableBuilder<MobileScannerState>(
+                          valueListenable: _controller,
+                          builder: (context, state, child) {
+                            final torchOn = state.torchState == TorchState.on;
+                            final torchAvailable =
+                                state.torchState != TorchState.unavailable;
+                            return _CircleIconButton(
+                              icon: torchOn
+                                  ? Icons.flash_on_rounded
+                                  : Icons.flash_off_rounded,
+                              onTap: torchAvailable && !_checkingIn
+                                  ? () => _controller.toggleTorch()
+                                  : null,
+                            );
+                          },
+                        ),
+                        _CircleIconButton(
+                          icon: Icons.close_rounded,
+                          onTap:
+                              _checkingIn ? null : () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: spacerHeight),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Point your camera at the QR code at reception'.tr(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Your arrival will be confirmed automatically'.tr(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _checkingIn ? null : _contactHelp,
+                          icon: const Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.white70,
+                            size: 18,
+                          ),
+                          label: Text(
+                            'Need help?'.tr(),
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 16,
+                          color: Colors.white24,
+                        ),
+                        TextButton(
+                          onPressed: _checkingIn ? null : _enterCodeManually,
+                          child: Text(
+                            'Enter code manually'.tr(),
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          CustomPaint(
-            painter: _ScannerOverlayPainter(
-              frameRect: frameRect,
-              borderColor: _frameColor,
-            ),
-          ),
-          AnimatedBuilder(
-            animation: _scanLineController,
-            builder: (context, child) {
-              final top =
-                  frameRect.top +
-                  8 +
-                  (frameRect.height - 16) * _scanLineController.value;
-              return Positioned(
-                left: frameRect.left + 12,
-                right: size.width - frameRect.right + 12,
-                top: top,
-                child: Container(
-                  height: 2.4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    gradient: LinearGradient(
-                      colors: [
-                        _frameColor.withOpacity(0),
-                        _frameColor.withOpacity(0.9),
-                        _frameColor.withOpacity(0),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _frameColor.withOpacity(0.7),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ValueListenableBuilder<MobileScannerState>(
-                        valueListenable: _controller,
-                        builder: (context, state, child) {
-                          final torchOn = state.torchState == TorchState.on;
-                          final torchAvailable =
-                              state.torchState != TorchState.unavailable;
-                          return _CircleIconButton(
-                            icon: torchOn
-                                ? Icons.flash_on_rounded
-                                : Icons.flash_off_rounded,
-                            onTap: torchAvailable && !_checkingIn
-                                ? () => _controller.toggleTorch()
-                                : null,
-                          );
-                        },
-                      ),
-                      _CircleIconButton(
-                        icon: Icons.close_rounded,
-                        onTap: _checkingIn ? null : () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: spacerHeight),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Point your camera at the QR code at reception'.tr(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Your arrival will be confirmed automatically'.tr(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.65),
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton.icon(
-                        onPressed: _checkingIn ? null : _contactHelp,
-                        icon: const Icon(
-                          Icons.info_outline_rounded,
-                          color: Colors.white70,
-                          size: 18,
-                        ),
-                        label: Text(
-                          'Need help?'.tr(),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ),
-                      Container(width: 1, height: 16, color: Colors.white24),
-                      TextButton(
-                        onPressed: _checkingIn ? null : _enterCodeManually,
-                        child: Text(
-                          'Enter code manually'.tr(),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }
